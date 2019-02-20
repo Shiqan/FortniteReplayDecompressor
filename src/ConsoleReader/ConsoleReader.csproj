@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FortniteReplayDecompressor\FortniteReplayDecompressor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="FortniteReplayReader">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp2.1\FortniteReplayReader.dll</HintPath>
+    </Reference>
+    <Reference Include="FortniteReplayReader.Core">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader.Core\bin\Debug\netcoreapp2.1\FortniteReplayReader.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

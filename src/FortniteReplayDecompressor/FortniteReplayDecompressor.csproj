@@ -1,22 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <AssemblyName>FortniteReplayReaderDecompressor</AssemblyName>
+    <RootNamespace>FortniteReplayReaderDecompressor</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="FortniteReplayReader">
-      <HintPath>D:\Projects\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\net461\FortniteReplayReader.dll</HintPath>
-    </Reference>
-    <Reference Include="FortniteReplayReader.Core">
-      <HintPath>D:\Projects\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\net461\FortniteReplayReader.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <Content Include="../../oodle/oo2core_5_win64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FortniteReplayDecompressor.Core\FortniteReplayDecompressor.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FortniteReplayReader">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.dll</HintPath>
+    </Reference>
+    <Reference Include="FortniteReplayReader.Core">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="oo2core_5_win64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

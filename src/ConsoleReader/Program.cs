@@ -1,6 +1,6 @@
 ﻿using FortniteReplayReaderDecompressor;
+using System;
 using System.IO;
-using static System.Environment;
 
 namespace ConsoleReader
 {
@@ -8,22 +8,16 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-            var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
-            var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-
-            var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "UnsavedReplay-2019.02.18-20.56.20.replay");
-
-            foreach (var replayFile in replayFiles)
+            var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
+            using (var stream = File.Open(replayFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-
-                using (var stream = File.Open(replayFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new FortniteBinaryDecompressor(stream))
                 {
-                    using (var reader = new FortniteReplayDecompressor(stream))
-                    {
-                        var replay = reader.ReadFile();
-                    }
+                    var replay = reader.ReadFile();
                 }
             }
+            Console.WriteLine("---- done ----");
+            Console.ReadLine();
         }
     }
 }

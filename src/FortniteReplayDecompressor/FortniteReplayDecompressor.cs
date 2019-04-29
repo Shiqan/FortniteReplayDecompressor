@@ -153,6 +153,9 @@ namespace FortniteReplayReaderDecompressor
         // SaveExternalData
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2071
 
+        // TickDemoRecord
+        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2255
+
         // TickDemoRecordFrame
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2324
 
@@ -161,6 +164,15 @@ namespace FortniteReplayReaderDecompressor
 
         // Serialize - might be useful...
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5775
+
+        // SerializeHitResult - might be useful one day
+        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Developer/CollisionAnalyzer/Private/CollisionAnalyzer.cpp#L19
+
+        //  UnrealMath - FVector etc
+        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57
+
+        // PackedVector
+        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
 
 
         /// <summary>
@@ -326,6 +338,9 @@ namespace FortniteReplayReaderDecompressor
                 // ReceivedRawPacket
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
 
+                // PacketHandler::Tick
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/PacketHandlers/PacketHandler/Private/PacketHandler.cpp#L60
+
                 remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
                 output = reader.ReadBytes(remainingBytes);
                 File.WriteAllBytes($"replaydata-postpackets-{reader.BaseStream.Position}.dump", output);
@@ -333,6 +348,7 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
         /// </summary>
         /// <param name="offset"></param>

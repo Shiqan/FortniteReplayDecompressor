@@ -1,4 +1,6 @@
-﻿namespace FortniteReplayReaderDecompressor.Core.Models
+﻿using FortniteReplayReaderDecompressor.Core.Models.Enums;
+
+namespace FortniteReplayReaderDecompressor.Core.Models
 {
     /// <summary>
     /// PlaybackPackets are used to buffer packets up when we read a demo frame, which we can then process when the time is right
@@ -6,9 +8,10 @@
     /// </summary>
     public class PlaybackPacket
     {
-        public sbyte[] Data { get; set; }
+        public byte[] Data { get; set; }
         public float TimeSeconds { get; set; }
         public int LevelIndex { get; set; }
         public uint SeenLevelIndex { get; set; }
+        public PacketState State { get; set; }
     }
 }

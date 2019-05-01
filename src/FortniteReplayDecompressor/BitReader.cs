@@ -102,6 +102,31 @@ namespace FortniteReplayReaderDecompressor
             }
             return result;
         }
+
+        /// <summary>
+        /// Retuns uint and advances the stream by 4 bytes.
+        /// see https://github.com/jjbott/RocketLeagueReplayParser/blob/51a72c36188de4163f0de73545d15096069a807b/RocketLeagueReplayParser/BitReader.cs#L85
+        /// </summary>
+        /// <param name="maxValue"></param>
+        /// <returns>uint</returns>
+        /// <exception cref="OverflowException"></exception>
+        public virtual uint ReadUInt32(uint maxValue)
+        {
+            uint value = 0;
+            for (uint mask = 1; (value + mask) < maxValue && mask > 0; mask *= 2, Position++)
+            {
+                if (Position >= Bits.Length)
+                {
+                    throw new OverflowException();
+                }
+
+                if (Bits[Position >> 3] & (1 << (Position & 7) > 0))
+                {
+                    value |= mask;
+                }
+            }
+            return value;
+        }
     }
 
 }

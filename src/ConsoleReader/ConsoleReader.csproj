@@ -22,6 +22,12 @@
     <None Update="Replays\UnsavedReplay-2018.10.06-22.00.32.replay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Replays\UnsavedReplay-2019.04.05-20.22.58.replay">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Replays\UnsavedReplay-2019.05.03-21.24.46.replay">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

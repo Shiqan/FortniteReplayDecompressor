@@ -127,6 +127,6 @@ namespace FortniteReplayReaderDecompressor
             }
             return value;
         }
-    }
+    } 
 
 }

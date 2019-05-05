@@ -15,6 +15,11 @@ namespace FortniteReplayReaderDecompressor
         {
         }
 
+        public FortniteBinaryDecompressor(Stream input, Replay replay) : base(input)
+        {
+            this.Replay = replay;
+        }
+
         public FortniteBinaryDecompressor(Stream input, int offset) : base(input)
         {
             throw new NotSupportedException();
@@ -23,8 +28,9 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
-        public void StaticParseName()
+        public virtual string StaticParseName()
         {
+            // todo: should be bits...
             var isHardcoded = ReadBoolean();
             if (isHardcoded)
             {
@@ -40,57 +46,71 @@ namespace FortniteReplayReaderDecompressor
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
+                return "";
             }
-            else
-            {
-                var inString = ReadFString();
-                var inNumber = ReadInt32();
-            }
+
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+            return inString;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64
         /// </summary>
-        public virtual void ReadNetFieldExport()
+        public virtual NetFieldExport ReadNetFieldExport()
         {
             var isExported = ReadBoolean();
             if (isExported)
             {
-                var handle = ReadIntPacked();
-                var checksum = ReadUInt32();
-
-
-                // we dont know the header on checkpoint0 ...?
-                // guess we can skip isLoading parts
-                if (EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
+                var fieldExport = new NetFieldExport()
                 {
-                    var name = ReadFString();
-                    var type = ReadFString();
+                    Handle = ReadIntPacked(),
+                    CompatibleChecksum = ReadUInt32()
+                };
+
+                if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
+                {
+                    fieldExport.Name = ReadFString();
+                    fieldExport.Type = ReadFString();
                 }
-                else if (EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
+                else if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
                 {
-                    // fname
-                    var exportname = ReadFString();
+                    fieldExport.Name = ReadFString();
                 }
                 else
                 {
-                    StaticParseName();
+                    fieldExport.Name = StaticParseName();
                 }
+                return fieldExport;
             }
+
+            return null;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L133
         /// </summary>
-        public virtual void ReadNetFieldExportGroupMap()
+        public virtual NetFieldExportGroup ReadNetFieldExportGroupMap()
         {
-            var pathName = ReadFString();
-            var pathNameIndex = ReadIntPacked();
-            var numNetFieldExports = ReadUInt32();
-            for (var i = 0; i < numNetFieldExports; i++)
+            var group = new NetFieldExportGroup()
             {
-                ReadNetFieldExport();
+                PathName = ReadFString(),
+                PathNameIndex = ReadIntPacked(),
+                NetFieldExportsLenght = ReadIntPacked(),
+                NetFieldExports = new List<NetFieldExport>()
+            };
+
+            for (var i = 0; i < group.NetFieldExportsLenght; i++)
+            {
+                var netFieldExport = ReadNetFieldExport();
+                if (netFieldExport != null)
+                {
+                    group.NetFieldExports.Add(netFieldExport);
+                }
             }
+
+            return group;
         }
 
         /// <summary>
@@ -131,7 +151,7 @@ namespace FortniteReplayReaderDecompressor
                 var numNetFieldExportGroups = reader.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
                 {
-                    //reader.ReadNetFieldExportGroupMap();
+                    reader.ReadNetFieldExportGroupMap();
                 }
 
                 var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
@@ -238,7 +258,6 @@ namespace FortniteReplayReaderDecompressor
 
                 ReadNetFieldExport();
             }
-
         }
 
 
@@ -349,23 +368,22 @@ namespace FortniteReplayReaderDecompressor
                 var end = ReadUInt32();
                 var length = ReadUInt32();
             }
+            else
+            {
+                var length = ReadUInt32();
+            }
 
             using (var reader = Decompress())
             {
-                var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                var output = reader.ReadBytes(remainingBytes);
-                reader.BaseStream.Position -= remainingBytes;
-                File.WriteAllBytes($"replaydata-start-{reader.BaseStream.Position}.dump", output);
-
-                // if HISTORY_MULTIPLE_LEVELS
-                var currentLevelIndex = reader.ReadInt32();
+                if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+                {
+                    var currentLevelIndex = reader.ReadInt32();
+                }
                 var timeSeconds = reader.ReadSingle();
 
-                // if HISTORY_LEVEL_STREAMING_FIXES
                 reader.ReadExportData();
 
-                // if HasLevelStreamingFixes()
-                if (true)
+                if (Replay.Header.HasLevelStreamingFixes())
                 {
                     var numStreamingLevels = reader.ReadIntPacked();
                     for (var i = 0; i < numStreamingLevels; i++)
@@ -386,14 +404,17 @@ namespace FortniteReplayReaderDecompressor
                     }
                 }
 
-                var externalOffset = reader.ReadUInt64();
+                if (Replay.Header.HasLevelStreamingFixes())
+                {
+                    var externalOffset = reader.ReadUInt64();
+                }
 
                 // if (!bForLevelFastForward)
                 reader.ReadExternalData();
                 // else skip externalOffset
 
-                remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                output = reader.ReadBytes(remainingBytes);
+                var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                var output = reader.ReadBytes(remainingBytes);
                 reader.BaseStream.Position -= remainingBytes;
                 File.WriteAllBytes($"replaydata-prepackets-{reader.BaseStream.Position}.dump", output);
 
@@ -401,7 +422,11 @@ namespace FortniteReplayReaderDecompressor
                 var @continue = true;
                 while (@continue)
                 {
-                    var seenLevelIndex = reader.ReadIntPacked();
+                    if (Replay.Header.HasLevelStreamingFixes())
+                    {
+                        var seenLevelIndex = reader.ReadIntPacked();
+                    }
+
                     var packet = reader.ReadPacket();
                     playbackPackets.Add(packet);
 
@@ -417,6 +442,10 @@ namespace FortniteReplayReaderDecompressor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
                 foreach (var packet in playbackPackets)
                 {
+                    if (packet.State == PacketState.Success)
+                    {
+                        File.WriteAllBytes($"packets/packet-{packet.LevelIndex}.dump", packet.Data);
+                    }
                     //ProcessPacket(packet);
                 }
 
@@ -438,7 +467,7 @@ namespace FortniteReplayReaderDecompressor
             var compressedSize = ReadInt32();
             var compressedBuffer = ReadBytes(compressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, compressedBuffer.Length, decompressedSize);
-            var reader = new FortniteBinaryDecompressor(new MemoryStream(output));
+            var reader = new FortniteBinaryDecompressor(new MemoryStream(output), this.Replay);
             reader.BaseStream.Position = 0;
             return reader;
         }

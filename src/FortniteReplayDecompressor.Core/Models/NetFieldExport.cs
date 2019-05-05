@@ -5,9 +5,11 @@
     /// </summary>
     public class NetFieldExport
     {
-        public uint InHandle { get; set; }
-        public uint InCompatibleChecksum { get; set; }
-        public string InName { get; set; }
-        public string InType { get; set; }
+        public bool IsExported { get; set; }
+        public uint Handle { get; set; }
+        public uint CompatibleChecksum { get; set; }
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public bool Incompatible { get; set; }
     }
 }

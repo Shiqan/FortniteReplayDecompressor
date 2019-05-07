@@ -76,6 +76,7 @@ namespace FortniteReplayReaderDecompressor
                 }
                 else if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
                 {
+                    // FName
                     fieldExport.Name = ReadFString();
                 }
                 else
@@ -157,9 +158,77 @@ namespace FortniteReplayReaderDecompressor
                 var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
                 var output = reader.ReadBytes(remainingBytes);
                 File.WriteAllBytes($"{id}.dump", output);
+                reader.BaseStream.Position -= remainingBytes;
 
                 // SerializeDemoFrameFromQueuedDemoPackets
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
+                // WriteDemoFrameFromQueuedDemoPackets
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3374
+
+                var currentLevelIndex = reader.ReadUInt32();
+                var frameTime = reader.ReadSingle();
+
+                reader.ReadExportData();
+
+                if (Replay.Header.HasLevelStreamingFixes())
+                {
+                    var numLevelsAddedThisFrame = reader.ReadIntPacked();
+                    for (var i = 0; i < numLevelsAddedThisFrame; i++)
+                    {
+                        var levelName = reader.ReadFString();
+                    }
+                }
+                // else todo?
+
+                // SaveExternalData
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2071
+
+                // FReplayExternalOutData
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L916
+
+                // FRepChangedPropertyTracker
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L83
+
+                remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                try
+                {
+                    reader.ReadExternalData();
+
+                    var playbackPackets = new List<PlaybackPacket>();
+                    var @continue = true;
+                    while (@continue)
+                    {
+                        if (Replay.Header.HasLevelStreamingFixes())
+                        {
+                            var seenLevelIndex = reader.ReadIntPacked();
+                        }
+
+                        var packet = reader.ReadPacket();
+                        playbackPackets.Add(packet);
+
+                        @continue = packet.State switch
+                        {
+                            PacketState.End => false,
+                            PacketState.Error => false,
+                            PacketState.Success => true,
+                            _ => false
+                        };
+                    }
+
+                    if (Replay.Header.HasLevelStreamingFixes())
+                    {
+                        reader.ReadIntPacked();
+                    }
+                    // Write a count of 0 to signal the end of the frame
+                    reader.ReadInt32();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+                reader.BaseStream.Position -= remainingBytes;
+                output = reader.ReadBytes(remainingBytes);
+                File.WriteAllBytes($"{id}-end.dump", output);
             }
         }
 
@@ -171,9 +240,6 @@ namespace FortniteReplayReaderDecompressor
 
         // ReadDemoFrameIntoPlaybackPackets
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
-
-        // SaveExternalData
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2071
 
         // TickDemoRecord
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2255

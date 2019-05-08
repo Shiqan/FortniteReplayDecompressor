@@ -28,6 +28,15 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
+        /// Returns whether position in current BitArray is greater than the lenght of the current BitArray.
+        /// </summary>
+        /// <returns>true, if position is greater than lenght, false otherwise</returns>
+        public virtual bool AtEnd()
+        {
+            return Position > Bits.Length;
+        }
+
+        /// <summary>
         /// Returns the bit at <see cref="Position"/> and does not advance the <see cref="Position"/> by one bit.
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>

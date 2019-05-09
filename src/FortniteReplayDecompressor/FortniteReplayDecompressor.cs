@@ -372,7 +372,13 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="packet"><see cref="PlaybackPacket"/></param>
         public virtual void ProcessPacket(PlaybackPacket packet)
         {
+            // serializebits...
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
+
+
             var bitReader = new BitReader(packet.Data);
+
+            // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
             // ReadPacketInfo(bitrReader);
             // while( !bitReader.AtEnd() )
 
@@ -387,50 +393,104 @@ namespace FortniteReplayReaderDecompressor
             var bOpen = bControl ? bitReader.ReadBit() : false;
             var bClose = bControl ? bitReader.ReadBit() : false;
 
-            //if (Bunch.EngineNetVer() < HISTORY_CHANNEL_CLOSE_REASON)
-            //{
-            //    Bunch.bDormant = Bunch.bClose ? Reader.ReadBit() : 0;
-            //    Bunch.CloseReason = Bunch.bDormant ? EChannelCloseReason::Dormancy : EChannelCloseReason::Destroyed;
-            //}
-            //else
-            //{
-            //    Bunch.CloseReason = Bunch.bClose ? (EChannelCloseReason)Reader.ReadInt((uint32)EChannelCloseReason::MAX) : EChannelCloseReason::Destroyed;
-            //    Bunch.bDormant = (Bunch.CloseReason == EChannelCloseReason::Dormancy);
-            //}
+            // FInBunch
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataBunch.cpp#L18
+
+            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
+            {
+                var bDormant = bClose ? bitReader.ReadBit() : false;
+                //CloseReason = Bunch.bDormant ? EChannelCloseReason::Dormancy : EChannelCloseReason::Destroyed;
+            }
+            else
+            {
+                var closeReason = bClose ?bitReader.ReadUInt32() : 0;
+                //Bunch.CloseReason = Bunch.bClose ? (EChannelCloseReason)Reader.ReadInt((uint32)EChannelCloseReason::MAX) : EChannelCloseReason::Destroyed;
+                //Bunch.bDormant = (Bunch.CloseReason == EChannelCloseReason::Dormancy);
+            }
 
             var bIsReplicationPaused = bitReader.ReadBit();
             var bReliable = bitReader.ReadBit();
 
-            //if (Bunch.EngineNetVer() < HISTORY_MAX_ACTOR_CHANNELS_CUSTOMIZATION)
-            //{
-            //    static const int OLD_MAX_ACTOR_CHANNELS = 10240;
-            //    Bunch.ChIndex = Reader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
-            //}
-            //else
-            //{
-            //    uint32 ChIndex;
-            //    Reader.SerializeIntPacked(ChIndex);
-
-            //    if (ChIndex >= (uint32)MaxChannelSize)
-            //    {
-            //        CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION(this, ESecurityEvent::Malformed_Packet, TEXT("Bunch channel index exceeds channel limit"));
-            //        return;
-            //    }
-
-            //    Bunch.ChIndex = ChIndex;
-            //}
+            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
+            {
+                var OLD_MAX_ACTOR_CHANNELS = 10240;
+                var chIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
+            }
+            else
+            {
+                var chIndex = bitReader.ReadIntPacked();
+            }
 
             var bHasPackageMapExports = bitReader.ReadBit();
             var bHasMustBeMappedGUIDs = bitReader.ReadBit();
             var bPartial = bitReader.ReadBit();
 
-            var ChSequence = 0; // todo
+            if (bReliable)
+            {
+                if (InternalAck)
+                {
+                    // We can derive the sequence for 100% reliable connections
+                    // var ChSequence = InReliable[Bunch.ChIndex] + 1;
+                }
+                else
+                {
+                    // If this is a reliable bunch, use the last processed reliable sequence to read the new reliable sequence
+                    var ChSequence = MakeRelative(Reader.ReadInt(MAX_CHSEQUENCE), InReliable[Bunch.ChIndex], MAX_CHSEQUENCE);
+                }
+            }
+            else if (bPartial)
+            {
+                // If this is an unreliable partial bunch, we simply use packet sequence since we already have it
+                // var ChSequence = InPacketId;
+            }
+            else
+            {
+                var ChSequence = 0;
+            }
 
             var bPartialInitial = bPartial ? bitReader.ReadBit() : false;
             var bPartialFinal = bPartial ? bitReader.ReadBit() : false;
 
-            //int32 BunchDataBits = Reader.ReadInt(UNetConnection::MaxPacket * 8);
+
+            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+            {
+                var chType = (bReliable || bOpen) ? bitReader.ReadInt(CHTYPE_MAX) : CHTYPE_None;
+            }
+            else
+            {
+                if (Bunch.bReliable || Bunch.bOpen)
+                {
+                    UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
+
+                    if (Reader.IsError())
+                    {
+                        CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION(this, ESecurityEvent::Malformed_Packet, TEXT("Channel name serialization failed."));
+                        return;
+                    }
+
+                    if (Bunch.ChName == NAME_Control)
+                    {
+                        Bunch.ChType = CHTYPE_Control;
+                    }
+                    else if (Bunch.ChName == NAME_Voice)
+                    {
+                        Bunch.ChType = CHTYPE_Voice;
+                    }
+                    else if (Bunch.ChName == NAME_Actor)
+                    {
+                        Bunch.ChType = CHTYPE_Actor;
+                    }
+                }
+                else
+                {
+                    Bunch.ChType = CHTYPE_None;
+                    Bunch.ChName = NAME_None;
+                }
+            }
+
+            var bunchDataBits = bitReader.ReadInt(UNetConnection::MaxPacket * 8);
             var headerPos = bitReader.Position;
+            // Bunch.SetData( Reader, BunchDataBits );
             if (bHasPackageMapExports)
             {
                 // ReceiveNetGUIDBunch
@@ -446,6 +506,9 @@ namespace FortniteReplayReaderDecompressor
             }
 
             //FNetworkGUID ActorGUID;
+
+            // termination bit?
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170
         }
 
         /// <summary>

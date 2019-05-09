@@ -28,12 +28,12 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
-        /// Returns whether position in current BitArray is greater than the lenght of the current BitArray.
+        /// Returns whether <see cref="Position"/> in current <see cref="Bits"/> is greater than the lenght of the current <see cref="Bits"/>.
         /// </summary>
-        /// <returns>true, if position is greater than lenght, false otherwise</returns>
+        /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
         public virtual bool AtEnd()
         {
-            return Position > Bits.Length;
+            return Position >= Bits.Length;
         }
 
         /// <summary>
@@ -113,28 +113,42 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
-        /// Retuns uint and advances the stream by 4 bytes.
-        /// see https://github.com/jjbott/RocketLeagueReplayParser/blob/51a72c36188de4163f0de73545d15096069a807b/RocketLeagueReplayParser/BitReader.cs#L85
+        /// Retuns int.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69
         /// </summary>
         /// <param name="maxValue"></param>
-        /// <returns>uint</returns>
-        /// <exception cref="OverflowException"></exception>
-        public virtual uint ReadUInt32(uint maxValue)
+        /// <returns>int</returns>
+        public virtual int ReadInt(int maxValue)
         {
-            uint value = 0;
-            for (uint mask = 1; (value + mask) < maxValue && mask > 0; mask *= 2, Position++)
-            {
-                if (Position >= Bits.Length)
-                {
-                    throw new OverflowException();
-                }
+            return 0;
+        }
+        
+        /// <summary>
+        /// Retuns int and advances the stream by 4 bytes.
+        /// </summary>
+        /// <returns>int</returns>
+        public virtual int ReadInt32()
+        {
+            return BitConverter.ToInt32(ReadBytes(4));
+        }
+        
+        /// <summary>
+        /// Retuns uint and advances the stream by 4 bytes.
+        /// </summary>
+        /// <returns>uint</returns>
+        public virtual uint ReadUInt32()
+        {
+            return BitConverter.ToUInt32(ReadBytes(4));
+        }
 
-                if (Bits[Position >> 3] & (1 << (Position & 7) > 0))
-                {
-                    value |= mask;
-                }
-            }
-            return value;
+        /// <summary>
+        /// Retuns uint
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
+        /// </summary>
+        /// <returns>uint</returns>
+        public virtual uint ReadIntPacked()
+        {
+            return ReadUInt32();
         }
     } 
 

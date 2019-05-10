@@ -112,17 +112,42 @@ namespace FortniteReplayReaderDecompressor
             return result;
         }
 
+        private int Shift(int Cnt)
+        {
+            return 1 << Cnt;
+        }
+
         /// <summary>
-        /// Retuns int.
+        /// Retuns uint.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69
         /// </summary>
         /// <param name="maxValue"></param>
-        /// <returns>int</returns>
-        public virtual int ReadInt(int maxValue)
+        /// <returns>uint</returns>
+        /// <exception cref="OverflowException"></exception>
+        public virtual uint ReadUInt32(int maxValue)
         {
-            return 0;
+            uint value = 0;
+            var localPos = Position;
+            var localNum = Bits.Length;
+
+            for (uint mask = 1; (value + mask) < maxValue; mask *= 2, localPos++)
+            {
+                if (localPos >= localNum)
+                {
+                    throw new OverflowException();
+                }
+
+                if ((Bits[localPos >> 3] ? 1u : 0u & Shift(localPos & 7)) == 1u)
+                {
+                    value |= mask;
+                }
+            }
+
+            // Now write back
+            Position = localPos;
+            return value;
         }
-        
+
         /// <summary>
         /// Retuns int and advances the stream by 4 bytes.
         /// </summary>

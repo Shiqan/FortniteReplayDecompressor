@@ -76,5 +76,20 @@ namespace FortniteReplayDecompressor.Test
             Assert.Equal(expectedBytes, reader.ReadBytes(3));
             Assert.Equal(expectedBytes.Length * 8, reader.Position);
         }
+
+
+        [Fact]
+        public void ReadUInt32Test()
+        {
+            reader = new BitReader(new byte[] { 10, 58, 0,  0 });
+            Assert.Equal(14858u, reader.ReadUInt32());
+        }
+
+        [Fact]
+        public void ReadInt32Test()
+        {
+            reader = new BitReader(new byte[] { 10, 58, 0, 0 });
+            Assert.Equal(14858, reader.ReadInt32());
+        }
     }
 }

@@ -124,7 +124,7 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="maxValue"></param>
         /// <returns>uint</returns>
         /// <exception cref="OverflowException"></exception>
-        public virtual uint ReadUInt32(int maxValue)
+        public virtual uint ReadInt(int maxValue)
         {
             uint value = 0;
             var localPos = Position;
@@ -158,6 +158,15 @@ namespace FortniteReplayReaderDecompressor
         }
         
         /// <summary>
+        /// Retuns ushort and advances the stream by 2 bytes.
+        /// </summary>
+        /// <returns>ushort</returns>
+        public virtual ushort ReadUInt16()
+        {
+            return BitConverter.ToUInt16(ReadBytes(2));
+        }
+        
+        /// <summary>
         /// Retuns uint and advances the stream by 4 bytes.
         /// </summary>
         /// <returns>uint</returns>
@@ -173,7 +182,16 @@ namespace FortniteReplayReaderDecompressor
         /// <returns>uint</returns>
         public virtual uint ReadIntPacked()
         {
-            return ReadUInt32();
+            throw new NotImplementedException();
+        }
+        
+        /// <summary>
+        /// Do I need this?
+        /// </summary>
+        /// <returns>uint</returns>
+        public virtual string ReadFString()
+        {
+            throw new NotImplementedException();
         }
     } 
 

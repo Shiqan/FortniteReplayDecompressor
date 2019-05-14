@@ -403,6 +403,16 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
+        /// </summary>
+        /// <param name="bitReader"></param>
+        public virtual void InternalLoadObject(BitReader bitReader)
+        {
+            var netGuid = bitReader.ReadUInt32();
+            // exportFlags ?
+        }
+
+        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1203
         /// </summary>
         public virtual void ReceiveNetGUIDBunch(BitReader bitReader)
@@ -424,6 +434,7 @@ namespace FortniteReplayReaderDecompressor
             {
                 //InternalLoadObject(InBunch, Obj, 0);
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
+                InternalLoadObject(bitReader);
 
                 numGUIDsRead++;
             }
@@ -442,125 +453,126 @@ namespace FortniteReplayReaderDecompressor
             var bitReader = new BitReader(packet.Data);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
-            // ReadPacketInfo(bitrReader);
-            // while( !bitReader.AtEnd() )
-
-            // For demo backwards compatibility, old replays still have this bit
-            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_ACKS_INCLUDED_IN_HEADER)
+            ReadPacketInfo(bitReader);
+            while (!bitReader.AtEnd())
             {
-                var isAckDummy = bitReader.ReadBit();
-            }
-
-            var startPos = bitReader.Position;
-            var bControl = bitReader.ReadBit();
-            var bOpen = bControl ? bitReader.ReadBit() : false;
-            var bClose = bControl ? bitReader.ReadBit() : false;
-
-            // FInBunch
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataBunch.cpp#L18
-
-            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
-            {
-                var bDormant = bClose ? bitReader.ReadBit() : false;
-                //CloseReason = Bunch.bDormant ? EChannelCloseReason::Dormancy : EChannelCloseReason::Destroyed;
-            }
-            else
-            {
-                var closeReason = bClose ? bitReader.ReadUInt32() : 0;
-                //Bunch.CloseReason = Bunch.bClose ? (EChannelCloseReason)Reader.ReadInt((uint32)EChannelCloseReason::MAX) : EChannelCloseReason::Destroyed;
-                //Bunch.bDormant = (Bunch.CloseReason == EChannelCloseReason::Dormancy);
-            }
-
-            var bIsReplicationPaused = bitReader.ReadBit();
-            var bReliable = bitReader.ReadBit();
-
-            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
-            {
-                var OLD_MAX_ACTOR_CHANNELS = 10240;
-                var chIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
-            }
-            else
-            {
-                var chIndex = bitReader.ReadIntPacked();
-            }
-
-            var bHasPackageMapExports = bitReader.ReadBit();
-            var bHasMustBeMappedGUIDs = bitReader.ReadBit();
-            var bPartial = bitReader.ReadBit();
-
-            if (bReliable)
-            {
-                // We can derive the sequence for 100% reliable connections
-                // var ChSequence = InReliable[Bunch.ChIndex] + 1;
-            }
-            else if (bPartial)
-            {
-                // If this is an unreliable partial bunch, we simply use packet sequence since we already have it
-                // var ChSequence = InPacketId;
-            }
-            else
-            {
-                var ChSequence = 0;
-            }
-
-            var bPartialInitial = bPartial ? bitReader.ReadBit() : false;
-            var bPartialFinal = bPartial ? bitReader.ReadBit() : false;
-
-            var chType = ChannelType.CHTYPE_None;
-            var chName = NAME_Type.None;
-            if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-            {
-                chType = (bReliable || bOpen) ? (ChannelType)bitReader.ReadInt((int)ChannelType.CHTYPE_MAX) : ChannelType.CHTYPE_None;
-            }
-            else
-            {
-                if (bReliable || bOpen)
+                // For demo backwards compatibility, old replays still have this bit
+                if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_ACKS_INCLUDED_IN_HEADER)
                 {
-                    //chName = UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
-                    Enum.TryParse(StaticParseName(bitReader), out chName);   
+                    var isAckDummy = bitReader.ReadBit();
+                }
 
-                    if (chName == NAME_Type.Control)
-                    {
-                        chType = ChannelType.CHTYPE_Control;
-                    }
-                    else if (chName == NAME_Type.Voice)
-                    {
-                        chType = ChannelType.CHTYPE_Voice;
-                    }
-                    else if (chName == NAME_Type.Actor)
-                    {
-                        chType = ChannelType.CHTYPE_Actor;
-                    }
+                var startPos = bitReader.Position;
+                var bControl = bitReader.ReadBit();
+                var bOpen = bControl ? bitReader.ReadBit() : false;
+                var bClose = bControl ? bitReader.ReadBit() : false;
+
+                // FInBunch
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataBunch.cpp#L18
+
+                if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
+                {
+                    var bDormant = bClose ? bitReader.ReadBit() : false;
+                    //CloseReason = Bunch.bDormant ? EChannelCloseReason::Dormancy : EChannelCloseReason::Destroyed;
                 }
                 else
                 {
-                    chType = ChannelType.CHTYPE_None;
-                    chName = NAME_Type.None;
+                    var closeReason = bClose ? bitReader.ReadUInt32() : 0;
+                    //Bunch.CloseReason = Bunch.bClose ? (EChannelCloseReason)Reader.ReadInt((uint32)EChannelCloseReason::MAX) : EChannelCloseReason::Destroyed;
+                    //Bunch.bDormant = (Bunch.CloseReason == EChannelCloseReason::Dormancy);
                 }
-            }
 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
-            var maxPacket = 1024 * 2;
-            var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
-            var headerPos = bitReader.Position;
-            // Bunch.SetData( Reader, BunchDataBits );
-            if (bHasPackageMapExports)
-            {
-                ReceiveNetGUIDBunch(bitReader);
-            }
+                var bIsReplicationPaused = bitReader.ReadBit();
+                var bReliable = bitReader.ReadBit();
 
-            // var bNewlyOpenedActorChannel = Bunch.bOpen && (Bunch.ChName == NAME_Actor) && (!Bunch.bPartial || Bunch.bPartialInitial);
-            if (bHasMustBeMappedGUIDs)
-            {
-                var numMustBeMappedGUIDs = bitReader.ReadUInt16();
-                for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
-                    bitReader.ReadUInt32();
+                    var OLD_MAX_ACTOR_CHANNELS = 10240;
+                    var chIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
                 }
+                else
+                {
+                    var chIndex = bitReader.ReadIntPacked();
+                }
+
+                var bHasPackageMapExports = bitReader.ReadBit();
+                var bHasMustBeMappedGUIDs = bitReader.ReadBit();
+                var bPartial = bitReader.ReadBit();
+
+                if (bReliable)
+                {
+                    // We can derive the sequence for 100% reliable connections
+                    // var ChSequence = InReliable[Bunch.ChIndex] + 1;
+                }
+                else if (bPartial)
+                {
+                    // If this is an unreliable partial bunch, we simply use packet sequence since we already have it
+                    // var ChSequence = InPacketId;
+                }
+                else
+                {
+                    var ChSequence = 0;
+                }
+
+                var bPartialInitial = bPartial ? bitReader.ReadBit() : false;
+                var bPartialFinal = bPartial ? bitReader.ReadBit() : false;
+
+                var chType = ChannelType.CHTYPE_None;
+                var chName = NAME_Type.None;
+                if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    chType = (bReliable || bOpen) ? (ChannelType)bitReader.ReadInt((int)ChannelType.CHTYPE_MAX) : ChannelType.CHTYPE_None;
+                }
+                else
+                {
+                    if (bReliable || bOpen)
+                    {
+                        //chName = UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
+                        Enum.TryParse(StaticParseName(bitReader), out chName);
+
+                        if (chName == NAME_Type.Control)
+                        {
+                            chType = ChannelType.CHTYPE_Control;
+                        }
+                        else if (chName == NAME_Type.Voice)
+                        {
+                            chType = ChannelType.CHTYPE_Voice;
+                        }
+                        else if (chName == NAME_Type.Actor)
+                        {
+                            chType = ChannelType.CHTYPE_Actor;
+                        }
+                    }
+                    else
+                    {
+                        chType = ChannelType.CHTYPE_None;
+                        chName = NAME_Type.None;
+                    }
+                }
+
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
+                var maxPacket = 1024 * 2;
+                var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
+                var headerPos = bitReader.Position;
+                // Bunch.SetData( Reader, BunchDataBits );
+                if (bHasPackageMapExports)
+                {
+                    ReceiveNetGUIDBunch(bitReader);
+                }
+
+                // var bNewlyOpenedActorChannel = Bunch.bOpen && (Bunch.ChName == NAME_Actor) && (!Bunch.bPartial || Bunch.bPartialInitial);
+                if (bHasMustBeMappedGUIDs)
+                {
+                    var numMustBeMappedGUIDs = bitReader.ReadUInt16();
+                    for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                    {
+                        bitReader.ReadUInt32();
+                    }
+                }
+
+                //FNetworkGUID ActorGUID;
+                bitReader.ReadUInt32();
             }
-
-            //FNetworkGUID ActorGUID;
-
             // termination bit?
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170
         }
@@ -662,8 +674,8 @@ namespace FortniteReplayReaderDecompressor
                         {
                             File.WriteAllBytes($"packets/packet-{index}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
                             index++;
+                            ProcessPacket(packet);
                         }
-                        //ProcessPacket(packet);
                     }
                 }
             }

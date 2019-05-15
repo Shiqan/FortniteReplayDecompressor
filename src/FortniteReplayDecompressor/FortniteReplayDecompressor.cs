@@ -395,6 +395,14 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Net/NetPacketNotify.cpp#L143
+        /// </summary>
+        public virtual void ReadPacketHeader(BitReader reader)
+        {
+            var packedHeader = reader.ReadUInt32();
+        }
+
+        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1409
         /// </summary>
         public virtual void ReceiveNetFieldExportsCompat(BitReader bitReader)
@@ -450,9 +458,13 @@ namespace FortniteReplayReaderDecompressor
             // serializebits...
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
 
+
+            //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
+
             var bitReader = new BitReader(packet.Data);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
+            ReadPacketHeader(bitReader);
             ReadPacketInfo(bitReader);
             while (!bitReader.AtEnd())
             {
@@ -571,7 +583,7 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 //FNetworkGUID ActorGUID;
-                bitReader.ReadUInt32();
+                var actorGuid = bitReader.ReadUInt32();
             }
             // termination bit?
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170

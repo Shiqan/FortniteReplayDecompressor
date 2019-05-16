@@ -16,4 +16,29 @@
     <ProjectReference Include="..\FortniteReplayDecompressor\FortniteReplayDecompressor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Packets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="FortniteReplayReader">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.dll</HintPath>
+    </Reference>
+    <Reference Include="FortniteReplayReader.Core">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Packets\packet0.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Packets\packet1.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Packets\packet2.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -2,10 +2,7 @@
 using FortniteReplayReader.Core.Models.Enums;
 using FortniteReplayReaderDecompressor;
 using FortniteReplayReaderDecompressor.Core.Models;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Xunit;
 
 namespace FortniteReplayDecompressor.Test
@@ -36,7 +33,7 @@ namespace FortniteReplayDecompressor.Test
                             Data = ms.ToArray()
                         };
                         reader.ProcessPacket(playbackPacket);
-                    }                   
+                    }
                 }
             }
         }

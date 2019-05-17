@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Text;
 
 namespace FortniteReplayReaderDecompressor
 {
@@ -8,6 +9,7 @@ namespace FortniteReplayReaderDecompressor
     /// Reads primitive data types as binary values in a <see cref="System.Collections.BitArray"/>
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp
     /// </summary>
+    /// TODO add interface and convert BitArray to 1 and 0's...
     public class BitReader
     {
         private readonly BitArray Bits;
@@ -25,6 +27,22 @@ namespace FortniteReplayReaderDecompressor
         public BitReader(byte[] input)
         {
             Bits = new BitArray(input);
+        }
+
+        public int this[int index]
+        {
+            get
+            {
+                return Bits[index] ? 1 : 0;
+            }
+        }
+
+        public int this[uint index]
+        {
+            get
+            {
+                return Bits[(int)index] ? 1 : 0;
+            }
         }
 
         /// <summary>
@@ -137,7 +155,7 @@ namespace FortniteReplayReaderDecompressor
                     throw new OverflowException();
                 }
 
-                if ((Bits[localPos >> 3] ? 1u : 0u & Shift(localPos & 7)) == 1u)
+                if ((this[localPos >> 3] & Shift(localPos & 7)) == 1u)
                 {
                     value |= mask;
                 }
@@ -156,7 +174,7 @@ namespace FortniteReplayReaderDecompressor
         {
             return BitConverter.ToInt32(ReadBytes(4));
         }
-        
+
         /// <summary>
         /// Retuns ushort and advances the stream by 2 bytes.
         /// </summary>
@@ -165,7 +183,7 @@ namespace FortniteReplayReaderDecompressor
         {
             return BitConverter.ToUInt16(ReadBytes(2));
         }
-        
+
         /// <summary>
         /// Retuns uint and advances the stream by 4 bytes.
         /// </summary>
@@ -182,17 +200,66 @@ namespace FortniteReplayReaderDecompressor
         /// <returns>uint</returns>
         public virtual uint ReadIntPacked()
         {
-            throw new NotImplementedException();
+            byte src = (byte)(this[Position] + (Position >> 3));
+
+            var test = new BitReader(new byte[] { src });
+
+            var bitCountUsedInByte = Position & 7;
+            var bitCountLeftInByte = 8 - bitCountUsedInByte;
+            var srcMaskByte0 = (byte)((1u << bitCountLeftInByte) - 1u);
+            var srcMaskByte1 = (byte)((1u << bitCountUsedInByte) - 1u);
+
+            var value = 0u;
+            var nextSrcIndex = bitCountUsedInByte != 0 ? 1u : 0u;
+            for (uint i = 0, shiftCount = 0; i < 5; i++, shiftCount += 7)
+            {
+                Position += 8;
+
+                var @byte = ((test[0] >> bitCountUsedInByte) & srcMaskByte0) | ((test[nextSrcIndex] & srcMaskByte1) << (bitCountUsedInByte & 7));
+                bool nextByteIndicator = (@byte & 1) > 0;
+                var byteAsWord = @byte >> 1;
+                value = (uint)(byteAsWord << (int)shiftCount) | value;
+                src++;
+                if (!nextByteIndicator)
+                {
+                    break;
+                }
+
+            }
+            return value;
         }
-        
+
         /// <summary>
         /// Do I need this?
         /// </summary>
         /// <returns>uint</returns>
         public virtual string ReadFString()
         {
-            throw new NotImplementedException();
+            var length = ReadInt32();
+
+            if (length == 0)
+            {
+                return "";
+            }
+
+            var isUnicode = length < 0;
+            byte[] data;
+            string value;
+
+            if (isUnicode)
+            {
+                length = -2 * length;
+                data = ReadBytes(length);
+                value = Encoding.Unicode.GetString(data);
+            }
+            else
+            {
+                data = ReadBytes(length);
+                value = Encoding.Default.GetString(data);
+            }
+
+            return value.Trim(new[] { ' ', '\0' });
         }
-    } 
+    }
 
 }

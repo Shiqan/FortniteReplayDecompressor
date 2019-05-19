@@ -12,6 +12,7 @@ namespace FortniteReplayReaderDecompressor
     public class FortniteBinaryDecompressor : FortniteBinaryReader
     {
         private int index = 0;
+        private int externalDataIndex = 0;
 
         public FortniteBinaryDecompressor(Stream input) : base(input)
         {
@@ -181,8 +182,84 @@ namespace FortniteReplayReaderDecompressor
             return group;
         }
 
+        public virtual void ReadDemoFrameIntoPlaybackPackets()
+        {
+            Console.WriteLine("ReadDemoFrameIntoPlaybackPackets...");
+            if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+            {
+                var currentLevelIndex = ReadInt32();
+            }
+            var timeSeconds = ReadSingle();
+            Console.WriteLine($"Time: {timeSeconds}...");
+
+            if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
+            {
+                ReadExportData();
+            }
+
+            if (Replay.Header.HasLevelStreamingFixes())
+            {
+                var numStreamingLevels = ReadIntPacked();
+                for (var i = 0; i < numStreamingLevels; i++)
+                {
+                    var levelName = ReadFString();
+                }
+            }
+            else
+            {
+                var numStreamingLevels = ReadIntPacked();
+                for (var i = 0; i < numStreamingLevels; i++)
+                {
+                    var packageName = ReadFString();
+                    var packageNameToLoad = ReadFString();
+                    // FTransform
+                    //var levelTransform = reader.ReadFString();
+                    // filter duplicates
+                }
+            }
+
+            if (Replay.Header.HasLevelStreamingFixes())
+            {
+                var externalOffset = ReadUInt64();
+            }
+
+            // if (!bForLevelFastForward)
+            ReadExternalData();
+            // else skip externalOffset
+
+            var playbackPackets = new List<PlaybackPacket>();
+            var @continue = true;
+            while (@continue)
+            {
+                if (Replay.Header.HasLevelStreamingFixes())
+                {
+                    var seenLevelIndex = ReadIntPacked();
+                }
+
+                var packet = ReadPacket();
+                playbackPackets.Add(packet);
+
+                @continue = packet.State switch
+                {
+                    PacketState.End => false,
+                    PacketState.Error => false,
+                    PacketState.Success => true,
+                    _ => false
+                };
+            }
+        }
+
+        public void Debug(string name)
+        {
+            var remainingBytes = (int)(BaseStream.Length - BaseStream.Position);
+            var output = ReadBytes(remainingBytes);
+            File.WriteAllBytes($"{name}.dump", output);
+            BaseStream.Position -= remainingBytes;
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1667
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4503
         /// </summary>
         public override void ParseCheckPoint()
         {
@@ -199,9 +276,21 @@ namespace FortniteReplayReaderDecompressor
             {
                 // SerializeDeletedStartupActors
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
-                var packetOffset = reader.ReadInt64();
-                var levelForCheckpoint = reader.ReadInt32();
-                var deletedNetStartupActors = reader.ReadArray(reader.ReadFString);
+
+                if (Replay.Header.HasLevelStreamingFixes())
+                {
+                    var packetOffset = reader.ReadInt64();
+                }
+
+                if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+                {
+                    var levelForCheckpoint = reader.ReadInt32();
+                }
+
+                if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
+                {
+                    var deletedNetStartupActors = reader.ReadArray(reader.ReadFString);
+                }
 
                 // SerializeGuidCache
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1591
@@ -223,80 +312,9 @@ namespace FortniteReplayReaderDecompressor
                     reader.ReadNetFieldExportGroupMap();
                 }
 
-                var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                var output = reader.ReadBytes(remainingBytes);
-                File.WriteAllBytes($"{id}.dump", output);
-                reader.BaseStream.Position -= remainingBytes;
-
                 // SerializeDemoFrameFromQueuedDemoPackets
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-                // WriteDemoFrameFromQueuedDemoPackets
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3374
-
-                var currentLevelIndex = reader.ReadUInt32();
-                var frameTime = reader.ReadSingle();
-
-                reader.ReadExportData();
-
-                if (Replay.Header.HasLevelStreamingFixes())
-                {
-                    var numLevelsAddedThisFrame = reader.ReadIntPacked();
-                    for (var i = 0; i < numLevelsAddedThisFrame; i++)
-                    {
-                        var levelName = reader.ReadFString();
-                    }
-                }
-                // else todo?
-
-                // SaveExternalData
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2071
-
-                // FReplayExternalOutData
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L916
-
-                // FRepChangedPropertyTracker
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L83
-
-                remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                try
-                {
-                    reader.ReadExternalData();
-
-                    var playbackPackets = new List<PlaybackPacket>();
-                    var @continue = true;
-                    while (@continue)
-                    {
-                        if (Replay.Header.HasLevelStreamingFixes())
-                        {
-                            var seenLevelIndex = reader.ReadIntPacked();
-                        }
-
-                        var packet = reader.ReadPacket();
-                        playbackPackets.Add(packet);
-
-                        @continue = packet.State switch
-                        {
-                            PacketState.End => false,
-                            PacketState.Error => false,
-                            PacketState.Success => true,
-                            _ => false
-                        };
-                    }
-
-                    if (Replay.Header.HasLevelStreamingFixes())
-                    {
-                        reader.ReadIntPacked();
-                    }
-                    // Write a count of 0 to signal the end of the frame
-                    reader.ReadInt32();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-                reader.BaseStream.Position -= remainingBytes;
-                output = reader.ReadBytes(remainingBytes);
-                File.WriteAllBytes($"{id}-end.dump", output);
+                reader.ReadDemoFrameIntoPlaybackPackets();
             }
         }
 
@@ -346,7 +364,10 @@ namespace FortniteReplayReaderDecompressor
 
                 var netGuid = ReadIntPacked();
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                var unknown = ReadBytes(externalDataNumBytes);
+                var externalData = ReadBytes(externalDataNumBytes);
+
+                File.WriteAllBytes($"external/externaldata-{netGuid}-{externalDataIndex}.dump", externalData);
+                externalDataIndex++;
             }
         }
 
@@ -478,7 +499,7 @@ namespace FortniteReplayReaderDecompressor
         public virtual void InternalLoadObject(BitReader bitReader)
         {
             var netGuid = bitReader.ReadUInt32();
-            // exportFlags ?
+            // exportFlags ? 
         }
 
         /// <summary>
@@ -519,17 +540,18 @@ namespace FortniteReplayReaderDecompressor
             // serializebits...
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
 
-            var count = packet.Data.Length;
-            var lastByte = packet.Data[count - 1];
-            if (lastByte != 0)
-            {
-                var bitSize = (count * 8) - 1;
-                while (!((lastByte & 0x80) == 1))
-                {
-                    lastByte *= 2;
-                    bitSize--;
-                }
-            }
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1080
+            //var count = packet.Data.Length;
+            //var lastByte = packet.Data[count - 1];
+            //if (lastByte != 0)
+            //{
+            //    var bitSize = (count * 8) - 1;
+            //    while (!((lastByte & 0x80) == 1))
+            //    {
+            //        lastByte *= 2;
+            //        bitSize--;
+            //    }
+            //}
 
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
 
@@ -654,6 +676,7 @@ namespace FortniteReplayReaderDecompressor
                         for (var i = 0; i < numMustBeMappedGUIDs; i++)
                         {
                             bitReader.ReadUInt32();
+                            //bitReader.ReadIntPacked();
                         }
                     }
                 }
@@ -694,79 +717,19 @@ namespace FortniteReplayReaderDecompressor
                 while (reader.BaseStream.Length > reader.BaseStream.Position)
                 {
                     var startPos = reader.BaseStream.Position;
-                    Console.WriteLine("ReadDemoFrameIntoPlaybackPackets...");
-                    if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
-                    {
-                        var currentLevelIndex = reader.ReadInt32();
-                    }
-                    var timeSeconds = reader.ReadSingle();
-                    Console.WriteLine($"Time: {timeSeconds}...");
-
-                    reader.ReadExportData();
-
-                    if (Replay.Header.HasLevelStreamingFixes())
-                    {
-                        var numStreamingLevels = reader.ReadIntPacked();
-                        for (var i = 0; i < numStreamingLevels; i++)
-                        {
-                            var levelName = reader.ReadFString();
-                        }
-                    }
-                    else
-                    {
-                        var numStreamingLevels = reader.ReadIntPacked();
-                        for (var i = 0; i < numStreamingLevels; i++)
-                        {
-                            var packageName = reader.ReadFString();
-                            var packageNameToLoad = reader.ReadFString();
-                            // FTransform
-                            //var levelTransform = reader.ReadFString();
-                            // filter duplicates
-                        }
-                    }
-
-                    if (Replay.Header.HasLevelStreamingFixes())
-                    {
-                        var externalOffset = reader.ReadUInt64();
-                    }
-
-                    // if (!bForLevelFastForward)
-                    reader.ReadExternalData();
-                    // else skip externalOffset
-
-                    var playbackPackets = new List<PlaybackPacket>();
-                    var @continue = true;
-                    while (@continue)
-                    {
-                        if (Replay.Header.HasLevelStreamingFixes())
-                        {
-                            var seenLevelIndex = reader.ReadIntPacked();
-                        }
-
-                        var packet = reader.ReadPacket();
-                        playbackPackets.Add(packet);
-
-                        @continue = packet.State switch
-                        {
-                            PacketState.End => false,
-                            PacketState.Error => false,
-                            PacketState.Success => true,
-                            _ => false
-                        };
-                    }
+                    reader.ReadDemoFrameIntoPlaybackPackets();
 
                     // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
-                    foreach (var packet in playbackPackets)
-                    {
-                        if (packet.State == PacketState.Success)
-                        {
-                            File.WriteAllBytes($"packets/packet-{index}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
-                            index++;
-                            ProcessPacket(packet);
-                        }
-                    }
+                    //foreach (var packet in playbackPackets)
+                    //{
+                    //    if (packet.State == PacketState.Success)
+                    //    {
+                    //        File.WriteAllBytes($"packets/packet-{index}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
+                    //        index++;
+                    //        // ProcessPacket(packet);
+                    //    }
+                    //}
                 }
-
             }
         }
 

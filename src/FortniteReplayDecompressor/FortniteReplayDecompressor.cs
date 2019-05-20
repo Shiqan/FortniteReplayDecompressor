@@ -182,7 +182,7 @@ namespace FortniteReplayReaderDecompressor
             return group;
         }
 
-        public virtual void ReadDemoFrameIntoPlaybackPackets()
+        public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets()
         {
             Console.WriteLine("ReadDemoFrameIntoPlaybackPackets...");
             if (Replay.Header.Version >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
@@ -247,6 +247,8 @@ namespace FortniteReplayReaderDecompressor
                     _ => false
                 };
             }
+
+            return playbackPackets;
         }
 
         public void Debug(string name)
@@ -528,6 +530,24 @@ namespace FortniteReplayReaderDecompressor
 
                 numGUIDsRead++;
             }
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
+        /// </summary>
+        /// <param name="bitReader"></param>
+        public virtual void ReceivedRawBunch(BitReader bitReader)
+        {
+
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L1346
+        /// </summary>
+        /// <param name="bitReader"></param>
+        public virtual void ReceivedBunch(BitReader bitReader)
+        {
+            var messageType = bitReader.ReadByte();
 
         }
 
@@ -541,25 +561,26 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1080
-            //var count = packet.Data.Length;
-            //var lastByte = packet.Data[count - 1];
-            //if (lastByte != 0)
-            //{
-            //    var bitSize = (count * 8) - 1;
-            //    while (!((lastByte & 0x80) == 1))
-            //    {
-            //        lastByte *= 2;
-            //        bitSize--;
-            //    }
-            //}
+            var count = packet.Data.Length;
+            var bitSize = count;
+            var lastByte = packet.Data[count - 1];
+            if (lastByte != 0)
+            {
+                bitSize = (count * 8) - 1;
+                while (!((lastByte & 0x80) > 0))
+                {
+                    lastByte *= 2;
+                    bitSize--;
+                }
+            }
 
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
 
-            var bitReader = new BitReader(packet.Data);
+            var bitReader = new BitReader(packet.Data, bitSize);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
-            ReadPacketHeader(bitReader);
-            ReadPacketInfo(bitReader);
+            //ReadPacketHeader(bitReader);
+            //ReadPacketInfo(bitReader);
             while (!bitReader.AtEnd())
             {
                 // For demo backwards compatibility, old replays still have this bit
@@ -580,13 +601,12 @@ namespace FortniteReplayReaderDecompressor
                 if (Replay.Header.EngineNetworkVersionHistory < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
                     var bDormant = bClose ? bitReader.ReadBit() : false;
-                    //CloseReason = Bunch.bDormant ? EChannelCloseReason::Dormancy : EChannelCloseReason::Destroyed;
+                    var closeReason = bDormant ? ChannelCloseReason.Dormancy : ChannelCloseReason.Destroyed;
                 }
                 else
                 {
-                    var closeReason = bClose ? bitReader.ReadUInt32() : 0;
-                    //Bunch.CloseReason = Bunch.bClose ? (EChannelCloseReason)Reader.ReadInt((uint32)EChannelCloseReason::MAX) : EChannelCloseReason::Destroyed;
-                    //Bunch.bDormant = (Bunch.CloseReason == EChannelCloseReason::Dormancy);
+                    var closeReason = bClose ? (ChannelCloseReason) bitReader.ReadInt((int) ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
+                    var bDormant = closeReason == ChannelCloseReason.Dormancy;
                 }
 
                 var bIsReplicationPaused = bitReader.ReadBit();
@@ -679,10 +699,12 @@ namespace FortniteReplayReaderDecompressor
                             //bitReader.ReadIntPacked();
                         }
                     }
+
+                    //FNetworkGUID ActorGUID;
+                    var actorGuid = bitReader.ReadUInt32();
                 }
 
-                //FNetworkGUID ActorGUID;
-                var actorGuid = bitReader.ReadUInt32();
+                ReceivedBunch(bitReader);
             }
             // termination bit?
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170
@@ -717,18 +739,18 @@ namespace FortniteReplayReaderDecompressor
                 while (reader.BaseStream.Length > reader.BaseStream.Position)
                 {
                     var startPos = reader.BaseStream.Position;
-                    reader.ReadDemoFrameIntoPlaybackPackets();
+                    var playbackPackets = reader.ReadDemoFrameIntoPlaybackPackets();
 
                     // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
-                    //foreach (var packet in playbackPackets)
-                    //{
-                    //    if (packet.State == PacketState.Success)
-                    //    {
-                    //        File.WriteAllBytes($"packets/packet-{index}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
-                    //        index++;
-                    //        // ProcessPacket(packet);
-                    //    }
-                    //}
+                    foreach (var packet in playbackPackets)
+                    {
+                        if (packet.State == PacketState.Success)
+                        {
+                            File.WriteAllBytes($"packets/packet-{index}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
+                            index++;
+                            //ProcessPacket(packet);
+                        }
+                    }
                 }
             }
         }

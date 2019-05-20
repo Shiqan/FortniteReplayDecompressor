@@ -14,5 +14,5 @@
 
         CHTYPE_Voice = 4,  // VoIP data channel
         CHTYPE_MAX = 8,  // Maximum.
-    };
+    }
 }

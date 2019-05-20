@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace FortniteReplayReaderDecompressor
 {
     /// <summary>
     /// Reads primitive data types as binary values in a <see cref="System.Collections.BitArray"/>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp
+    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp
     /// </summary>
     /// TODO add interface and convert BitArray to 1 and 0's...
     public class BitReader
     {
+        public byte[] GShift = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+        public byte[] GMask = { 0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f };
         private readonly BitArray Bits;
 
         /// <summary>
@@ -26,8 +29,31 @@ namespace FortniteReplayReaderDecompressor
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
+            var num = input.Length;
+
             Bits = new BitArray(input);
+            if ((num & 7) > 0)
+            {
+                var bit = Bits[num >> 3] ? 1 : 0;
+                var newbit = bit &= GMask[num & 7];
+                Bits[num >> 3] = newbit > 0 ? true : false;
+            }
         }
+
+        public BitReader(byte[] input, int count)
+        {
+            var bytes = (count + 7) >> 3;
+            var num = count;
+
+            Bits = new BitArray(input);
+            if ((num & 7) > 0)
+            {
+                var bit = Bits[num >> 3] ? 1 : 0;
+                var newbit = bit &= GMask[num & 7];
+                Bits[num >> 3] = newbit > 0 ? true : false;
+            }
+        }
+
 
         public int this[int index]
         {

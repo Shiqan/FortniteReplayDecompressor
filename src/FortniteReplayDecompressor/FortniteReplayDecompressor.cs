@@ -461,7 +461,7 @@ namespace FortniteReplayReaderDecompressor
             var historyWordCountBits = 4;
             var historyWordCountMask = (1 << historyWordCountBits) - 1;
 
-            return (uint) (packed & historyWordCountMask);
+            return (uint)(packed & historyWordCountMask);
         }
 
         /// <summary>
@@ -473,6 +473,13 @@ namespace FortniteReplayReaderDecompressor
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/NetPacketNotify.h#L139
             // var historyWordCount = GetHistoryWordCount(packedHeader) + 1;
+
+            // sequencehistory.h
+            //NumWords = FPlatformMath::Min(NumWords, WordCount);
+            //for (SIZE_T CurrentWordIt = 0; CurrentWordIt < NumWords; ++CurrentWordIt)
+            //{
+            //    Reader << Storage[CurrentWordIt];
+            //}
         }
 
         /// <summary>
@@ -516,7 +523,7 @@ namespace FortniteReplayReaderDecompressor
                 // We need to keep this around to ensure we don't break backwards compatability.
                 ReceiveNetFieldExportsCompat(bitReader);
                 return;
-            }  
+            }
 
             var numGUIDsInBunch = bitReader.ReadInt32();
             //if (NumGUIDsInBunch > MAX_GUID_COUNT)
@@ -576,6 +583,7 @@ namespace FortniteReplayReaderDecompressor
 
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
 
+
             var bitReader = new BitReader(packet.Data, bitSize);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
@@ -605,7 +613,7 @@ namespace FortniteReplayReaderDecompressor
                 }
                 else
                 {
-                    var closeReason = bClose ? (ChannelCloseReason) bitReader.ReadInt((int) ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
+                    var closeReason = bClose ? (ChannelCloseReason)bitReader.ReadInt((int)ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
                     var bDormant = closeReason == ChannelCloseReason.Dormancy;
                 }
 

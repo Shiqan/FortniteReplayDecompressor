@@ -226,31 +226,19 @@ namespace FortniteReplayReaderDecompressor
         /// <returns>uint</returns>
         public virtual uint ReadIntPacked()
         {
-            byte src = (byte)(this[Position] + (Position >> 3));
+            uint value = 0;
+            bool remaining = true;
 
-            var test = new BitReader(new byte[] { src });
-
-            var bitCountUsedInByte = Position & 7;
-            var bitCountLeftInByte = 8 - bitCountUsedInByte;
-            var srcMaskByte0 = (byte)((1u << bitCountLeftInByte) - 1u);
-            var srcMaskByte1 = (byte)((1u << bitCountUsedInByte) - 1u);
-
-            var value = 0u;
-            var nextSrcIndex = bitCountUsedInByte != 0 ? 1u : 0u;
-            for (uint i = 0, shiftCount = 0; i < 5; i++, shiftCount += 7)
+            while (remaining)
             {
-                Position += 8;
-
-                var @byte = ((test[0] >> bitCountUsedInByte) & srcMaskByte0) | ((test[nextSrcIndex] & srcMaskByte1) << (bitCountUsedInByte & 7));
-                bool nextByteIndicator = (@byte & 1) > 0;
-                var byteAsWord = @byte >> 1;
-                value = (uint)(byteAsWord << (int)shiftCount) | value;
-                src++;
-                if (!nextByteIndicator)
+                remaining = ReadBit(); // Check 1 bit to see if theres more after this
+                for (int i = 0; i < 7; i++)
                 {
-                    break;
+                    if (ReadBit())
+                    {
+                        value |= (byte)(1 << i); // Add to total value
+                    }
                 }
-
             }
             return value;
         }

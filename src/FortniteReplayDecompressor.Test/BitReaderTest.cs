@@ -91,5 +91,13 @@ namespace FortniteReplayDecompressor.Test
             reader = new BitReader(new byte[] { 10, 58, 0, 0 });
             Assert.Equal(14858, reader.ReadInt32());
         }
+
+        [Fact]
+        public void ReadPackedIntTest()
+        {
+            // This version is bit compatible with FArchive::SerializeIntPacked, see CustomBinaryReader
+            reader = new BitReader(new byte[] { 14 });
+            Assert.Equal(7u, reader.ReadIntPacked());
+        }
     }
 }

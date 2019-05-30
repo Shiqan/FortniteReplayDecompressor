@@ -29,30 +29,22 @@ namespace FortniteReplayReaderDecompressor
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
-            var num = input.Length;
-
             Bits = new BitArray(input);
-            if ((num & 7) > 0)
-            {
-                var bit = Bits[num >> 3] ? 1 : 0;
-                var newbit = bit &= GMask[num & 7];
-                Bits[num >> 3] = newbit > 0 ? true : false;
-            }
         }
 
-        public BitReader(byte[] input, int count)
-        {
-            var bytes = (count + 7) >> 3;
-            var num = count;
+        //public BitReader(byte[] input, int count)
+        //{
+        //    var bytes = (count + 7) >> 3;
+        //    var num = count;
 
-            Bits = new BitArray(input);
-            if ((num & 7) > 0)
-            {
-                var bit = Bits[num >> 3] ? 1 : 0;
-                var newbit = bit &= GMask[num & 7];
-                Bits[num >> 3] = newbit > 0 ? true : false;
-            }
-        }
+        //    Bits = new BitArray(input);
+        //    if ((num & 7) > 0)
+        //    {
+        //        var bit = Bits[num >> 3] ? 1 : 0;
+        //        var newbit = bit &= GMask[num & 7];
+        //        Bits[num >> 3] = newbit > 0 ? true : false;
+        //    }
+        //}
 
 
         public int this[int index]
@@ -171,24 +163,15 @@ namespace FortniteReplayReaderDecompressor
         public virtual uint ReadInt(int maxValue)
         {
             uint value = 0;
-            var localPos = Position;
-            var localNum = Bits.Length;
 
-            for (uint mask = 1; (value + mask) < maxValue; mask *= 2, localPos++)
+            for (uint mask = 1; (value + mask) < maxValue; mask *= 2)
             {
-                if (localPos >= localNum)
-                {
-                    throw new OverflowException();
-                }
-
-                if ((this[localPos >> 3] & Shift(localPos & 7)) == 1u)
+                if (ReadBit())
                 {
                     value |= mask;
                 }
             }
 
-            // Now write back
-            Position = localPos;
             return value;
         }
 

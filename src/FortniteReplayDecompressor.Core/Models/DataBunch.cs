@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReaderDecompressor.Core.Models.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,16 +8,16 @@ namespace FortniteReplayReaderDecompressor.Core.Models
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/DataBunch.h#L112
     /// </summary>
-    public class DataBuch
+    public class DataBunch
     {
         public int PacketId { get; set; }
         //FInBunch* Next;
         //UNetConnection* Connection;
         public int ChIndex { get; set; }
         // UE_DEPRECATED(4.22, "ChType deprecated in favor of ChName.")
-        public int ChType { get; set; }
+        public ChannelType ChType { get; set; }
         // FName
-        public string ChName { get; set; }
+        public ChannelName ChName { get; set; }
         public int ChSequence { get; set; }
         public bool bOpen { get; set; }
         public bool bClose { get; set; }

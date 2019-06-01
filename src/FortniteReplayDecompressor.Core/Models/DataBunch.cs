@@ -13,7 +13,7 @@ namespace FortniteReplayReaderDecompressor.Core.Models
         public int PacketId { get; set; }
         //FInBunch* Next;
         //UNetConnection* Connection;
-        public int ChIndex { get; set; }
+        public uint ChIndex { get; set; }
         // UE_DEPRECATED(4.22, "ChType deprecated in favor of ChName.")
         public ChannelType ChType { get; set; }
         // FName
@@ -31,5 +31,6 @@ namespace FortniteReplayReaderDecompressor.Core.Models
         public bool bHasPackageMapExports { get; set; }  // This bunch has networkGUID name/id pairs
         public bool bHasMustBeMappedGUIDs { get; set; }  // This bunch has guids that must be mapped before we can process this bunch
         public bool bIgnoreRPCs { get; set; }
+        public ChannelCloseReason CloseReason { get; set; }
     }
 }

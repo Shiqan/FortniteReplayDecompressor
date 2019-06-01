@@ -19,7 +19,7 @@ namespace FortniteReplayDecompressor.Test
                 {
                     Header = new Header()
                     {
-                        EngineNetworkVersionHistory = EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL
+                        EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL
                     }
                 };
 

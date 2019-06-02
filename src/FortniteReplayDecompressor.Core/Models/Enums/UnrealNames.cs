@@ -19,16 +19,16 @@
         TextProperty = 14,
         InterfaceProperty = 15,
         MulticastDelegateProperty = 16,
-        // Available = 17
+        //Available = 17
         LazyObjectProperty = 18,
-        SoftObjectProperty = 19,// SoftClassProperty shares the same tag
+        SoftObjectProperty = 19, // SoftClassProperty shares the same tag
         UInt64Property = 20,
         UInt32Property = 21,
         UInt16Property = 22,
         Int64Property = 23,
         Int16Property = 25,
         Int8Property = 26,
-        //Available = 27                
+        //Available = 27
         MapProperty = 28,
         SetProperty = 29,
 

@@ -398,18 +398,15 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1564
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
         /// </summary>
         public virtual void ReadNetExportGuids()
         {
-            var guids = new List<string>();
-
             var numGuids = ReadIntPacked();
             for (var i = 0; i < numGuids; i++)
             {
                 var size = ReadInt32();
-                var guid = ReadBytes(size);
-
+                //var guid = ReadBytes(size);
                 InternalLoadObject();
             }
         }
@@ -538,15 +535,15 @@ namespace FortniteReplayReaderDecompressor
             var flags = ReadByteAsEnum<ExportFlags>();
 
             // outerguid
-            if (flags >= ExportFlags.bHasPath)
+            if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
             {
                 InternalLoadObject();
-            }
 
-            var pathName = ReadFString();
-            if (flags >= ExportFlags.bHasNetworkChecksum)
-            {
-                var networkChecksum = ReadUInt32();
+                var pathName = ReadFString();
+                if (flags >= ExportFlags.bHasNetworkChecksum)
+                {
+                    var networkChecksum = ReadUInt32();
+                }
             }
         }
 
@@ -556,8 +553,30 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bitReader"></param>
         public virtual void InternalLoadObject(BitReader bitReader)
         {
-            var netGuid = bitReader.ReadUInt32();
-            // exportFlags ? 
+            // INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
+            var netGuid = new NetworkGUID()
+            {
+                Value = bitReader.ReadIntPacked()
+            };
+
+            if (!netGuid.IsValid())
+            {
+                return;
+            }
+
+            var flags = (ExportFlags)bitReader.ReadByte();
+
+            // outerguid
+            if (flags >= ExportFlags.bHasPath)
+            {
+                InternalLoadObject(bitReader);
+
+                var pathName = bitReader.ReadFString();
+                if (flags >= ExportFlags.bHasNetworkChecksum)
+                {
+                    var networkChecksum = bitReader.ReadUInt32();
+                }
+            }
         }
 
         /// <summary>
@@ -810,8 +829,7 @@ namespace FortniteReplayReaderDecompressor
                         for (var i = 0; i < numMustBeMappedGUIDs; i++)
                         {
                             // FNetworkGUID NetGUID
-                            bitReader.ReadUInt32();
-                            //bitReader.ReadIntPacked();
+                            bitReader.ReadIntPacked();
                         }
                     }
 
@@ -820,7 +838,7 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // Channel->ReceivedRawBunch(Bunch, bLocalSkipAck);
-                ReceivedRawBunch(bitReader, bunch);
+                // ReceivedRawBunch(bitReader, bunch);
             }
 
             // termination bit?
@@ -864,7 +882,7 @@ namespace FortniteReplayReaderDecompressor
                         {
                             File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
                             packetIndex++;
-                            ProcessPacket(packet);
+                            // ProcessPacket(packet);
                         }
                     }
                 }

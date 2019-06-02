@@ -7,7 +7,11 @@
     {
         None = 0,
         bHasPath = 1,
-        bNoLoad = 3,
-        bHasNetworkChecksum = 7
+        bNoLoad = 2,
+        bHasPathAndNoLoad = 3,
+        bHasNetworkChecksum = 4,
+        bHasPathAndNetWorkChecksum = 5,
+        bNoLoadAndNetworkChecksum = 6,
+        All = 7
     }
 }

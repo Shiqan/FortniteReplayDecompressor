@@ -29,23 +29,15 @@ namespace FortniteReplayReaderDecompressor
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
+            // not sure if this is needed...
+            var num = input.Length * 8 - 1; // not sure if it should be -1...
+            if ((num & 7) > 0)
+            {
+                input[num >> 3] &= GMask[num & 7];
+            }
+
             Bits = new BitArray(input);
         }
-
-        //public BitReader(byte[] input, int count)
-        //{
-        //    var bytes = (count + 7) >> 3;
-        //    var num = count;
-
-        //    Bits = new BitArray(input);
-        //    if ((num & 7) > 0)
-        //    {
-        //        var bit = Bits[num >> 3] ? 1 : 0;
-        //        var newbit = bit &= GMask[num & 7];
-        //        Bits[num >> 3] = newbit > 0 ? true : false;
-        //    }
-        //}
-
 
         public int this[int index]
         {
@@ -229,7 +221,7 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// Do I need this?
         /// </summary>
-        /// <returns>uint</returns>
+        /// <returns>string</returns>
         public virtual string ReadFString()
         {
             var length = ReadInt32();

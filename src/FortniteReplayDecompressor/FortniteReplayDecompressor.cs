@@ -6,6 +6,7 @@ using FortniteReplayReaderDecompressor.Core.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace FortniteReplayReaderDecompressor
 {
@@ -14,6 +15,8 @@ namespace FortniteReplayReaderDecompressor
         private int replayDataIndex = 0;
         private int packetIndex = 0;
         private int externalDataIndex = 0;
+
+        private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
         public FortniteBinaryDecompressor(Stream input) : base(input)
         {
@@ -370,15 +373,30 @@ namespace FortniteReplayReaderDecompressor
 
                 // Read net guid this payload belongs to
                 var netGuid = ReadIntPacked();
+
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
                 var externalData = ReadBytes(externalDataNumBytes);
+
+                // this is a bitreader, probably some compressed string property?
+                var bitReader = new BitReader(externalData);
+                var unknown = bitReader.ReadBytes(3); // always 19 FB 01
+                var unknownString = bitReader.ReadFString();
+
+                if (!bitReader.AtEnd())
+                {
+                    throw new InvalidDataException();
+                }
+
+                if (!NetGuidCache.ContainsKey(netGuid))
+                {
+                    NetGuidCache.Add(netGuid, unknownString);
+                }
 
                 File.WriteAllBytes($"external/externaldata-{netGuid}-{externalDataIndex}.dump", externalData);
                 externalDataIndex++;
             }
 
             // FRepChangedPropertyTracker
-
 
             // Using an indirect array here since FReplayExternalData stores an FBitReader, and it's not safe to store an FArchive directly in a TArray.
             // typedef TIndirectArray<FReplayExternalData> FReplayExternalDataArray;
@@ -540,6 +558,10 @@ namespace FortniteReplayReaderDecompressor
                 InternalLoadObject();
 
                 var pathName = ReadFString();
+                if (!NetGuidCache.ContainsKey(netGuid.Value))
+                {
+                    NetGuidCache.Add(netGuid.Value, pathName);
+                }
                 if (flags >= ExportFlags.bHasNetworkChecksum)
                 {
                     var networkChecksum = ReadUInt32();
@@ -547,7 +569,7 @@ namespace FortniteReplayReaderDecompressor
             }
         }
 
-        /// <summary>
+        /// <summary> 
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
         /// </summary>
         /// <param name="bitReader"></param>
@@ -572,6 +594,10 @@ namespace FortniteReplayReaderDecompressor
                 InternalLoadObject(bitReader);
 
                 var pathName = bitReader.ReadFString();
+                if (!NetGuidCache.ContainsKey(netGuid.Value))
+                {
+                    NetGuidCache.Add(netGuid.Value, pathName);
+                }
                 if (flags >= ExportFlags.bHasNetworkChecksum)
                 {
                     var networkChecksum = bitReader.ReadUInt32();
@@ -599,10 +625,7 @@ namespace FortniteReplayReaderDecompressor
             var numGUIDsRead = 0;
             while (numGUIDsRead < numGUIDsInBunch)
             {
-                //InternalLoadObject(InBunch, Obj, 0);
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
                 InternalLoadObject(bitReader);
-
                 numGUIDsRead++;
             }
         }
@@ -614,9 +637,19 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ReceivedRawBunch(BitReader bitReader, DataBunch bunch)
         {
-            if (bunch.bReliable)
+            if (bunch.bHasPackageMapExports)
             {
                 ReceiveNetGUIDBunch(bitReader);
+            }
+
+            if (bunch.bReliable)
+            {
+                ReceivedNextBunch(bitReader, bunch);
+            }
+            else
+            {
+                // "burn" bunches until ?
+                // ReceivedNextBunch(bitReader, bunch);
             }
         }
 
@@ -647,18 +680,62 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ReceivedSequencedBunch(BitReader bitReader, DataBunch bunch)
         {
-            // We have fully received the bunch, so process it.
-            ReceivedBunch(bitReader, bunch);
+            ReceivedBunch(bitReader, bunch); // based on Closing flag...
+
+            if (bunch.bClose)
+            {
+                // We have fully received the bunch, so process it.
+                // cleanup
+            }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L1346
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         public virtual void ReceivedBunch(BitReader bitReader, DataBunch bunch)
         {
-            var messageType = bitReader.ReadByte();
+            // control channel
+            // var messageType = bitReader.ReadByte();
+
+
+            // actor channel
+            if (bunch.bHasMustBeMappedGUIDs)
+            {
+                var numMustBeMappedGUIDs = bitReader.ReadUInt16();
+                for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                {
+                    var guid = bitReader.ReadIntPacked();
+                }
+            }
+
+            if (bunch.bOpen)
+            {
+                var actorGuid = bitReader.ReadIntPacked();
+            }
+
+            ProcessBunch(bitReader, bunch);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2411
+        /// </summary>
+        /// <param name="bitReader"></param>
+        /// <param name="bunch"></param>
+        public virtual void ProcessBunch(BitReader bitReader, DataBunch bunch)
+        {
+            // Initialize client if first time through.
+            // Read chunks of actor content
+            // Check to see if the actor was destroyed, not sure if this is interesting...
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
+        /// </summary>
+        public virtual void ReadContentBlockPayload(BitReader bitReader, DataBunch bunch)
+        {
 
         }
 
@@ -693,10 +770,9 @@ namespace FortniteReplayReaderDecompressor
             // InternalAck is always true for demo?
             //ReadPacketHeader(bitReader);
             //ReadPacketInfo(bitReader);
-
+            return;
             while (!bitReader.AtEnd())
             {
-
                 // For demo backwards compatibility, old replays still have this bit
                 if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_ACKS_INCLUDED_IN_HEADER)
                 {
@@ -882,7 +958,7 @@ namespace FortniteReplayReaderDecompressor
                         {
                             File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
                             packetIndex++;
-                            // ProcessPacket(packet);
+                            ProcessPacket(packet);
                         }
                     }
                 }

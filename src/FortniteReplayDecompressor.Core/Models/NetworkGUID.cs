@@ -12,6 +12,11 @@
             return Value > 0;
         }
 
+        public bool IsDynamic()
+        {
+            return Value > 0 && (Value & 1) != 1;
+        }
+
         public bool IsDefault()
         {
             return Value == 1;

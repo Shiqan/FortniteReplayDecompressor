@@ -727,8 +727,83 @@ namespace FortniteReplayReaderDecompressor
         public virtual void ProcessBunch(BitReader bitReader, DataBunch bunch)
         {
             // Initialize client if first time through.
-            // Read chunks of actor content
-            // Check to see if the actor was destroyed, not sure if this is interesting...
+
+            // SerializeNewActor
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
+            InternalLoadObject(bitReader);
+            var netGuid = new NetworkGUID();
+            if (netGuid.IsDynamic())
+            {
+                var ArchetypeNetGUID = new NetworkGUID();
+                InternalLoadObject(bitReader);
+
+                // Only in Saving ??
+                //if (Replay.Header.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
+                //{
+                //    InternalLoadObject(bitReader);
+                //}
+
+                // bSerializeLocation
+                if (bitReader.ReadBit())
+                {
+                    // Location.NetSerialize(Ar, this, SerSuccess);
+                    bitReader.ReadPackedVector(10, 24);
+                }
+
+                // bSerializeRotation
+                if (bitReader.ReadBit())
+                {
+                    // Rotation.NetSerialize(Ar, this, SerSuccess);
+                    bitReader.ReadPackedVector(10, 24);
+                }
+
+                // bSerializeScale
+                if (bitReader.ReadBit())
+                {
+                    // Scale.NetSerialize(Ar, this, SerSuccess);
+                    bitReader.ReadPackedVector(10, 24);
+                }
+
+                // bSerializeVelocity
+                if (bitReader.ReadBit())
+                {
+                    // Velocity.NetSerialize(Ar, this, SerSuccess);
+                    bitReader.ReadPackedVector(10, 24);
+                }
+            }
+
+            while (!bitReader.AtEnd())
+            {
+                ReadContentBlockPayload(bitReader, bunch);
+                // if (empty) continue
+
+                while (ReadFieldHeaderAndPayload(bitReader, bunch))
+                {
+                    bitReader.ReadIntPacked();
+                    // not sure...
+                }
+            }
+            // PostReceivedBunch, not interesting?
+
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L610
+        /// </summary>
+        /// <param name="bitReader"></param>
+        /// <param name="bunch"></param>
+        /// <returns></returns>
+        public virtual bool ReadFieldHeaderAndPayload(BitReader bitReader, DataBunch bunch)
+        {
+            if (bitReader.AtEnd())
+            {
+                return false;
+            }
+
+            // NetFieldExportGroup.Num ?
+            var netFieldExportHandle = bitReader.ReadInt(2);
+            var numPayloadBits = bitReader.ReadIntPacked();
+            return true;
         }
 
         /// <summary>
@@ -736,7 +811,37 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         public virtual void ReadContentBlockPayload(BitReader bitReader, DataBunch bunch)
         {
+            ReadContentBlockHeader(bitReader, bunch);
+            var numPayloadBits = bitReader.ReadIntPacked();
+            // FNetBitReader?
+        }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
+        /// </summary>
+        public virtual void ReadContentBlockHeader(BitReader bitReader, DataBunch bunch)
+        {
+            var bOutHasRepLayout = bitReader.ReadBit();
+            var bIsActor = bitReader.ReadBit();
+            if (bIsActor)
+            {
+                // If this is for the actor on the channel, we don't need to read anything else
+                return;
+            }
+
+            // We need to handle a sub-object
+            // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
+            InternalLoadObject(bitReader);
+
+            var bStablyNamed = bitReader.ReadBit();
+            if (bStablyNamed)
+            {
+                // If this is a stably named sub-object, we shouldn't need to create it. Don't raise a bunch error though because this may happen while a level is streaming out.
+                return;
+            }
+
+            // Serialize the class in case we have to spawn it.
+            InternalLoadObject(bitReader);
         }
 
         /// <summary>

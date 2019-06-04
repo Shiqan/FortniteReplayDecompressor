@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FortniteReplayReaderDecompressor.Core.Models;
+using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
@@ -216,6 +217,27 @@ namespace FortniteReplayReaderDecompressor
                 }
             }
             return value;
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
+        /// </summary>
+        /// <returns></returns>
+        public virtual FVector ReadPackedVector(int scaleFactor, int maxBits)
+        {
+            var bits = ReadInt(maxBits);
+            var bias = 1 << ((int) bits + 1);
+            var Max = 1 << ((int) bits + 2);
+
+            var dx = ReadInt(Max);
+            var dy = ReadInt(Max);
+            var dz = ReadInt(Max);
+
+            var x = dx-bias / scaleFactor;
+            var y = dy - bias / scaleFactor;
+            var z = dz - bias / scaleFactor;
+
+            return new FVector(x, y, z);
         }
 
         /// <summary>

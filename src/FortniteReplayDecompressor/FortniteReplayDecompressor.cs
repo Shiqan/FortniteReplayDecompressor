@@ -6,7 +6,6 @@ using FortniteReplayReaderDecompressor.Core.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace FortniteReplayReaderDecompressor
 {
@@ -14,7 +13,6 @@ namespace FortniteReplayReaderDecompressor
     {
         private int replayDataIndex = 0;
         private int packetIndex = 0;
-        private int externalDataIndex = 0;
 
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
@@ -379,21 +377,12 @@ namespace FortniteReplayReaderDecompressor
 
                 // this is a bitreader, probably some compressed string property?
                 var bitReader = new BitReader(externalData);
-                var unknown = bitReader.ReadBytes(3); // always 19 FB 01
-                var unknownString = bitReader.ReadFString();
-
-                if (!bitReader.AtEnd())
-                {
-                    throw new InvalidDataException();
-                }
+                var unknownString = bitReader.ReadExternalData();
 
                 if (!NetGuidCache.ContainsKey(netGuid))
                 {
                     NetGuidCache.Add(netGuid, unknownString);
                 }
-
-                File.WriteAllBytes($"external/externaldata-{netGuid}-{externalDataIndex}.dump", externalData);
-                externalDataIndex++;
             }
 
             // FRepChangedPropertyTracker
@@ -589,7 +578,7 @@ namespace FortniteReplayReaderDecompressor
             var flags = (ExportFlags)bitReader.ReadByte();
 
             // outerguid
-            if (flags >= ExportFlags.bHasPath)
+            if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
             {
                 InternalLoadObject(bitReader);
 
@@ -854,18 +843,7 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1080
-            //var count = packet.Data.Length;
-            //var bitSize = count;
-            //var lastByte = packet.Data[count - 1];
-            //if (lastByte != 0)
-            //{
-            //    bitSize = (count * 8) - 1;
-            //    while (!((lastByte & 0x80) > 0))
-            //    {
-            //        lastByte *= 2;
-            //        bitSize--;
-            //    }
-            //}
+
 
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
             var bitReader = new BitReader(packet.Data);

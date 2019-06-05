@@ -240,6 +240,14 @@ namespace FortniteReplayReaderDecompressor
             return new FVector(x, y, z);
         }
 
+        public virtual string ReadExternalData()
+        {
+            var unknown = ReadBytes(3); // always 19 FB 01
+            var unknownString = ReadFString();
+
+            return unknownString;
+        }
+
         /// <summary>
         /// Do I need this?
         /// </summary>

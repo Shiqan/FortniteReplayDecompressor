@@ -242,6 +242,7 @@ namespace FortniteReplayReaderDecompressor
 
         public virtual string ReadExternalData()
         {
+            // charactermovementcomponent.cpp?
             var unknown = ReadBytes(3); // always 19 FB 01
             var unknownString = ReadFString();
 

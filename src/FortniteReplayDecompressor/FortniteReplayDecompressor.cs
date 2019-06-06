@@ -14,6 +14,7 @@ namespace FortniteReplayReaderDecompressor
         private int replayDataIndex = 0;
         private int packetIndex = 0;
 
+        // TODO make sure only one netguidcache is used ...
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
         public FortniteBinaryDecompressor(Stream input) : base(input)
@@ -309,6 +310,11 @@ namespace FortniteReplayReaderDecompressor
                     var path = reader.ReadFString();
                     var checksum = reader.ReadUInt32();
                     var flags = reader.ReadByte();
+
+                    if (!NetGuidCache.ContainsKey(guid))
+                    {
+                        NetGuidCache.Add(guid, path);
+                    }
                 }
 
                 // SerializeNetFieldExportGroupMap 

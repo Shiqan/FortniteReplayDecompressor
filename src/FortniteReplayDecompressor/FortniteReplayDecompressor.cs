@@ -721,6 +721,10 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ProcessBunch(BitReader bitReader, DataBunch bunch)
         {
+            // TODO difference between InBunch vs OutBunch ??
+
+            //if (Actor == null) need to keep track of actor across a channel, and thus bunches...
+
             // Initialize client if first time through.
 
             // SerializeNewActor
@@ -809,6 +813,7 @@ namespace FortniteReplayReaderDecompressor
             ReadContentBlockHeader(bitReader, bunch);
             var numPayloadBits = bitReader.ReadIntPacked();
             // FNetBitReader?
+            // A bit reader that serializes FNames and UObject* through a network packagemap.
         }
 
         /// <summary>
@@ -851,15 +856,30 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1080
 
 
+            var lastByte = packet.Data[packet.Data.Length - 1];
+            var bitSize = (packet.Data.Length * 8) - 1;
+
+            if (lastByte != 0)
+            {
+                // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
+                while ((lastByte & 0x80) > 0)
+                {
+                    lastByte *= 2;
+                    bitSize--;
+                }
+            }
+
+
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
             var bitReader = new BitReader(packet.Data);
+            var bitReader2 = new BitReader(packet.Data, bitSize);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
 
             // InternalAck is always true for demo?
             //ReadPacketHeader(bitReader);
             //ReadPacketInfo(bitReader);
-            return;
+
             while (!bitReader.AtEnd())
             {
                 // For demo backwards compatibility, old replays still have this bit
@@ -985,6 +1005,10 @@ namespace FortniteReplayReaderDecompressor
                     ReceiveNetGUIDBunch(bitReader);
                 }
 
+                // Can't handle other channels until control channel exists.
+
+                // ignore control channel close if it hasn't been opened yet
+
                 var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
                 if (bNewlyOpenedActorChannel)
                 {
@@ -994,7 +1018,7 @@ namespace FortniteReplayReaderDecompressor
                         for (var i = 0; i < numMustBeMappedGUIDs; i++)
                         {
                             // FNetworkGUID NetGUID
-                            bitReader.ReadIntPacked();
+                            var guid = bitReader.ReadIntPacked();
                         }
                     }
 
@@ -1002,7 +1026,11 @@ namespace FortniteReplayReaderDecompressor
                     var actorGuid = bitReader.ReadUInt32();
                 }
 
-                // Channel->ReceivedRawBunch(Bunch, bLocalSkipAck);
+                // Ignore if reliable packet has already been processed.
+
+                // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
+
+                // Dispatch the raw, unsequenced bunch to the channel
                 // ReceivedRawBunch(bitReader, bunch);
             }
 

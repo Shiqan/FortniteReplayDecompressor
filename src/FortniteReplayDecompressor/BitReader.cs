@@ -40,6 +40,16 @@ namespace FortniteReplayReaderDecompressor
             Bits = new BitArray(input);
         }
 
+        public BitReader(byte[] input, int countBits)
+        {
+            if ((countBits & 7) > 0)
+            {
+                input[countBits >> 3] &= GMask[countBits & 7];
+            }
+
+            Bits = new BitArray(input);
+        }
+
         public int this[int index]
         {
             get
@@ -227,11 +237,11 @@ namespace FortniteReplayReaderDecompressor
         {
             var bits = ReadInt(maxBits);
             var bias = 1 << ((int) bits + 1);
-            var Max = 1 << ((int) bits + 2);
+            var max = 1 << ((int) bits + 2);
 
-            var dx = ReadInt(Max);
-            var dy = ReadInt(Max);
-            var dz = ReadInt(Max);
+            var dx = ReadInt(max);
+            var dy = ReadInt(max);
+            var dz = ReadInt(max);
 
             var x = dx-bias / scaleFactor;
             var y = dy - bias / scaleFactor;

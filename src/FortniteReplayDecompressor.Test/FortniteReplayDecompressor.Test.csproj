@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="NetFieldExports\" />
     <Folder Include="Packets\" />
   </ItemGroup>
 

@@ -205,6 +205,11 @@ namespace FortniteReplayReaderDecompressor
             return BitConverter.ToUInt32(ReadBytes(4));
         }
 
+        public virtual float ReadSingle()
+        {
+            return BitConverter.ToSingle(ReadBytes(4));
+        }
+
         /// <summary>
         /// Retuns uint
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
@@ -252,15 +257,66 @@ namespace FortniteReplayReaderDecompressor
 
         public virtual string ReadExternalData()
         {
-            // charactermovementcomponent.cpp?
+            // doesnt work for old(er) replays...
+            // new replays dont contain as much external data?
             var unknown = ReadBytes(3); // always 19 FB 01
             var unknownString = ReadFString();
+
+            // the only place where external data is added, in Unreal source code at least...
+            // https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7242
+            // ( *ExternalReplayData )[i].Reader << ReplaySample;
+            // https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
+            //var location = ReadPackedVector(10, 24);
+            //var velocity = ReadPackedVector(10, 24);
+            //var acceleration = ReadPackedVector(10, 24);
+            //ReadCompressedRotation();
+            //var remoteViewPitch = ReadByte();
+            //var time = ReadSingle();
 
             return unknownString;
         }
 
         /// <summary>
-        /// Do I need this?
+        /// see https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
+        /// </summary>
+        public virtual void ReadCompressedRotation()
+        {
+            byte BytePitch = 0;
+            byte ByteYaw = 0;
+            byte ByteRoll = 0;
+
+            if (ReadBit())
+            {
+                BytePitch = ReadByte();
+            }
+
+            if (ReadBit())
+            {
+                ByteYaw = ReadByte();
+            }
+
+            if (ReadBit())
+            {
+                ByteRoll = ReadByte();
+            }
+
+            var pitch = DecompressAxisFromByte(BytePitch);
+            var yaw = DecompressAxisFromByte(ByteYaw);
+            var roll = DecompressAxisFromByte(ByteRoll);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L640
+        /// </summary>
+        /// <param name="angle"></param>
+        /// <returns>float</returns>
+        public virtual float DecompressAxisFromByte(byte angle)
+        {
+            return (float) (angle * 360.0 / 256.0);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
         /// </summary>
         /// <returns>string</returns>
         public virtual string ReadFString()

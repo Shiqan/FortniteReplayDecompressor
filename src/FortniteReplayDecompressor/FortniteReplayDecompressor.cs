@@ -13,8 +13,8 @@ namespace FortniteReplayReaderDecompressor
     {
         private int replayDataIndex = 0;
         private int packetIndex = 0;
+        private int externalDataIndex = 0;
 
-        // TODO make sure only one netguidcache is used ...
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
         public FortniteBinaryDecompressor(Stream input) : base(input)
@@ -257,14 +257,6 @@ namespace FortniteReplayReaderDecompressor
             return playbackPackets;
         }
 
-        public void Debug(string name)
-        {
-            var remainingBytes = (int)(BaseStream.Length - BaseStream.Position);
-            var output = ReadBytes(remainingBytes);
-            File.WriteAllBytes($"{name}.dump", output);
-            BaseStream.Position -= remainingBytes;
-        }
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1667
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4503
@@ -328,39 +320,25 @@ namespace FortniteReplayReaderDecompressor
                 // SerializeDemoFrameFromQueuedDemoPackets
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
                 reader.ReadDemoFrameIntoPlaybackPackets();
+
+
+                // merge netguid cache like this for debugging purposes...
+                foreach (var key in reader.NetGuidCache.Keys)
+                {
+                    if (!this.NetGuidCache.ContainsKey(key))
+                    {
+                        this.NetGuidCache[key] = reader.NetGuidCache[key];
+                    }
+                    else
+                    {
+                        if (this.NetGuidCache[key] != reader.NetGuidCache[key])
+                        {
+                            Console.WriteLine($"{this.NetGuidCache[key]}, {reader.NetGuidCache[key]}");
+                        }
+                    }
+                }
             }
         }
-
-        // fname
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/NameAsStringProxyArchive.h#L11
-
-        // ReceiveNetFieldExports
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1497
-
-        // ReadDemoFrameIntoPlaybackPackets
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
-
-        // TickDemoRecord
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2255
-
-        // TickDemoRecordFrame
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2324
-
-        // WritePacket
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3450
-
-        // Serialize - might be useful...
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5775
-
-        // SerializeHitResult - might be useful one day
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Developer/CollisionAnalyzer/Private/CollisionAnalyzer.cpp#L19
-
-        //  UnrealMath - FVector etc
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57
-
-        // PackedVector
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
-
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2106
@@ -381,14 +359,18 @@ namespace FortniteReplayReaderDecompressor
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
                 var externalData = ReadBytes(externalDataNumBytes);
 
-                // this is a bitreader, probably some compressed string property?
-                var bitReader = new BitReader(externalData);
-                var unknownString = bitReader.ReadExternalData();
+                Debug($"external/externalData-{externalDataIndex}-{netGuid}", externalData);
 
-                if (!NetGuidCache.ContainsKey(netGuid))
-                {
-                    NetGuidCache.Add(netGuid, unknownString);
-                }
+                // this is a bitreader, probably some compressed string property?
+                //var bitReader = new BitReader(externalData);
+                //var unknownString = bitReader.ReadExternalData();
+                
+                //if (!NetGuidCache.ContainsKey(netGuid))
+                //{
+                //    NetGuidCache.Add(netGuid, unknownString);
+                //}
+
+                externalDataIndex++;
             }
 
             // FRepChangedPropertyTracker
@@ -1058,11 +1040,6 @@ namespace FortniteReplayReaderDecompressor
 
             using (var reader = Decompress())
             {
-                var remainingBytes = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                var output = reader.ReadBytes(remainingBytes);
-                File.WriteAllBytes($"replaydata-{replayDataIndex}.dump", output);
-                reader.BaseStream.Position -= remainingBytes;
-
                 while (reader.BaseStream.Length > reader.BaseStream.Position)
                 {
                     var startPos = reader.BaseStream.Position;
@@ -1075,7 +1052,24 @@ namespace FortniteReplayReaderDecompressor
                         {
                             File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
                             packetIndex++;
-                            ProcessPacket(packet);
+                            //ProcessPacket(packet);
+                        }
+                    }
+
+
+                    // merge netguid cache like this for debugging purposes...
+                    foreach (var key in reader.NetGuidCache.Keys)
+                    {
+                        if (!this.NetGuidCache.ContainsKey(key))
+                        {
+                            this.NetGuidCache[key] = reader.NetGuidCache[key];
+                        }
+                        else
+                        {
+                            if (this.NetGuidCache[key] != reader.NetGuidCache[key])
+                            {
+                                Console.WriteLine($"{this.NetGuidCache[key]}, {reader.NetGuidCache[key]}");
+                            }
                         }
                     }
                 }

@@ -32,7 +32,7 @@ namespace FortniteReplayDecompressor.Test
                         {
                             Data = ms.ToArray()
                         };
-                        reader.ProcessPacket(playbackPacket);
+                        reader.ReceivedRawPacket(playbackPacket);
                     }
                 }
             }

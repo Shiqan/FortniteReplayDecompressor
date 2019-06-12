@@ -364,7 +364,7 @@ namespace FortniteReplayReaderDecompressor
                 // this is a bitreader, probably some compressed string property?
                 //var bitReader = new BitReader(externalData);
                 //var unknownString = bitReader.ReadExternalData();
-                
+
                 //if (!NetGuidCache.ContainsKey(netGuid))
                 //{
                 //    NetGuidCache.Add(netGuid, unknownString);
@@ -445,51 +445,6 @@ namespace FortniteReplayReaderDecompressor
             packet.Data = ReadBytes(bufferSize);
             packet.State = PacketState.Success;
             return packet;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1452
-        /// </summary>
-        public virtual void ReadPacketInfo(BitReader reader)
-        {
-            var bHasServerFrameTime = reader.ReadBit();
-
-            if (bHasServerFrameTime)
-            {
-                var frameTimeByte = reader.ReadByte();
-            }
-            var remoteInKBytesPerSecondByte = reader.ReadByte();
-        }
-
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Net/NetPacketNotify.cpp#L105
-        /// </summary>
-        /// <param name="packed"></param>
-        public virtual uint GetHistoryWordCount(uint packed)
-        {
-            var historyWordCountBits = 4;
-            var historyWordCountMask = (1 << historyWordCountBits) - 1;
-
-            return (uint)(packed & historyWordCountMask);
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Net/NetPacketNotify.cpp#L143
-        /// </summary>
-        public virtual void ReadPacketHeader(BitReader reader)
-        {
-            var packedHeader = reader.ReadUInt32(); // do we need it unpacked?
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/NetPacketNotify.h#L139
-            // var historyWordCount = GetHistoryWordCount(packedHeader) + 1;
-
-            // sequencehistory.h
-            //NumWords = FPlatformMath::Min(NumWords, WordCount);
-            //for (SIZE_T CurrentWordIt = 0; CurrentWordIt < NumWords; ++CurrentWordIt)
-            //{
-            //    Reader << Storage[CurrentWordIt];
-            //}
         }
 
         /// <summary>
@@ -579,6 +534,38 @@ namespace FortniteReplayReaderDecompressor
                 {
                     var networkChecksum = bitReader.ReadUInt32();
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1452
+        /// </summary>
+        public virtual void ReadPacketInfo(BitReader reader)
+        {
+            var bHasServerFrameTime = reader.ReadBit();
+
+            if (bHasServerFrameTime)
+            {
+                var frameTimeByte = reader.ReadByte();
+            }
+            var remoteInKBytesPerSecondByte = reader.ReadByte();
+        }
+
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Net/NetPacketNotify.cpp#L143
+        /// see https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Engine/Public/Net/Util/SequenceHistory.h#L119
+        /// </summary>
+        public virtual void ReadPacketHeader(BitReader reader)
+        {
+            var packedHeader = reader.ReadUInt32();
+            var historyWordCount = FPackedHeader.GetHistoryWordCount(packedHeader) + 1;
+            
+            var numWords = Math.Min(historyWordCount, FPackedHeader.MaxSequenceHistoryLength);
+            for (int i = 0; i < numWords; i++)
+            {
+                reader.ReadBit(); // I think?
             }
         }
 
@@ -703,8 +690,6 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ProcessBunch(BitReader bitReader, DataBunch bunch)
         {
-            // TODO difference between InBunch vs OutBunch ??
-
             //if (Actor == null) need to keep track of actor across a channel, and thus bunches...
 
             // Initialize client if first time through.
@@ -827,16 +812,13 @@ namespace FortniteReplayReaderDecompressor
         }
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
         /// </summary>
-        /// <param name="packet"><see cref="PlaybackPacket"/></param>
-        public virtual void ProcessPacket(PlaybackPacket packet)
+        /// <param name="packet"></param>
+        public virtual void ReceivedRawPacket(PlaybackPacket packet)
         {
-            // serializebits...
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1080
-
+            //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
 
             var lastByte = packet.Data[packet.Data.Length - 1];
             var bitSize = (packet.Data.Length * 8) - 1;
@@ -849,18 +831,56 @@ namespace FortniteReplayReaderDecompressor
                     lastByte *= 2;
                     bitSize--;
                 }
+
+                var bitReader = new BitReader(packet.Data, bitSize);
+                // Handler->IncomingHigh(Reader);
+                ReceivedPacket(bitReader, packet);
             }
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3352
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525
+        /// </summary>
+        /// <param name="bitReader"><see cref="BitReader"/></param>
+        /// <param name="packet"><see cref="PlaybackPacket"/></param>
+        public virtual void ReceivedPacket(BitReader bitReader, PlaybackPacket packet)
+        {
+            // SerializeBits is called for outgoing packets, so if Handlers are used we need to look at this...
+            // void SerializeBits( void* Dest, int64 LengthBits )
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
+
+            // void appBitsCpy( uint8* Dest, int32 DestBit, uint8* Src, int32 SrcBit, int32 BitCount )
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L13
 
 
-            //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
-            var bitReader = new BitReader(packet.Data);
-            var bitReader2 = new BitReader(packet.Data, bitSize);
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
 
-            // InternalAck is always true for demo?
-            //ReadPacketHeader(bitReader);
-            //ReadPacketInfo(bitReader);
+
+            //if (InteralAck)
+            //{
+            //    PackedId++;
+            //}
+            //else
+            //{
+            //    ReadPacketHeader(bitReader);
+
+            //    int PacketSequenceDelta = PacketNotify.Update(Header, HandlePacketNotification);
+            //    if (PacketSequenceDelta > 0)
+            //    {
+            //        const int32 PacketsLost = PacketSequenceDelta - 1;
+            //        InPacketsLost += PacketsLost;
+            //        InTotalPacketsLost += PacketsLost;
+            //        Driver->InPacketsLost += PacketsLost;
+            //        Driver->InTotalPacketsLost += PacketsLost;
+            //        InPacketId += PacketSequenceDelta;
+
+            //        // Extra information associated with the header
+            //        ReadPacketInfo(bitReader);
+            //    }
+
+            //}
 
             while (!bitReader.AtEnd())
             {
@@ -1052,7 +1072,7 @@ namespace FortniteReplayReaderDecompressor
                         {
                             File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
                             packetIndex++;
-                            //ProcessPacket(packet);
+                            //ReceivedRawPacket(packet);
                         }
                     }
 

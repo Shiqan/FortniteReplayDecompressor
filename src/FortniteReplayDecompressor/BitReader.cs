@@ -66,6 +66,20 @@ namespace FortniteReplayReaderDecompressor
             }
         }
 
+        public virtual void Debug(string name)
+        {
+            var contents = "";
+            for(var i = 0; i < Bits.Length; i++)
+            {
+                if (i > 0 && i % 8 == 0)
+                {
+                    contents += "\n";
+                }
+                contents += this[i];
+            }
+            File.WriteAllText($"bitpackets/{name}.dump", contents);
+        }
+
         /// <summary>
         /// Returns whether <see cref="Position"/> in current <see cref="Bits"/> is greater than the lenght of the current <see cref="Bits"/>.
         /// </summary>

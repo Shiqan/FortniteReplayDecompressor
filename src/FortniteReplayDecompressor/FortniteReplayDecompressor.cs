@@ -561,7 +561,7 @@ namespace FortniteReplayReaderDecompressor
         {
             var packedHeader = reader.ReadUInt32();
             var historyWordCount = FPackedHeader.GetHistoryWordCount(packedHeader) + 1;
-            
+
             var numWords = Math.Min(historyWordCount, FPackedHeader.MaxSequenceHistoryLength);
             for (int i = 0; i < numWords; i++)
             {
@@ -833,6 +833,7 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 var bitReader = new BitReader(packet.Data, bitSize);
+                bitReader.Debug($"packet-{packetIndex}");
                 // Handler->IncomingHigh(Reader);
                 ReceivedPacket(bitReader, packet);
             }
@@ -854,9 +855,27 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L13
 
 
+            // OodleHandler ?
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L503
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Public/OodleHandlerComponent.h#L16
+            const int MAX_OODLE_PACKET_BYTES = 1024;
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Public/OodleHandlerComponent.h#L19
+            const int MAX_OODLE_BUFFER = MAX_OODLE_PACKET_BYTES * 2;
+            if (bitReader.ReadBit())
+            {
+                var packetSize = bitReader.ReadInt(MAX_OODLE_PACKET_BYTES);
+                packetSize++;
+
+                //OodleNetwork1UDP_Decode(CurDict->CompressorState, CurDict->SharedDictionary, CompressedData, CompressedLength, DecompressedData, DecompressedLength);
+            }
+
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
 
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
+            // InternalAck always true? 
 
             //if (InteralAck)
             //{
@@ -881,6 +900,12 @@ namespace FortniteReplayReaderDecompressor
             //    }
 
             //}
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetConnection.h#L44
+            const int MAX_CHSEQUENCE = 1024;
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
+            const int OLD_MAX_ACTOR_CHANNELS = 10240;
 
             while (!bitReader.AtEnd())
             {
@@ -914,7 +939,6 @@ namespace FortniteReplayReaderDecompressor
 
                 if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
-                    var OLD_MAX_ACTOR_CHANNELS = 10240;
                     bunch.ChIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
                 }
                 else
@@ -937,11 +961,12 @@ namespace FortniteReplayReaderDecompressor
                     //{
                     //    Bunch.ChSequence = MakeRelative(Reader.ReadInt(MAX_CHSEQUENCE), InReliable[Bunch.ChIndex], MAX_CHSEQUENCE);
                     //}
+                    //bunch.ChSequence = (int) bitReader.ReadInt(MAX_CHSEQUENCE);
                 }
                 else if (bunch.bPartial)
                 {
                     // If this is an unreliable partial bunch, we simply use packet sequence since we already have it
-                    // var ChSequence = InPacketId;
+                    //bunch.ChSequence = InPacketId;
                 }
                 else
                 {
@@ -1071,8 +1096,8 @@ namespace FortniteReplayReaderDecompressor
                         if (packet.State == PacketState.Success)
                         {
                             File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
+                            ReceivedRawPacket(packet);
                             packetIndex++;
-                            //ReceivedRawPacket(packet);
                         }
                     }
 

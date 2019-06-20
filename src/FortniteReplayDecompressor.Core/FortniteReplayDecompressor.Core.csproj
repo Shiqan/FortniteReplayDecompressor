@@ -6,4 +6,10 @@
     <RootNamespace>FortniteReplayReaderDecompressor.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="FortniteReplayReader.Core">
+      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

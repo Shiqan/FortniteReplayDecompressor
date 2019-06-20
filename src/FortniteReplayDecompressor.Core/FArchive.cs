@@ -1,97 +1,56 @@
-﻿namespace FortniteReplayReaderDecompressor.Core
+﻿using FortniteReplayReader.Core.Models.Enums;
+using System;
+using System.IO;
+
+namespace FortniteReplayReaderDecompressor.Core
 {
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Serialization/Archive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Serialization/Archive.cpp
     /// </summary>
-    public abstract class FArchive
+    public abstract class FArchive : BinaryReader
     {
-        private byte[] Data;
-        private uint ArEngineNetVer;
-        private uint ArGameNetVer;
-        private bool ArIsError;
+        public EngineNetworkVersionHistory EngineNetworkVersion { get; set; }
+        public ReplayHeaderFlags ReplayHeaderFlags { get; set; }
+        public uint GameNetworkVersion { get; set; }
+        public bool ArIsError { get; private set; }
 
-        public int Position { get; private set; }
-
-        public FArchive(byte[] data)
+        public FArchive(Stream input) : base(input)
         {
-            this.Data = data;
+
         }
 
-
-        /// <summary>
-        /// Sets the archive engine network version.
-        /// </summary>
-        /// <param name="InEngineNetVer"></param>
-        public virtual void SetEngineNetVer(uint InEngineNetVer)
+        public virtual bool HasLevelStreamingFixes()
         {
-        }
-
-        /// <summary>
-        /// Sets the archive game network version.
-        /// </summary>
-        /// <param name="InGameNetVer"></param>
-        public virtual void SetGameNetVer(uint InGameNetVer)
-        {
+            return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
         }
 
         public virtual bool AtEnd()
         {
+            return BaseStream.Position >= BaseStream.Length;
         }
 
-        public abstract void CountBytes(uint InNum, uint InMax);
-        public virtual bool GetError() { return ArIsError; }
-        public abstract void Seek(int pos);
-        public abstract int TotalSize();
-        public virtual int Tell() { }
+        public virtual bool IsError() { return ArIsError; }
 
-        public virtual void Close() { }
+        public abstract T ReadUInt32AsEnum<T>();
+        public abstract T ReadByteAsEnum<T>();
+        public abstract T[] ReadArray<T>(Func<T> func1);
+        public abstract string ReadBytesToString(int count);
+        public abstract string ReadFString();
+        public abstract string ReadGUID();
+        public abstract bool ReadInt32AsBoolean();
+        public abstract uint ReadIntPacked();
+        public abstract ValueTuple<T, U>[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2);
+        public abstract bool ReadUInt32AsBoolean();
 
-        public void Dispose() { }
+        public virtual void SkipBytes(uint byteCount)
+        {
+            BaseStream.Seek(byteCount, SeekOrigin.Current);
+        }
 
-        public virtual int PeekChar() { }
-
-        public virtual int Read(byte[] buffer, int index, int count) { }
-
-        public virtual int Read(char[] buffer, int index, int count) { }
-
-        public virtual int Read(Span<byte> buffer) { }
-
-        public virtual int Read(Span<char> buffer) { }
-
-        public virtual bool ReadBoolean() { }
-
-        public virtual byte ReadByte() { }
-
-        public virtual byte[] ReadBytes(int count) { }
-
-        public virtual char ReadChar() { }
-
-        public virtual char[] ReadChars(int count) { }
-
-        public virtual decimal ReadDecimal() { }
-
-        public virtual double ReadDouble() { }
-
-        public virtual short ReadInt16() { }
-
-        public virtual int ReadInt32() { }
-
-        public virtual long ReadInt64() { }
-
-        public virtual sbyte ReadSByte() { }
-
-        public virtual float ReadSingle() { }
-
-        public virtual string ReadString() { }
-
-        public virtual ushort ReadUInt16() { }
-
-        public virtual uint ReadUInt32() { }
-
-        public virtual ulong ReadUInt64() { }
-
-        protected virtual void Dispose(bool disposing) { }
-
+        public virtual void SkipBytes(int byteCount)
+        {
+            BaseStream.Seek(byteCount, SeekOrigin.Current);
+        }
     }
 }

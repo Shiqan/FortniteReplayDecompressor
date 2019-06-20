@@ -833,7 +833,6 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 var bitReader = new BitReader(packet.Data, bitSize);
-                bitReader.Debug($"packet-{packetIndex}");
                 // Handler->IncomingHigh(Reader);
                 ReceivedPacket(bitReader, packet);
             }
@@ -853,23 +852,6 @@ namespace FortniteReplayReaderDecompressor
 
             // void appBitsCpy( uint8* Dest, int32 DestBit, uint8* Src, int32 SrcBit, int32 BitCount )
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L13
-
-
-            // OodleHandler ?
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L503
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Public/OodleHandlerComponent.h#L16
-            const int MAX_OODLE_PACKET_BYTES = 1024;
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Public/OodleHandlerComponent.h#L19
-            const int MAX_OODLE_BUFFER = MAX_OODLE_PACKET_BYTES * 2;
-            if (bitReader.ReadBit())
-            {
-                var packetSize = bitReader.ReadInt(MAX_OODLE_PACKET_BYTES);
-                packetSize++;
-
-                //OodleNetwork1UDP_Decode(CurDict->CompressorState, CurDict->SharedDictionary, CompressedData, CompressedLength, DecompressedData, DecompressedLength);
-            }
 
 
             // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
@@ -930,7 +912,8 @@ namespace FortniteReplayReaderDecompressor
                 }
                 else
                 {
-                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)bitReader.ReadInt((int)ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
+                    var closeReason = bitReader.ReadInt((int)ChannelCloseReason.MAX);
+                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason) closeReason : ChannelCloseReason.Destroyed;
                     bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
                 }
 

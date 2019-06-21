@@ -30,13 +30,6 @@ namespace FortniteReplayReaderDecompressor
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
-            // not sure if this is needed...
-            var num = input.Length * 8 - 1; // not sure if it should be -1...
-            if ((num & 7) > 0)
-            {
-                input[num >> 3] &= GMask[num & 7];
-            }
-
             Bits = new BitArray(input);
         }
 
@@ -47,6 +40,11 @@ namespace FortniteReplayReaderDecompressor
                 input[countBits >> 3] &= GMask[countBits & 7];
             }
 
+            Bits = new BitArray(input);
+        }
+
+        public BitReader(bool[] input)
+        {
             Bits = new BitArray(input);
         }
 
@@ -108,6 +106,21 @@ namespace FortniteReplayReaderDecompressor
         public virtual bool ReadBit()
         {
             return Bits[Position++];
+        }
+
+        public virtual bool[] ReadBits(int bits)
+        {
+            bool[] result = new bool[bits];
+            for (var i = 0; i < bits; i++)
+            {
+                result[i] = ReadBit();
+            }
+            return result;
+        }
+
+        public virtual bool[] ReadBits(uint bits)
+        {
+            return ReadBits((int)bits);
         }
 
         /// <summary>
@@ -232,9 +245,9 @@ namespace FortniteReplayReaderDecompressor
         public virtual uint ReadIntPacked()
         {
             uint value = 0;
-            bool remaining = true;
+            bool remaining;
 
-            while (remaining)
+            for (var it = 0; it < 5; it++)
             {
                 remaining = ReadBit(); // Check 1 bit to see if theres more after this
                 for (int i = 0; i < 7; i++)
@@ -243,6 +256,10 @@ namespace FortniteReplayReaderDecompressor
                     {
                         value |= (byte)(1 << i); // Add to total value
                     }
+                }
+                if (!remaining)
+                {
+                    break;
                 }
             }
             return value;

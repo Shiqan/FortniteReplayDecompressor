@@ -821,20 +821,30 @@ namespace FortniteReplayReaderDecompressor
             //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
 
             var lastByte = packet.Data[packet.Data.Length - 1];
-            var bitSize = (packet.Data.Length * 8) - 1;
 
             if (lastByte != 0)
             {
                 // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
-                while ((lastByte & 0x80) > 0)
-                {
-                    lastByte *= 2;
-                    bitSize--;
-                }
+                //while ((lastByte & 0x80) > 0)
+                //{
+                //    lastByte *= 2;
+                //    bitSize--;
+                //}
 
-                var bitReader = new BitReader(packet.Data, bitSize);
+                var bitReader = new BitReader(packet.Data);
                 // Handler->IncomingHigh(Reader);
-                ReceivedPacket(bitReader, packet);
+                try
+                {
+                    ReceivedPacket(bitReader, packet);
+                }
+                catch
+                {
+                    Console.WriteLine("failed ReceivedPacket");
+                }
+            }
+            else
+            {
+                throw new Exception("Malformed packet: Received packet with 0's in last byte of packet");
             }
         }
 
@@ -884,7 +894,7 @@ namespace FortniteReplayReaderDecompressor
             //}
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetConnection.h#L44
-            const int MAX_CHSEQUENCE = 1024;
+            //const int MAX_CHSEQUENCE = 1024;
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
             const int OLD_MAX_ACTOR_CHANNELS = 10240;
@@ -1008,11 +1018,12 @@ namespace FortniteReplayReaderDecompressor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
-                var headerPos = bitReader.Position;
                 // Bunch.SetData( Reader, BunchDataBits );
+                var bunchReader = new BitReader(bitReader.ReadBits(bunchDataBits));
+
                 if (bunch.bHasPackageMapExports)
                 {
-                    ReceiveNetGUIDBunch(bitReader);
+                    ReceiveNetGUIDBunch(bunchReader);
                 }
 
                 // Can't handle other channels until control channel exists.
@@ -1024,24 +1035,27 @@ namespace FortniteReplayReaderDecompressor
                 {
                     if (bunch.bHasMustBeMappedGUIDs)
                     {
-                        var numMustBeMappedGUIDs = bitReader.ReadUInt16();
+                        var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
                         for (var i = 0; i < numMustBeMappedGUIDs; i++)
                         {
                             // FNetworkGUID NetGUID
-                            var guid = bitReader.ReadIntPacked();
+                            var guid = bunchReader.ReadIntPacked();
                         }
                     }
 
                     //FNetworkGUID ActorGUID;
-                    var actorGuid = bitReader.ReadUInt32();
+                    var actorGuid = bunchReader.ReadUInt32();
                 }
 
                 // Ignore if reliable packet has already been processed.
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
 
+                // Create channel if necessary
+
                 // Dispatch the raw, unsequenced bunch to the channel
-                // ReceivedRawBunch(bitReader, bunch);
+                // control vs actor channels?
+                // ReceivedRawBunch(bunchReader, bunch);
             }
 
             // termination bit?

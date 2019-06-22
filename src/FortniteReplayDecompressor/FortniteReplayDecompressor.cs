@@ -601,20 +601,17 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ReceivedRawBunch(BitReader bitReader, DataBunch bunch)
         {
+            // Immediately consume the NetGUID portion of this bunch, regardless if it is partial or reliable.
             if (bunch.bHasPackageMapExports)
             {
                 ReceiveNetGUIDBunch(bitReader);
             }
 
-            if (bunch.bReliable)
-            {
-                ReceivedNextBunch(bitReader, bunch);
-            }
-            else
-            {
-                // "burn" bunches until ?
-                // ReceivedNextBunch(bitReader, bunch);
-            }
+            // bDeleted 
+            ReceivedNextBunch(bitReader, bunch);
+
+            // if (bDeleted) return;
+            // else { We shouldn't hit this path on 100% reliable connections }
         }
 
         /// <summary>
@@ -632,8 +629,10 @@ namespace FortniteReplayReaderDecompressor
             if (bunch.bPartial)
             {
                 // merge
+                Console.WriteLine("Partial bunch!");
             }
 
+            // Receive it in sequence.
             ReceivedSequencedBunch(bitReader, bunch);
         }
 
@@ -644,7 +643,19 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ReceivedSequencedBunch(BitReader bitReader, DataBunch bunch)
         {
-            ReceivedBunch(bitReader, bunch); // based on Closing flag...
+            // if ( !Closing ) {
+            switch (bunch.ChName)
+            {
+                case ChannelName.Actor:
+                    ReceivedActorBunch(bitReader, bunch);
+                    break;
+                case ChannelName.Control:
+                    ReceivedControlBunch(bitReader, bunch);
+                    break;
+                default:
+                    throw new Exception()
+            };
+            // }
 
             if (bunch.bClose)
             {
@@ -655,17 +666,25 @@ namespace FortniteReplayReaderDecompressor
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L1346
+        /// </summary>
+        /// <param name="bitReader"></param>
+        /// <param name="bunch"></param>
+        public virtual void ReceivedControlBunch(BitReader bitReader, DataBunch bunch)
+        {
+            // control channel
+            //while (!bitReader.AtEnd())
+            //{
+            //    var messageType = bitReader.ReadByte();
+            //}
+        }
+
+        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedActorBunch(BitReader bitReader, DataBunch bunch)
         {
-            // control channel
-            // var messageType = bitReader.ReadByte();
-
-
-            // actor channel
             if (bunch.bHasMustBeMappedGUIDs)
             {
                 var numMustBeMappedGUIDs = bitReader.ReadUInt16();
@@ -675,6 +694,7 @@ namespace FortniteReplayReaderDecompressor
                 }
             }
 
+            // if actor == null
             if (bunch.bOpen)
             {
                 var actorGuid = bitReader.ReadIntPacked();
@@ -817,22 +837,11 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="packet"></param>
         public virtual void ReceivedRawPacket(PlaybackPacket packet)
         {
-
-            //const ProcessedPacket UnProcessedPacket = Handler->Incoming(Data, Count);
-
             var lastByte = packet.Data[packet.Data.Length - 1];
 
             if (lastByte != 0)
             {
-                // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
-                //while ((lastByte & 0x80) > 0)
-                //{
-                //    lastByte *= 2;
-                //    bitSize--;
-                //}
-
                 var bitReader = new BitReader(packet.Data);
-                // Handler->IncomingHigh(Reader);
                 try
                 {
                     ReceivedPacket(bitReader, packet);
@@ -856,45 +865,8 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="packet"><see cref="PlaybackPacket"/></param>
         public virtual void ReceivedPacket(BitReader bitReader, PlaybackPacket packet)
         {
-            // SerializeBits is called for outgoing packets, so if Handlers are used we need to look at this...
-            // void SerializeBits( void* Dest, int64 LengthBits )
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
-
-            // void appBitsCpy( uint8* Dest, int32 DestBit, uint8* Src, int32 SrcBit, int32 BitCount )
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L13
-
-
-            // var DEFAULT_MAX_CHANNEL_SIZE = 32767;
-
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
             // InternalAck always true? 
-
-            //if (InteralAck)
-            //{
-            //    PackedId++;
-            //}
-            //else
-            //{
-            //    ReadPacketHeader(bitReader);
-
-            //    int PacketSequenceDelta = PacketNotify.Update(Header, HandlePacketNotification);
-            //    if (PacketSequenceDelta > 0)
-            //    {
-            //        const int32 PacketsLost = PacketSequenceDelta - 1;
-            //        InPacketsLost += PacketsLost;
-            //        InTotalPacketsLost += PacketsLost;
-            //        Driver->InPacketsLost += PacketsLost;
-            //        Driver->InTotalPacketsLost += PacketsLost;
-            //        InPacketId += PacketSequenceDelta;
-
-            //        // Extra information associated with the header
-            //        ReadPacketInfo(bitReader);
-            //    }
-
-            //}
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetConnection.h#L44
-            //const int MAX_CHSEQUENCE = 1024;
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
             const int OLD_MAX_ACTOR_CHANNELS = 10240;
@@ -923,7 +895,7 @@ namespace FortniteReplayReaderDecompressor
                 else
                 {
                     var closeReason = bitReader.ReadInt((int)ChannelCloseReason.MAX);
-                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason) closeReason : ChannelCloseReason.Destroyed;
+                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)closeReason : ChannelCloseReason.Destroyed;
                     bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
                 }
 
@@ -945,16 +917,7 @@ namespace FortniteReplayReaderDecompressor
 
                 if (bunch.bReliable)
                 {
-                    //if (InteralAck)
-                    //{
-                    //    // We can derive the sequence for 100% reliable connections
-                    //    var ChSequence = InReliable[Bunch.ChIndex] + 1;
-                    //}
-                    //else
-                    //{
-                    //    Bunch.ChSequence = MakeRelative(Reader.ReadInt(MAX_CHSEQUENCE), InReliable[Bunch.ChIndex], MAX_CHSEQUENCE);
-                    //}
-                    //bunch.ChSequence = (int) bitReader.ReadInt(MAX_CHSEQUENCE);
+                    //var ChSequence = InReliable[Bunch.ChIndex] + 1;
                 }
                 else if (bunch.bPartial)
                 {
@@ -1030,6 +993,12 @@ namespace FortniteReplayReaderDecompressor
 
                 // ignore control channel close if it hasn't been opened yet
 
+
+                // We're on a 100% reliable connection and we are rolling back some data.
+                // In that case, we can generally ignore these bunches.
+                // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
+                // { 
+
                 var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
                 if (bNewlyOpenedActorChannel)
                 {
@@ -1045,18 +1014,37 @@ namespace FortniteReplayReaderDecompressor
 
                     //FNetworkGUID ActorGUID;
                     var actorGuid = bunchReader.ReadUInt32();
+
+                    // IgnoringChannels.Add(Bunch.ChIndex, ActorGUID);
                 }
 
+                // if (IgnoringChannels.Contains(Bunch.ChIndex)) 
+                // {
+                // ...
+                // continue
+                // }
+                // }
+
                 // Ignore if reliable packet has already been processed.
+                // if ( Bunch.bReliable && Bunch.ChSequence <= InReliable[Bunch.ChIndex] )
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
+                // if( !Channel && !Bunch.bReliable ) 
+                // {
+                // ...
+                // continue
+                // }
 
                 // Create channel if necessary
+                // if( Channel == nullptr ) 
+                // {
+                // ...
+                // continue
+                // }
 
                 // Dispatch the raw, unsequenced bunch to the channel
-                // control vs actor channels?
-                // ReceivedRawBunch(bunchReader, bunch);
-            }
+                ReceivedRawBunch(bunchReader, bunch);
+            } 
 
             // termination bit?
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1170

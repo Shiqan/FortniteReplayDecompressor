@@ -18,10 +18,11 @@ namespace FortniteReplayReaderDecompressor
         private int InPacketId;
         private bool Actor; // TODO: per channel (i think)
         private bool Control;
+        private bool Channel;
         private DataBunch PartialBunch;
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
-        private List<string> Channels; // TODO: UChannel
+        private Dictionary<uint, string> Channels = new Dictionary<uint, string>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
@@ -764,7 +765,7 @@ namespace FortniteReplayReaderDecompressor
             }
 
             // if actor == null
-            if (bunch.bOpen)
+            if (!Actor && bunch.bOpen)
             {
                 var actorGuid = bitReader.ReadIntPacked();
             }
@@ -1075,7 +1076,7 @@ namespace FortniteReplayReaderDecompressor
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
-                var bunchDataBits = bitReader.ReadInt(maxPacket * 8); // TODO double check the max packet size
+                var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
                 var bunchReader = new BitReader(bitReader.ReadBits(bunchDataBits));
 
@@ -1085,74 +1086,81 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // Can't handle other channels until control channel exists.
-                //if (Channels[(int)bunch.ChIndex] == null && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
-                //{
-                //    return;
-                //}
+                if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
+                {
+                    return;
+                }
 
                 // ignore control channel close if it hasn't been opened yet
-                //if (bunch.ChIndex == 0 && Channels[0] == null && bunch.bClose && bunch.ChName == ChannelName.Control)
-                //{
-                //    return;
-                //}
+                if (bunch.ChIndex == 0 && Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
+                {
+                    return;
+                }
 
                 // We're on a 100% reliable connection and we are rolling back some data.
                 // In that case, we can generally ignore these bunches.
                 // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
-                var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
-                if (bNewlyOpenedActorChannel)
+                // bIgnoreAlreadyOpenedChannels always true?  https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4393
+                if (Channel)
                 {
-                    if (bunch.bHasMustBeMappedGUIDs)
+                    var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
+                    if (bNewlyOpenedActorChannel)
                     {
-                        var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
-                        for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                        if (bunch.bHasMustBeMappedGUIDs)
                         {
-                            // FNetworkGUID NetGUID
-                            var guid = bunchReader.ReadIntPacked();
+                            var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
+                            for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                            {
+                                // FNetworkGUID NetGUID
+                                var guid = bunchReader.ReadIntPacked();
+                            }
                         }
+
+                        //FNetworkGUID ActorGUID;
+                        var actorGuid = bunchReader.ReadIntPacked();
+                        IgnoringChannels.Add(bunch.ChIndex, actorGuid);
                     }
 
-                    //FNetworkGUID ActorGUID;
-                    var actorGuid = bunchReader.ReadIntPacked();
-                    IgnoringChannels.Add(bunch.ChIndex, actorGuid);
+                    if (IgnoringChannels.ContainsKey(bunch.ChIndex))
+                    {
+                        if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
+                        {
+                            //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
+                            IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
+                        }
+                        continue;
+                    }
                 }
 
-                //if (IgnoringChannels.ContainsKey(bunch.ChIndex))
-                //{
-                //    if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
-                //    {
-                //        //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
-                //        IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
-                //    }
-                //    continue;
-                //}
 
                 // Ignore if reliable packet has already been processed.
-                //if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
-                //{
-                //    continue;
-                //}
+                if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                {
+                    continue;
+                }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
                 //if (!Channel && !Bunch.bReliable)
-                //if (!bunch.bReliable)
-                //{
-                //    if (bunch.bOpen && (bunch.bClose || bunch.bPartial))
-                //    {
-                //        continue;
-                //    }
-                //}
+                if (!Channel && !bunch.bReliable)
+                {
+                    if (bunch.bOpen && (bunch.bClose || bunch.bPartial))
+                    {
+                        continue;
+                    }
+                }
 
                 // Create channel if necessary
-                //if (Channel == nullptr)
-                //{
-                //    // if (RejectedChans.Contains(Bunch.ChIndex))
-                //    // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
+                if (!Channel)
+                {
+                    // if (RejectedChans.Contains(Bunch.ChIndex))
+                    // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
 
-                //    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) )
-                //    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-                //    continue;
-                //}
+                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) )
+                    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
+                    Channel = true;
+                    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
+                    continue;
+                }
 
                 // Dispatch the raw, unsequenced bunch to the channel
                 ReceivedRawBunch(bunchReader, bunch);

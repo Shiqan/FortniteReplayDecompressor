@@ -620,7 +620,7 @@ namespace FortniteReplayReaderDecompressor
                 ReceiveNetGUIDBunch(bitReader);
             }
 
-            // bDeleted 
+            // bDeleted =
             ReceivedNextBunch(bitReader, bunch);
 
             // if (bDeleted) return;
@@ -954,7 +954,6 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
             const int OLD_MAX_ACTOR_CHANNELS = 10240;
 
-
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
             InPacketId++;
 
@@ -1088,11 +1087,14 @@ namespace FortniteReplayReaderDecompressor
                 // Can't handle other channels until control channel exists.
                 if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
                 {
-                    return;
+                    if (!Channels.ContainsKey(0))
+                    {
+                        return;
+                    }
                 }
 
                 // ignore control channel close if it hasn't been opened yet
-                if (bunch.ChIndex == 0 && Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
+                if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
                 {
                     return;
                 }
@@ -1132,7 +1134,6 @@ namespace FortniteReplayReaderDecompressor
                     }
                 }
 
-
                 // Ignore if reliable packet has already been processed.
                 if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
                 {
@@ -1140,7 +1141,6 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
-                //if (!Channel && !Bunch.bReliable)
                 if (!Channel && !bunch.bReliable)
                 {
                     if (bunch.bOpen && (bunch.bClose || bunch.bPartial))

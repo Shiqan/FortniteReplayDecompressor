@@ -211,6 +211,10 @@ namespace FortniteReplayReaderDecompressor
         /// <returns>int</returns>
         public virtual int ReadInt32()
         {
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L131
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
+            // Bitreader.h overrides serialize function, do we need to implement something similar???
+
             return BitConverter.ToInt32(ReadBytes(4));
         }
 

@@ -929,9 +929,9 @@ namespace FortniteReplayReaderDecompressor
                 {
                     ReceivedPacket(bitReader, packet);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("failed ReceivedPacket");
+                    Console.WriteLine($"failed ReceivedPacket: {ex}");
                 }
             }
             else

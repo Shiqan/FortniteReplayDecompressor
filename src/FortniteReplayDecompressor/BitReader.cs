@@ -14,8 +14,8 @@ namespace FortniteReplayReaderDecompressor
     /// TODO add interface and convert BitArray to 1 and 0's...
     public class BitReader
     {
-        public byte[] GShift = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
-        public byte[] GMask = { 0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f };
+        //public byte[] GShift = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+        //public byte[] GMask = { 0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f };
         private readonly BitArray Bits;
 
         /// <summary>
@@ -30,16 +30,6 @@ namespace FortniteReplayReaderDecompressor
         /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
-            Bits = new BitArray(input);
-        }
-
-        public BitReader(byte[] input, int countBits)
-        {
-            if ((countBits & 7) > 0)
-            {
-                input[countBits >> 3] &= GMask[countBits & 7];
-            }
-
             Bits = new BitArray(input);
         }
 
@@ -69,13 +59,127 @@ namespace FortniteReplayReaderDecompressor
             var contents = "";
             for(var i = 0; i < Bits.Length; i++)
             {
-                if (i > 0 && i % 8 == 0)
-                {
-                    contents += "\n";
-                }
                 contents += this[i];
             }
             File.WriteAllText($"bitpackets/{name}.dump", contents);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L14
+        /// </summary>
+        /// <param name="dest"></param>
+        /// <param name="src"></param>
+        /// <param name="bitCount"></param>
+        public virtual byte[] appBitsCpy(byte[] dest, int destBit, byte[] src, int srcBit, int bitCount)
+        {
+            // Archive.h
+            // ReadUint32
+            // 1. Ar.ByteOrderSerialize(&Value, sizeof(Value));
+            // 2. Serialize(V, Length);
+            // BitReader.h
+            // 3. SerializeBits( Dest, LengthBytes*8 );
+            // 4. ((uint8*)Dest)[((LengthBits+7)>>3) - 1] = 0;
+            // 5. appBitsCpy((uint8*)Dest, 0, Buffer.GetData(), Pos, LengthBits);
+
+            // dest = FArchive
+            // src = buffer
+
+            if (bitCount == 0) return dest;
+
+            int DestIndex = destBit / 8;
+            int SrcIndex = srcBit / 8;
+            int LastDest;
+            int LastSrc;
+
+            // Special case - always at least one bit to copy,
+            // a maximum of 2 bytes to read, 2 to write - only touch bytes that are actually used.
+            if (bitCount <= 8)
+            {
+                LastDest = (destBit + bitCount - 1) / 8;
+                LastSrc = (srcBit + bitCount - 1) / 8;
+                int ShiftSrc = srcBit & 7;
+                int ShiftDest = destBit & 7;
+                int FirstMask = 0xFF << ShiftDest;
+                int LastMask = 0xFE << ((destBit + bitCount - 1) & 7); // Pre-shifted left by 1.	
+                int Accu;
+
+                if (SrcIndex == LastSrc)
+                    Accu = (src[SrcIndex] >> ShiftSrc);
+                else
+                    Accu = ((src[SrcIndex] >> ShiftSrc) | (src[LastSrc] << (8 - ShiftSrc)));
+
+                if (DestIndex == LastDest)
+                {
+                    int MultiMask = FirstMask & ~LastMask;
+                    dest[DestIndex] = (byte) ((dest[DestIndex] & ~MultiMask) | ((Accu << ShiftDest) & MultiMask));
+                }
+                else
+                {
+                    dest[DestIndex] = (byte)((dest[DestIndex] & ~FirstMask) | ((Accu << ShiftDest) & FirstMask));
+                    dest[LastDest] = (byte)((dest[LastDest] & LastMask) | ((Accu >> (8 - ShiftDest)) & ~LastMask));
+                }
+
+                return dest;
+            }
+
+            // Main copier, uses byte sized shifting. Minimum size is 9 bits, so at least 2 reads and 2 writes.
+            int FirstSrcMask = 0xFF << (destBit & 7);
+            LastDest = (destBit + bitCount) / 8;
+            int LastSrcMask = 0xFF << ((destBit + bitCount) & 7);
+            LastSrc = (srcBit + bitCount) / 8;
+            int ShiftCount = (destBit & 7) - (srcBit & 7);
+            int DestLoop = LastDest - DestIndex;
+            int SrcLoop = LastSrc - SrcIndex;
+            int FullLoop;
+            int BitAccu;
+
+            // Lead-in needs to read 1 or 2 source bytes depending on alignment.
+            if (ShiftCount >= 0)
+            {
+                FullLoop = Math.Max(DestLoop, SrcLoop);
+                BitAccu = src[SrcIndex] << ShiftCount;
+                ShiftCount += 8; //prepare for the inner loop.
+            }
+            else
+            {
+                ShiftCount += 8; // turn shifts -7..-1 into +1..+7
+                FullLoop = Math.Max(DestLoop, SrcLoop - 1);
+                BitAccu = src[SrcIndex] << ShiftCount;
+                SrcIndex++;
+                ShiftCount += 8; // Prepare for inner loop.  
+                BitAccu = ((src[SrcIndex] << ShiftCount) + (BitAccu)) >> 8;
+            }
+
+            // Lead-in - first copy.
+            dest[DestIndex] = (byte)((BitAccu & FirstSrcMask) | (dest[DestIndex] & ~FirstSrcMask));
+            SrcIndex++;
+            DestIndex++;
+
+            // Fast inner loop. 
+            for (; FullLoop > 1; FullLoop--)
+            {   // ShiftCount ranges from 8 to 15 - all reads are relevant.
+                BitAccu = ((src[SrcIndex] << ShiftCount) + (BitAccu)) >> 8; // Copy in the new, discard the old.
+                SrcIndex++;
+                dest[DestIndex] = (byte)BitAccu;  // Copy low 8 bits.
+                DestIndex++;
+            }
+
+            // Lead-out. 
+            if (LastSrcMask != 0xFF)
+            {
+                if ((srcBit + bitCount - 1) / 8 == SrcIndex) // Last legal byte ?
+                {
+                    BitAccu = ((src[SrcIndex] << ShiftCount) + (BitAccu)) >> 8;
+                }
+                else
+                {
+                    BitAccu >>= 8;
+                }
+
+                dest[DestIndex] = (byte)((dest[DestIndex] & LastSrcMask) | (BitAccu & ~LastSrcMask));
+            }
+
+            return dest;
         }
 
         /// <summary>
@@ -214,6 +318,7 @@ namespace FortniteReplayReaderDecompressor
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L131
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L36
             // Bitreader.h overrides serialize function, do we need to implement something similar???
+            // var result = appBitsCpy(new byte[4] { 0, 0, 0, 0 }, 0, ReadBytes(4), 0, 32);
 
             return BitConverter.ToInt32(ReadBytes(4));
         }

@@ -90,8 +90,14 @@ namespace FortniteReplayReaderDecompressor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
+
+                // Combine with Fortnite SDK dump?
                 return ((UnrealNames)nameIndex).ToString();
             }
+
+            // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
+            // InName.GetPlainNameString();
+            // InName.GetNumber();
 
             var inString = bitReader.ReadFString();
             var inNumber = bitReader.ReadInt32();
@@ -1071,6 +1077,9 @@ namespace FortniteReplayReaderDecompressor
                 bunch.ChType = chType;
                 bunch.ChName = chName;
 
+                // UChannel* Channel = Channels[Bunch.ChIndex];
+                Channel = Channels.ContainsKey(bunch.ChIndex);
+
                 // If there's an existing channel and the bunch specified it's channel type, make sure they match.
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
@@ -1085,13 +1094,13 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // Can't handle other channels until control channel exists.
-                if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
-                {
-                    if (!Channels.ContainsKey(0))
-                    {
-                        return;
-                    }
-                }
+                //if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
+                //{
+                //    if (!Channels.ContainsKey(0))
+                //    {
+                //        return;
+                //    }
+                //}
 
                 // ignore control channel close if it hasn't been opened yet
                 if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)

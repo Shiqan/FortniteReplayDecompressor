@@ -81,9 +81,6 @@ namespace FortniteReplayReaderDecompressor
             // 4. ((uint8*)Dest)[((LengthBits+7)>>3) - 1] = 0;
             // 5. appBitsCpy((uint8*)Dest, 0, Buffer.GetData(), Pos, LengthBits);
 
-            // dest = FArchive
-            // src = buffer
-
             if (bitCount == 0) return dest;
 
             int DestIndex = destBit / 8;
@@ -206,12 +203,17 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>
         /// <seealso cref="PeekBit"/>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="IndexOutOfRangeException"></exception>
         public virtual bool ReadBit()
         {
             return Bits[Position++];
         }
 
+        /// <summary>
+        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// </summary>
+        /// <param name="bits">The number of bits to read.</param>
+        /// <returns>bool[]</returns>
         public virtual bool[] ReadBits(int bits)
         {
             bool[] result = new bool[bits];
@@ -222,6 +224,11 @@ namespace FortniteReplayReaderDecompressor
             return result;
         }
 
+        /// <summary>
+        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// </summary>
+        /// <param name="bits">The number of bits to read.</param>
+        /// <returns>bool[]</returns>
         public virtual bool[] ReadBits(uint bits)
         {
             return ReadBits((int)bits);
@@ -280,11 +287,6 @@ namespace FortniteReplayReaderDecompressor
                 result[i] = ReadByte();
             }
             return result;
-        }
-
-        private int Shift(int Cnt)
-        {
-            return 1 << Cnt;
         }
 
         /// <summary>

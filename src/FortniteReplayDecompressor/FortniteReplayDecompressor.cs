@@ -622,7 +622,11 @@ namespace FortniteReplayReaderDecompressor
             // if actor == null
             if (!Actor && bunch.bOpen)
             {
+                // FBitReaderMark (how does this even work??)
+                // Take a sneak peak at the actor guid so we have a copy of it now
+                bitReader.Mark();
                 var actorGuid = bitReader.ReadIntPacked();
+                bitReader.Pop();
             }
 
             ProcessBunch(bitReader, bunch);
@@ -692,14 +696,13 @@ namespace FortniteReplayReaderDecompressor
                 Actor = true;
             }
 
-
-
             while (!bitReader.AtEnd())
             {
                 // FNetBitReader Reader( Bunch.PackageMap, 0 );
 
                 ReadContentBlockPayload(bitReader, bunch);
                 // if (empty) continue
+                // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
 
                 while (ReadFieldHeaderAndPayload(bitReader, bunch))
                 {
@@ -802,7 +805,7 @@ namespace FortniteReplayReaderDecompressor
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3352
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525
         /// </summary>
-        /// <param name="bitReader"><see cref="BitReader"/></param>
+        /// <param name="bitReader"><see cref="Core.BitReader"/></param>
         /// <param name="packet"><see cref="PlaybackPacket"/></param>
         public virtual void ReceivedPacket(FBitArchive bitReader)
         {
@@ -1028,7 +1031,7 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // Dispatch the raw, unsequenced bunch to the channel
-                ReceivedRawBunch(bunchReader, bunch);
+                // ReceivedRawBunch(bunchReader, bunch);
             }
 
             if (!bitReader.AtEnd())

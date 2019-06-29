@@ -20,6 +20,11 @@ namespace FortniteReplayReaderDecompressor.Core
         public int Position { get; private set; }
 
         /// <summary>
+        /// For pushing and popping FBitReaderMark positions.
+        /// </summary>
+        public int MarkPosition { get; private set; }
+        
+        /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
         /// <param name="input">The input bytes.</param>
@@ -352,6 +357,26 @@ namespace FortniteReplayReaderDecompressor.Core
         public override void SkipBytes(int byteCount)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Save Position to <see cref="MarkPosition"/> so we can reset back to this point.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228
+        /// </summary>
+        public override void Mark()
+        {
+            MarkPosition = Position;
+        }
+
+
+        /// <summary>
+        /// Set Position back to <see cref="MarkPosition"/>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228
+        /// </summary>
+        public override void Pop()
+        {
+            // TODO: pop makes it sound like a list...
+            Position = MarkPosition;
         }
     }
 }

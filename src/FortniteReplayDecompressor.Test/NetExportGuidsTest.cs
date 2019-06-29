@@ -14,7 +14,7 @@ namespace FortniteReplayDecompressor.Test
             {
                 using (var reader = new FortniteBinaryDecompressor(stream))
                 {
-                    reader.InternalLoadObject();
+                    //reader.InternalLoadObject();
                     Assert.Equal(reader.BaseStream.Position, reader.BaseStream.Length);
                 }
             }
@@ -28,7 +28,7 @@ namespace FortniteReplayDecompressor.Test
             {
                 using (var reader = new FortniteBinaryDecompressor(stream))
                 {
-                    reader.InternalLoadObject();
+                    //reader.InternalLoadObject();
                     Assert.Equal(reader.BaseStream.Position, reader.BaseStream.Length);
                 }
             }
@@ -42,7 +42,7 @@ namespace FortniteReplayDecompressor.Test
             {
                 using (var reader = new FortniteBinaryDecompressor(stream))
                 {
-                    reader.InternalLoadObject();
+                    //reader.InternalLoadObject();
                     Assert.Equal(reader.BaseStream.Position, reader.BaseStream.Length);
                 }
             }

@@ -1,4 +1,5 @@
 using FortniteReplayReaderDecompressor;
+using FortniteReplayReaderDecompressor.Core;
 using System;
 using Xunit;
 

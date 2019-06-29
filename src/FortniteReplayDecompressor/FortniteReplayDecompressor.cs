@@ -1,6 +1,7 @@
 ﻿using FortniteReplayReader;
 using FortniteReplayReader.Core.Models;
 using FortniteReplayReader.Core.Models.Enums;
+using FortniteReplayReaderDecompressor.Core;
 using FortniteReplayReaderDecompressor.Core.Models;
 using FortniteReplayReaderDecompressor.Core.Models.Enums;
 using System;
@@ -24,6 +25,7 @@ namespace FortniteReplayReaderDecompressor
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
         private Dictionary<uint, string> Channels = new Dictionary<uint, string>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
+        private Dictionary<uint, uint> RejectedChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
         public FortniteBinaryDecompressor(Stream input) : base(input)
@@ -43,129 +45,72 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
-        public virtual string StaticParseName()
+        public virtual string StaticParseName(FArchive archive)
         {
-            var isHardcoded = ReadBoolean();
+            var isHardcoded = archive.ReadBoolean();
             if (isHardcoded)
             {
                 uint nameIndex;
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                if (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
-                    nameIndex = ReadUInt32();
+                    nameIndex = archive.ReadUInt32();
                 }
                 else
                 {
-                    nameIndex = ReadIntPacked();
+                    nameIndex = archive.ReadIntPacked();
                 }
-
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
-                // hard coded names in "UnrealNames.inl"
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
-                return ((UnrealNames)nameIndex).ToString();
-            }
-
-            var inString = ReadFString();
-            var inNumber = ReadInt32();
-            return inString;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
-        /// </summary>
-        public virtual string StaticParseName(BitReader bitReader)
-        {
-            var isHardcoded = bitReader.ReadBit();
-            if (isHardcoded)
-            {
-                uint nameIndex;
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = bitReader.ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = bitReader.ReadIntPacked();
-                }
-
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
 
-                // Combine with Fortnite SDK dump?
+                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
+                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
+                // TODO: Combine with Fortnite SDK dump
                 return ((UnrealNames)nameIndex).ToString();
             }
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
+            // MAX_NETWORKED_HARDCODED_NAME = 410
+
+            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
+            // NAME_SIZE = 1024
 
             // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
             // InName.GetPlainNameString();
             // InName.GetNumber();
 
-            var inString = bitReader.ReadFString();
-            var inNumber = bitReader.ReadInt32();
+            var inString = archive.ReadFString();
+            var inNumber = archive.ReadInt32();
             return inString;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64
         /// </summary>
-        public virtual NetFieldExport ReadNetFieldExport(BitReader bitReader)
+        public virtual NetFieldExport ReadNetFieldExport(FArchive archive)
         {
-            var isExported = bitReader.ReadByte() == 1;
+            var isExported = archive.ReadBoolean();
             if (isExported)
             {
                 var fieldExport = new NetFieldExport()
                 {
-                    Handle = bitReader.ReadIntPacked(),
-                    CompatibleChecksum = bitReader.ReadUInt32()
+                    Handle = archive.ReadIntPacked(),
+                    CompatibleChecksum = archive.ReadUInt32()
                 };
 
                 if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
                 {
-                    fieldExport.Name = bitReader.ReadFString();
-                    fieldExport.Type = bitReader.ReadFString();
+                    fieldExport.Name = archive.ReadFString();
+                    fieldExport.Type = archive.ReadFString();
                 }
                 else if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
                 {
                     // FName
-                    fieldExport.Name = bitReader.ReadFString();
+                    fieldExport.Name = archive.ReadFString();
                 }
                 else
                 {
-                    fieldExport.Name = StaticParseName(bitReader);
-                }
-
-                return fieldExport;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64
-        /// </summary>
-        public virtual NetFieldExport ReadNetFieldExport()
-        {
-            var isExported = ReadBoolean();
-            if (isExported)
-            {
-                var fieldExport = new NetFieldExport()
-                {
-                    Handle = ReadIntPacked(),
-                    CompatibleChecksum = ReadUInt32()
-                };
-
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION)
-                {
-                    fieldExport.Name = ReadFString();
-                    fieldExport.Type = ReadFString();
-                }
-                else if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
-                {
-                    // FName
-                    fieldExport.Name = ReadFString();
-                }
-                else
-                {
-                    fieldExport.Name = StaticParseName();
+                    fieldExport.Name = StaticParseName(archive);
                 }
 
                 return fieldExport;
@@ -177,19 +122,19 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L133
         /// </summary>
-        public virtual NetFieldExportGroup ReadNetFieldExportGroupMap()
+        public virtual NetFieldExportGroup ReadNetFieldExportGroupMap(FArchive archive)
         {
             var group = new NetFieldExportGroup()
             {
-                PathName = ReadFString(),
-                PathNameIndex = ReadIntPacked(),
-                NetFieldExportsLenght = ReadIntPacked(),
+                PathName = archive.ReadFString(),
+                PathNameIndex = archive.ReadIntPacked(),
+                NetFieldExportsLenght = archive.ReadIntPacked(),
                 NetFieldExports = new List<NetFieldExport>()
             };
 
             for (var i = 0; i < group.NetFieldExportsLenght; i++)
             {
-                var netFieldExport = ReadNetFieldExport();
+                var netFieldExport = ReadNetFieldExport(archive);
                 if (netFieldExport != null)
                 {
                     group.NetFieldExports.Add(netFieldExport);
@@ -203,61 +148,61 @@ namespace FortniteReplayReaderDecompressor
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
         /// <returns></returns>
-        public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets()
+        public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
             Console.WriteLine("ReadDemoFrameIntoPlaybackPackets...");
-            if (Replay.Header.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
-                var currentLevelIndex = ReadInt32();
+                var currentLevelIndex = archive.ReadInt32();
             }
-            var timeSeconds = ReadSingle();
+            var timeSeconds = archive.ReadSingle();
             Console.WriteLine($"Time: {timeSeconds}...");
 
-            if (Replay.Header.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
+            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
             {
-                ReadExportData();
+                ReadExportData(archive);
             }
 
-            if (Replay.Header.HasLevelStreamingFixes())
+            if (archive.HasLevelStreamingFixes())
             {
-                var numStreamingLevels = ReadIntPacked();
+                var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
                 {
-                    var levelName = ReadFString();
+                    var levelName = archive.ReadFString();
                 }
             }
             else
             {
-                var numStreamingLevels = ReadIntPacked();
+                var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
                 {
-                    var packageName = ReadFString();
-                    var packageNameToLoad = ReadFString();
+                    var packageName = archive.ReadFString();
+                    var packageNameToLoad = archive.ReadFString();
                     // FTransform
                     //var levelTransform = reader.ReadFString();
                     // filter duplicates
                 }
             }
 
-            if (Replay.Header.HasLevelStreamingFixes())
+            if (archive.HasLevelStreamingFixes())
             {
-                var externalOffset = ReadUInt64();
+                var externalOffset = archive.ReadUInt64();
             }
 
             // if (!bForLevelFastForward)
-            ReadExternalData();
+            ReadExternalData(archive);
             // else skip externalOffset
 
             var playbackPackets = new List<PlaybackPacket>();
             var @continue = true;
             while (@continue)
             {
-                if (Replay.Header.HasLevelStreamingFixes())
+                if (archive.HasLevelStreamingFixes())
                 {
-                    var seenLevelIndex = ReadIntPacked();
+                    var seenLevelIndex = archive.ReadIntPacked();
                 }
 
-                var packet = ReadPacket();
+                var packet = ReadPacket(archive);
                 playbackPackets.Add(packet);
 
                 @continue = packet.State switch
@@ -287,36 +232,36 @@ namespace FortniteReplayReaderDecompressor
             var eventSizeInBytes = ReadInt32();
 
             var offset = BaseStream.Position;
-            using (var reader = Decompress())
+            using (var archive = Decompress())
             {
                 // SerializeDeletedStartupActors
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
 
-                if (Replay.Header.HasLevelStreamingFixes())
+                if (archive.HasLevelStreamingFixes())
                 {
-                    var packetOffset = reader.ReadInt64();
+                    var packetOffset = archive.ReadInt64();
                 }
 
-                if (Replay.Header.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+                if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
                 {
-                    var levelForCheckpoint = reader.ReadInt32();
+                    var levelForCheckpoint = archive.ReadInt32();
                 }
 
-                if (Replay.Header.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
+                if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
                 {
-                    var deletedNetStartupActors = reader.ReadArray(reader.ReadFString);
+                    var deletedNetStartupActors = archive.ReadArray(archive.ReadFString);
                 }
 
                 // SerializeGuidCache
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1591
-                var count = reader.ReadInt32();
+                var count = archive.ReadInt32();
                 for (var i = 0; i < count; i++)
                 {
-                    var guid = reader.ReadIntPacked();
-                    var outerGuid = reader.ReadIntPacked();
-                    var path = reader.ReadFString();
-                    var checksum = reader.ReadUInt32();
-                    var flags = reader.ReadByte();
+                    var guid = archive.ReadIntPacked();
+                    var outerGuid = archive.ReadIntPacked();
+                    var path = archive.ReadFString();
+                    var checksum = archive.ReadUInt32();
+                    var flags = archive.ReadByte();
 
                     if (!NetGuidCache.ContainsKey(guid))
                     {
@@ -326,53 +271,36 @@ namespace FortniteReplayReaderDecompressor
 
                 // SerializeNetFieldExportGroupMap 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
-                var numNetFieldExportGroups = reader.ReadUInt32();
+                var numNetFieldExportGroups = archive.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
                 {
-                    reader.ReadNetFieldExportGroupMap();
+                    ReadNetFieldExportGroupMap(archive);
                 }
 
                 // SerializeDemoFrameFromQueuedDemoPackets
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-                reader.ReadDemoFrameIntoPlaybackPackets();
-
-
-                // merge netguid cache like this for debugging purposes...
-                foreach (var key in reader.NetGuidCache.Keys)
-                {
-                    if (!this.NetGuidCache.ContainsKey(key))
-                    {
-                        this.NetGuidCache[key] = reader.NetGuidCache[key];
-                    }
-                    else
-                    {
-                        if (this.NetGuidCache[key] != reader.NetGuidCache[key])
-                        {
-                            Console.WriteLine($"{this.NetGuidCache[key]}, {reader.NetGuidCache[key]}");
-                        }
-                    }
-                }
+                ReadDemoFrameIntoPlaybackPackets(archive);
             }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2106
         /// </summary>
-        public virtual void ReadExternalData()
+        public virtual void ReadExternalData(FArchive archive)
         {
             while (true)
             {
-                var externalDataNumBits = ReadIntPacked();
+                var externalDataNumBits = archive.ReadIntPacked();
                 if (externalDataNumBits == 0)
                 {
                     return;
                 }
 
                 // Read net guid this payload belongs to
-                var netGuid = ReadIntPacked();
+                var netGuid = archive.ReadIntPacked();
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                var externalData = ReadBytes(externalDataNumBytes);
+                var externalData = archive.ReadBytes(externalDataNumBytes);
 
                 Debug($"external/externalData-{externalDataIndex}-{netGuid}", externalData);
 
@@ -387,58 +315,50 @@ namespace FortniteReplayReaderDecompressor
 
                 externalDataIndex++;
             }
-
-            // FRepChangedPropertyTracker
-
-            // Using an indirect array here since FReplayExternalData stores an FBitReader, and it's not safe to store an FArchive directly in a TArray.
-            // typedef TIndirectArray<FReplayExternalData> FReplayExternalDataArray;
-            // class DemoNetDriver.h -> BitReader and TimeSeconds (float)
-
-            // ScriptCore.cpp UObject::ProcessEvent( UFunction* Function, void* Parms )
         }
 
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348
         /// </summary>
-        public virtual void ReadExportData()
+        public virtual void ReadExportData(FArchive archive)
         {
-            ReadNetFieldExports();
-            ReadNetExportGuids();
+            ReadNetFieldExports(archive);
+            ReadNetExportGuids(archive);
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
         /// </summary>
-        public virtual void ReadNetExportGuids()
+        public virtual void ReadNetExportGuids(FArchive archive)
         {
-            var numGuids = ReadIntPacked();
+            var numGuids = archive.ReadIntPacked();
             for (var i = 0; i < numGuids; i++)
             {
-                var size = ReadInt32();
+                var size = archive.ReadInt32();
                 //var guid = ReadBytes(size);
-                InternalLoadObject();
+                InternalLoadObject(archive);
             }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1497
         /// </summary>
-        public virtual void ReadNetFieldExports()
+        public virtual void ReadNetFieldExports(FArchive archive)
         {
-            var numLayoutCmdExports = ReadIntPacked();
+            var numLayoutCmdExports = archive.ReadIntPacked();
             for (var i = 0; i < numLayoutCmdExports; i++)
             {
-                var pathNameIndex = ReadIntPacked();
-                var isExported = ReadIntPacked() == 1;
+                var pathNameIndex = archive.ReadIntPacked();
+                var isExported = archive.ReadIntPacked() == 1;
 
                 if (isExported)
                 {
-                    var pathName = ReadFString();
-                    var numExports = ReadIntPacked();
+                    var pathName = archive.ReadFString();
+                    var numExports = archive.ReadIntPacked();
                 }
 
-                ReadNetFieldExport();
+                ReadNetFieldExport(archive);
             }
         }
 
@@ -446,18 +366,18 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3220
         /// </summary>
-        public virtual PlaybackPacket ReadPacket()
+        public virtual PlaybackPacket ReadPacket(FArchive archive)
         {
             var packet = new PlaybackPacket();
 
-            var bufferSize = ReadInt32();
+            var bufferSize = archive.ReadInt32();
             if (bufferSize == 0)
             {
                 packet.State = PacketState.End;
                 return packet;
             }
 
-            packet.Data = ReadBytes(bufferSize);
+            packet.Data = archive.ReadBytes(bufferSize);
             packet.State = PacketState.Success;
             return packet;
         }
@@ -465,31 +385,31 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1409
         /// </summary>
-        public virtual void ReceiveNetFieldExportsCompat(BitReader bitReader)
+        public virtual void ReceiveNetFieldExportsCompat(FBitArchive bitArchive)
         {
-            var numLayoutCmdExports = bitReader.ReadUInt32();
+            var numLayoutCmdExports = bitArchive.ReadUInt32();
             for (var i = 0; i < numLayoutCmdExports; i++)
             {
-                var pathNameIndex = bitReader.ReadIntPacked();
-                if (bitReader.ReadBit())
+                var pathNameIndex = bitArchive.ReadIntPacked();
+                if (bitArchive.ReadBit())
                 {
-                    var pathName = bitReader.ReadFString();
-                    var maxExports = bitReader.ReadInt32();
+                    var pathName = bitArchive.ReadFString();
+                    var maxExports = bitArchive.ReadInt32();
                 }
 
-                var netFieldExport = ReadNetFieldExport(bitReader);
+                var netFieldExport = ReadNetFieldExport(bitArchive);
             }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
         /// </summary>
-        public virtual void InternalLoadObject()
+        public virtual void InternalLoadObject(FArchive archive)
         {
             // TODO: INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
             var netGuid = new NetworkGUID()
             {
-                Value = ReadIntPacked()
+                Value = archive.ReadIntPacked()
             };
 
             if (!netGuid.IsValid())
@@ -497,118 +417,47 @@ namespace FortniteReplayReaderDecompressor
                 return;
             }
 
-            var flags = ReadByteAsEnum<ExportFlags>();
+            var flags = archive.ReadByteAsEnum<ExportFlags>();
 
             // outerguid
             if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
             {
-                InternalLoadObject();
+                InternalLoadObject(archive);
 
-                var pathName = ReadFString();
+                var pathName = archive.ReadFString();
                 if (!NetGuidCache.ContainsKey(netGuid.Value))
                 {
                     NetGuidCache.Add(netGuid.Value, pathName);
                 }
                 if (flags >= ExportFlags.bHasNetworkChecksum)
                 {
-                    var networkChecksum = ReadUInt32();
+                    var networkChecksum = archive.ReadUInt32();
                 }
             }
         }
 
-        /// <summary> 
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
-        /// </summary>
-        /// <param name="bitReader"></param>
-        public virtual void InternalLoadObject(BitReader bitReader)
-        {
-            // INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
-            var netGuid = new NetworkGUID()
-            {
-                Value = bitReader.ReadIntPacked()
-            };
-
-            if (!netGuid.IsValid())
-            {
-                return;
-            }
-
-            var flags = ExportFlags.None;
-            if (netGuid.IsDefault())
-            {
-                flags = (ExportFlags)bitReader.ReadByte();
-            }
-
-            // outerguid
-            if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
-            {
-                InternalLoadObject(bitReader);
-
-                var pathName = bitReader.ReadFString();
-                if (!NetGuidCache.ContainsKey(netGuid.Value))
-                {
-                    NetGuidCache.Add(netGuid.Value, pathName);
-                }
-                if (flags >= ExportFlags.bHasNetworkChecksum)
-                {
-                    var networkChecksum = bitReader.ReadUInt32();
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1452
-        /// </summary>
-        public virtual void ReadPacketInfo(BitReader reader)
-        {
-            var bHasServerFrameTime = reader.ReadBit();
-
-            if (bHasServerFrameTime)
-            {
-                var frameTimeByte = reader.ReadByte();
-            }
-            var remoteInKBytesPerSecondByte = reader.ReadByte();
-        }
-
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Net/NetPacketNotify.cpp#L143
-        /// see https://github.com/EpicGames/UnrealEngine/blob/27e7396206a1b3778d357cd67b93ec718ffb0dad/Engine/Source/Runtime/Engine/Public/Net/Util/SequenceHistory.h#L119
-        /// </summary>
-        public virtual void ReadPacketHeader(BitReader reader)
-        {
-            var packedHeader = reader.ReadUInt32();
-            var historyWordCount = FPackedHeader.GetHistoryWordCount(packedHeader) + 1;
-
-            var numWords = Math.Min(historyWordCount, FPackedHeader.MaxSequenceHistoryLength);
-            for (var i = 0; i < numWords; i++)
-            {
-                reader.ReadBit(); // I think?
-            }
-        }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1203
         /// </summary>
-        public virtual void ReceiveNetGUIDBunch(BitReader bitReader)
+        public virtual void ReceiveNetGUIDBunch(FBitArchive bitArchive)
         {
-            var bHasRepLayoutExport = bitReader.ReadBit();
+            var bHasRepLayoutExport = bitArchive.ReadBit();
 
             if (bHasRepLayoutExport)
             {
                 // We need to keep this around to ensure we don't break backwards compatability.
-                ReceiveNetFieldExportsCompat(bitReader);
+                ReceiveNetFieldExportsCompat(bitArchive);
                 return;
             }
 
-            var numGUIDsInBunch = bitReader.ReadInt32();
+            var numGUIDsInBunch = bitArchive.ReadInt32();
             //if (NumGUIDsInBunch > MAX_GUID_COUNT)
 
             var numGUIDsRead = 0;
             while (numGUIDsRead < numGUIDsInBunch)
             {
-                InternalLoadObject(bitReader);
+                InternalLoadObject(bitArchive);
                 numGUIDsRead++;
             }
         }
@@ -618,7 +467,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedRawBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedRawBunch(FBitArchive bitReader, DataBunch bunch)
         {
             // Immediately consume the NetGUID portion of this bunch, regardless if it is partial or reliable.
             if (bunch.bHasPackageMapExports)
@@ -638,7 +487,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedNextBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedNextBunch(FBitArchive bitReader, DataBunch bunch)
         {
             // We received the next bunch. Basically at this point:
             //	-We know this is in order if reliable
@@ -717,7 +566,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedSequencedBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedSequencedBunch(FBitArchive bitReader, DataBunch bunch)
         {
             // if ( !Closing ) {
             switch (bunch.ChName)
@@ -745,7 +594,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedControlBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedControlBunch(FBitArchive bitReader, DataBunch bunch)
         {
             // control channel
             while (!bitReader.AtEnd())
@@ -759,7 +608,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedActorBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ReceivedActorBunch(FBitArchive bitReader, DataBunch bunch)
         {
             if (bunch.bHasMustBeMappedGUIDs)
             {
@@ -784,7 +633,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ProcessBunch(BitReader bitReader, DataBunch bunch)
+        public virtual void ProcessBunch(FBitArchive bitReader, DataBunch bunch)
         {
             if (!Actor)
             {
@@ -868,7 +717,7 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         /// <returns></returns>
-        public virtual bool ReadFieldHeaderAndPayload(BitReader bitReader, DataBunch bunch)
+        public virtual bool ReadFieldHeaderAndPayload(FBitArchive bitReader, DataBunch bunch)
         {
             if (bitReader.AtEnd())
             {
@@ -884,7 +733,7 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        public virtual void ReadContentBlockPayload(BitReader bitReader, DataBunch bunch)
+        public virtual void ReadContentBlockPayload(FBitArchive bitReader, DataBunch bunch)
         {
             ReadContentBlockHeader(bitReader, bunch);
             var numPayloadBits = bitReader.ReadIntPacked();
@@ -895,7 +744,7 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        public virtual void ReadContentBlockHeader(BitReader bitReader, DataBunch bunch)
+        public virtual void ReadContentBlockHeader(FBitArchive bitReader, DataBunch bunch)
         {
             var bOutHasRepLayout = bitReader.ReadBit();
             var bIsActor = bitReader.ReadBit();
@@ -930,10 +779,13 @@ namespace FortniteReplayReaderDecompressor
 
             if (lastByte != 0)
             {
-                var bitReader = new BitReader(packet.Data);
+                var bitArchive = new Core.BitReader(packet.Data);
+                bitArchive.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
+                bitArchive.NetworkVersion = Replay.Header.NetworkVersion;
+                bitArchive.ReplayHeaderFlags = Replay.Header.Flags;
                 try
                 {
-                    ReceivedPacket(bitReader, packet);
+                    ReceivedPacket(bitArchive);
                 }
                 catch (Exception ex)
                 {
@@ -952,7 +804,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"><see cref="BitReader"/></param>
         /// <param name="packet"><see cref="PlaybackPacket"/></param>
-        public virtual void ReceivedPacket(BitReader bitReader, PlaybackPacket packet)
+        public virtual void ReceivedPacket(FBitArchive bitReader)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
             // InternalAck always true!
@@ -973,13 +825,14 @@ namespace FortniteReplayReaderDecompressor
 
                 // FInBunch
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataBunch.cpp#L18
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/DataBunch.h#L168
                 var bunch = new DataBunch();
 
                 var bControl = bitReader.ReadBit();
                 bunch.bOpen = bControl ? bitReader.ReadBit() : false;
                 bunch.bClose = bControl ? bitReader.ReadBit() : false;
 
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
+                if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
                     bunch.bDormant = bunch.bClose ? bitReader.ReadBit() : false;
                     bunch.CloseReason = bunch.bDormant ? ChannelCloseReason.Dormancy : ChannelCloseReason.Destroyed;
@@ -994,7 +847,7 @@ namespace FortniteReplayReaderDecompressor
                 bunch.bIsReplicationPaused = bitReader.ReadBit();
                 bunch.bReliable = bitReader.ReadBit();
 
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_MAX_ACTOR_CHANNELS_CUSTOMIZATION)
+                if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_MAX_ACTOR_CHANNELS_CUSTOMIZATION)
                 {
                     bunch.ChIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
                 }
@@ -1009,6 +862,7 @@ namespace FortniteReplayReaderDecompressor
 
                 if (bunch.bReliable)
                 {
+                    // TODO
                     if (InReliable.ContainsKey(bunch.ChIndex))
                     {
                         bunch.ChSequence = InReliable[bunch.ChIndex] + 1;
@@ -1034,7 +888,7 @@ namespace FortniteReplayReaderDecompressor
                 var chType = ChannelType.None;
                 var chName = ChannelName.None;
 
-                if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
                     var type = bitReader.ReadInt((int)ChannelType.MAX);
                     chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
@@ -1086,7 +940,7 @@ namespace FortniteReplayReaderDecompressor
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
-                var bunchReader = new BitReader(bitReader.ReadBits(bunchDataBits));
+                var bunchReader = new Core.BitReader(bitReader.ReadBits(bunchDataBits));
 
                 if (bunch.bHasPackageMapExports)
                 {
@@ -1103,10 +957,10 @@ namespace FortniteReplayReaderDecompressor
                 //}
 
                 // ignore control channel close if it hasn't been opened yet
-                if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
-                {
-                    return;
-                }
+                //if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
+                //{
+                //    return;
+                //}
 
                 // We're on a 100% reliable connection and we are rolling back some data.
                 // In that case, we can generally ignore these bunches.
@@ -1150,29 +1004,36 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
-                if (!Channel && !bunch.bReliable)
-                {
-                    if (bunch.bOpen && (bunch.bClose || bunch.bPartial))
-                    {
-                        continue;
-                    }
-                }
+                //if (!Channel && !bunch.bReliable)
+                //{
+                //    if (bunch.bOpen && (bunch.bClose || bunch.bPartial))
+                //    {
+                //        continue;
+                //    }
+                //}
 
                 // Create channel if necessary
                 if (!Channel)
                 {
-                    // if (RejectedChans.Contains(Bunch.ChIndex))
+                    if (RejectedChannels.ContainsKey(bunch.ChIndex))
+                    {
+                        continue;
+                    }
                     // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
 
-                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) )
                     // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
                     Channel = true;
                     Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
-                    continue;
+                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
                 }
 
                 // Dispatch the raw, unsequenced bunch to the channel
                 ReceivedRawBunch(bunchReader, bunch);
+            }
+
+            if (!bitReader.AtEnd())
+            {
+                Console.WriteLine("packet not fully read...");
             }
 
             // termination bit?
@@ -1197,37 +1058,21 @@ namespace FortniteReplayReaderDecompressor
                 var length = ReadUInt32();
             }
 
-            using (var reader = Decompress())
+            using (var archive = Decompress())
             {
-                while (reader.BaseStream.Length > reader.BaseStream.Position)
+                while (!archive.AtEnd())
                 {
-                    var startPos = reader.BaseStream.Position;
-                    var playbackPackets = reader.ReadDemoFrameIntoPlaybackPackets();
+                    var startPos = archive.BaseStream.Position;
+                    var playbackPackets = ReadDemoFrameIntoPlaybackPackets(archive);
 
                     // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
                     foreach (var packet in playbackPackets)
                     {
                         if (packet.State == PacketState.Success)
                         {
-                            File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{reader.BaseStream.Position}.dump", packet.Data);
+                            File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{archive.BaseStream.Position}.dump", packet.Data);
                             ReceivedRawPacket(packet);
                             packetIndex++;
-                        }
-                    }
-
-                    // merge netguid cache like this for debugging purposes...
-                    foreach (var key in reader.NetGuidCache.Keys)
-                    {
-                        if (!this.NetGuidCache.ContainsKey(key))
-                        {
-                            this.NetGuidCache[key] = reader.NetGuidCache[key];
-                        }
-                        else
-                        {
-                            if (this.NetGuidCache[key] != reader.NetGuidCache[key])
-                            {
-                                Console.WriteLine($"{this.NetGuidCache[key]}, {reader.NetGuidCache[key]}");
-                            }
                         }
                     }
                 }
@@ -1241,15 +1086,17 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
-        private FortniteBinaryDecompressor Decompress()
+        private Core.BinaryReader Decompress()
         {
             var decompressedSize = ReadInt32();
             var compressedSize = ReadInt32();
             var compressedBuffer = ReadBytes(compressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, compressedBuffer.Length, decompressedSize);
-            var reader = new FortniteBinaryDecompressor(new MemoryStream(output), this.Replay);
-            reader.BaseStream.Position = 0;
-            return reader;
+            var archive = new Core.BinaryReader(new MemoryStream(output));
+            archive.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
+            archive.NetworkVersion = Replay.Header.NetworkVersion;
+            archive.ReplayHeaderFlags = Replay.Header.Flags;
+            return archive;
         }
     }
 }

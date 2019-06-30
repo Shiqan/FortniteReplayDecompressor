@@ -10,6 +10,32 @@ namespace FortniteReplayReaderDecompressor.Core.Models
     /// </summary>
     public class DataBunch
     {
+        public DataBunch()
+        {
+
+        }
+
+        public DataBunch(DataBunch InBunch)
+        {
+            PacketId = InBunch.PacketId;
+            ChIndex = InBunch.ChIndex;
+            ChType = InBunch.ChType;
+            ChName = InBunch.ChName;
+            ChSequence = InBunch.ChSequence;
+            bOpen = InBunch.bOpen;
+            bClose = InBunch.bClose;
+            bDormant = InBunch.bDormant;
+            bIsReplicationPaused = InBunch.bIsReplicationPaused;
+            bReliable = InBunch.bReliable;
+            bPartial = InBunch.bPartial;
+            bPartialInitial = InBunch.bPartialInitial;
+            bPartialFinal = InBunch.bPartialFinal;
+            bHasPackageMapExports = InBunch.bHasPackageMapExports;
+            bHasMustBeMappedGUIDs = InBunch.bHasMustBeMappedGUIDs;
+            bIgnoreRPCs = InBunch.bIgnoreRPCs;
+            CloseReason = InBunch.CloseReason;
+        }
+
         public int PacketId { get; set; }
         //FInBunch* Next;
         //UNetConnection* Connection;

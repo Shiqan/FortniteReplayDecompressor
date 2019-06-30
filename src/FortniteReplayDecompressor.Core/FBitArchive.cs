@@ -16,5 +16,7 @@ namespace FortniteReplayReaderDecompressor.Core
         public abstract FVector ReadPackedVector(int scaleFactor, int maxBits);
         public abstract void Mark();
         public abstract void Pop();
+        public abstract int GetBitsLeft();
+        public abstract void AppendDataFromChecked(bool[] data);
     }
 }

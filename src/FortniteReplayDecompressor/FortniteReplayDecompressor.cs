@@ -469,12 +469,6 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bunch"></param>
         public virtual void ReceivedRawBunch(FBitArchive bitReader, DataBunch bunch)
         {
-            // Immediately consume the NetGUID portion of this bunch, regardless if it is partial or reliable.
-            if (bunch.bHasPackageMapExports)
-            {
-                ReceiveNetGUIDBunch(bitReader);
-            }
-
             // bDeleted =
             ReceivedNextBunch(bitReader, bunch);
 
@@ -507,54 +501,110 @@ namespace FortniteReplayReaderDecompressor
             {
                 if (bunch.bPartialInitial)
                 {
-                    // new bunch
-                    // !Bunch.bHasPackageMapExports && Bunch.GetBitsLeft() > 0
-                    // InPartialBunch->AppendDataFromChecked(Bunch.GetDataPosChecked(), Bunch.GetBitsLeft());
-                }
-                else
-                {
                     if (PartialBunch != null)
                     {
+                        if (!PartialBunch.bPartialFinal)
+                        {
+                            if (PartialBunch.bReliable)
+                            {
+                                if (bunch.bReliable)
+                                {
+                                    // log Reliable partial trying to destroy reliable partial 1
+                                    return;
+                                }
 
+                                //  log "Unreliable partial trying to destroy reliable partial 1"
+                                return;
+
+                            }
+                            // Incomplete partial bunch. 
+                        }
+                        PartialBunch = null;
+                    }
+
+                    // InPartialBunch = new FInBunch(Bunch, false);
+                    PartialBunch = new DataBunch(bunch);
+
+                    if (!bunch.bHasPackageMapExports && bitReader.GetBitsLeft() > 0)
+                    {
+                        if (bitReader.GetBitsLeft() % 8 != 0)
+                        {
+                            return;
+                        }
+
+                        // InPartialBunch->AppendDataFromChecked( Bunch.GetDataPosChecked(), Bunch.GetBitsLeft() );
                     }
                     else
                     {
-                        // skip
+                        // "Received New partial bunch. It only contained NetGUIDs."
+                    }
+                }
+                else
+                {
+                    var bSequenceMatches = false;
+
+                    if (PartialBunch != null)
+                    {
+                        var bReliableSequencesMatches = bunch.ChSequence == PartialBunch.ChSequence + 1;
+                        var bUnreliableSequenceMatches = bReliableSequencesMatches || (bunch.ChSequence == PartialBunch.ChSequence);
+
+                        // Unreliable partial bunches use the packet sequence, and since we can merge multiple bunches into a single packet,
+                        // it's perfectly legal for the ChSequence to match in this case.
+                        // Reliable partial bunches must be in consecutive order though
+                        bSequenceMatches = PartialBunch.bReliable ? bReliableSequencesMatches : bUnreliableSequenceMatches;
                     }
 
-                    //if (!Bunch.bHasPackageMapExports && Bunch.GetBitsLeft() > 0)
-                    //{
-                    //    InPartialBunch->AppendDataFromChecked(Bunch.GetDataPosChecked(), Bunch.GetBitsLeft());
-                    //}
-
-
-                    // Advance the sequence of the current partial bunch so we know what to expect next
-                    //InPartialBunch->ChSequence = Bunch.ChSequence;
-
-                    if (bunch.bPartialFinal)
+                    // if (InPartialBunch && !InPartialBunch->bPartialFinal && bSequenceMatches && InPartialBunch->bReliable == Bunch.bReliable)
+                    if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
                     {
-                        //if (Bunch.bHasPackageMapExports)
+                        if (!bunch.bHasPackageMapExports && bitReader.GetBitsLeft() > 0)
+                        {
+                            //    InPartialBunch->AppendDataFromChecked(Bunch.GetDataPosChecked(), Bunch.GetBitsLeft());
+                        }
+
+                        // Only the final partial bunch should ever be non byte aligned. This is enforced during partial bunch creation
+                        // This is to ensure fast copies/appending of partial bunches. The final partial bunch may be non byte aligned.
+                        //if (!Bunch.bHasPackageMapExports && !Bunch.bPartialFinal && (Bunch.GetBitsLeft() % 8 != 0))
                         //{
-                        //    // Shouldn't have these, they only go in initial partial export bunches
-                        //    UE_LOG(LogNetPartialBunch, Warning, TEXT("Corrupt partial bunch. Final partial bunch has package map exports. %s"), *Describe());
+                        //    UE_LOG(LogNetPartialBunch, Warning, TEXT("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned. bHasPackageMapExports = %d, bPartialFinal = %d, BitsLeft = %u. %s"),
+                        //        Bunch.bHasPackageMapExports ? 1 : 0, Bunch.bPartialFinal ? 1 : 0, Bunch.GetBitsLeft(), *Describe());
                         //    Bunch.SetError();
                         //    return false;
                         //}
 
-                        //    HandleBunch = InPartialBunch;
+                        // Advance the sequence of the current partial bunch so we know what to expect next
+                        PartialBunch.ChSequence = bunch.ChSequence;
 
-                        //    InPartialBunch->bPartialFinal = true;
-                        //    InPartialBunch->bClose = Bunch.bClose;
-                        //    PRAGMA_DISABLE_DEPRECATION_WARNINGS
+                        if (bunch.bPartialFinal)
+                        {
+                            //if (Bunch.bHasPackageMapExports)
+                            //{
+                            //    // Shouldn't have these, they only go in initial partial export bunches
+                            //    UE_LOG(LogNetPartialBunch, Warning, TEXT("Corrupt partial bunch. Final partial bunch has package map exports. %s"), *Describe());
+                            //    Bunch.SetError();
+                            //    return false;
+                            //}
 
-                        //InPartialBunch->bDormant = Bunch.bDormant;
-                        //    PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-                        //InPartialBunch->CloseReason = Bunch.CloseReason;
-                        //    InPartialBunch->bIsReplicationPaused = Bunch.bIsReplicationPaused;
-                        //    InPartialBunch->bHasMustBeMappedGUIDs = Bunch.bHasMustBeMappedGUIDs;
+
+                            // HandleBunch = InPartialBunch;
+
+                            PartialBunch.bPartialFinal = true;
+                            PartialBunch.bClose = bunch.bClose;
+                            PartialBunch.bDormant = bunch.bDormant;
+                            PartialBunch.CloseReason = bunch.CloseReason;
+                            PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
+                            PartialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
+                        }
+                    }
+                    else
+                    {
+                        // Merge problem - delete InPartialBunch. This is mainly so that in the unlikely chance that ChSequence wraps around, we wont merge two completely separate partial bunches.
+                        // We shouldn't hit this path on 100% reliable connections
+                        Console.WriteLine("debug");
                     }
                 }
+                // bunch size check...
             }
 
             // Receive it in sequence.
@@ -658,11 +708,10 @@ namespace FortniteReplayReaderDecompressor
                     var ArchetypeNetGUID = new NetworkGUID();
                     InternalLoadObject(bitReader); // out ArchetypeNetGUID
 
-                    // Only in Saving ??
-                    //if (Replay.Header.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
-                    //{
-                    //    InternalLoadObject(bitReader);
-                    //}
+                    if (bitReader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
+                    {
+                        InternalLoadObject(bitReader);
+                    }
 
                     // bSerializeLocation
                     if (bitReader.ReadBit())
@@ -782,10 +831,12 @@ namespace FortniteReplayReaderDecompressor
 
             if (lastByte != 0)
             {
-                var bitArchive = new Core.BitReader(packet.Data);
-                bitArchive.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
-                bitArchive.NetworkVersion = Replay.Header.NetworkVersion;
-                bitArchive.ReplayHeaderFlags = Replay.Header.Flags;
+                var bitArchive = new Core.BitReader(packet.Data)
+                {
+                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                    NetworkVersion = Replay.Header.NetworkVersion,
+                    ReplayHeaderFlags = Replay.Header.Flags
+                };
                 try
                 {
                     ReceivedPacket(bitArchive);
@@ -943,7 +994,12 @@ namespace FortniteReplayReaderDecompressor
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
-                var bunchReader = new Core.BitReader(bitReader.ReadBits(bunchDataBits));
+                var bunchReader = new Core.BitReader(bitReader.ReadBits(bunchDataBits))
+                {
+                    EngineNetworkVersion = bitReader.EngineNetworkVersion,
+                    NetworkVersion = bitReader.NetworkVersion,
+                    ReplayHeaderFlags = bitReader.ReplayHeaderFlags
+                };
 
                 if (bunch.bHasPackageMapExports)
                 {
@@ -969,42 +1025,42 @@ namespace FortniteReplayReaderDecompressor
                 // In that case, we can generally ignore these bunches.
                 // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
                 // bIgnoreAlreadyOpenedChannels always true?  https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4393
-                if (Channel)
-                {
-                    var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
-                    if (bNewlyOpenedActorChannel)
-                    {
-                        if (bunch.bHasMustBeMappedGUIDs)
-                        {
-                            var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
-                            for (var i = 0; i < numMustBeMappedGUIDs; i++)
-                            {
-                                // FNetworkGUID NetGUID
-                                var guid = bunchReader.ReadIntPacked();
-                            }
-                        }
+                //if (Channel)
+                //{
+                //    var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
+                //    if (bNewlyOpenedActorChannel)
+                //    {
+                //        if (bunch.bHasMustBeMappedGUIDs)
+                //        {
+                //            var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
+                //            for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                //            {
+                //                // FNetworkGUID NetGUID
+                //                var guid = bunchReader.ReadIntPacked();
+                //            }
+                //        }
 
-                        //FNetworkGUID ActorGUID;
-                        var actorGuid = bunchReader.ReadIntPacked();
-                        IgnoringChannels.Add(bunch.ChIndex, actorGuid);
-                    }
+                //        //FNetworkGUID ActorGUID;
+                //        var actorGuid = bunchReader.ReadIntPacked();
+                //        IgnoringChannels.Add(bunch.ChIndex, actorGuid);
+                //    }
 
-                    if (IgnoringChannels.ContainsKey(bunch.ChIndex))
-                    {
-                        if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
-                        {
-                            //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
-                            IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
-                        }
-                        continue;
-                    }
-                }
+                //    if (IgnoringChannels.ContainsKey(bunch.ChIndex))
+                //    {
+                //        if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
+                //        {
+                //            //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
+                //            IgnoringChannels.Remove(bunch.ChIndex, out var actorguid);
+                //        }
+                //        continue;
+                //    }
+                //}
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
-                {
-                    continue;
-                }
+                //if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                //{
+                //    continue;
+                //}
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
                 //if (!Channel && !bunch.bReliable)
@@ -1016,22 +1072,34 @@ namespace FortniteReplayReaderDecompressor
                 //}
 
                 // Create channel if necessary
-                if (!Channel)
-                {
-                    if (RejectedChannels.ContainsKey(bunch.ChIndex))
-                    {
-                        continue;
-                    }
-                    // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
+                //if (!Channel)
+                //{
+                //    if (RejectedChannels.ContainsKey(bunch.ChIndex))
+                //    {
+                //        continue;
+                //    }
+                //    // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
 
-                    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-                    Channel = true;
-                    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
-                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
+                //    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
+                //    Channel = true;
+                //    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
+                //    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
+                //}
+
+                // debugging
+                if (bunch.ChName == ChannelName.Control)
+                {
+                    Control = true;
+                }
+
+
+                if (!Control)
+                {
+                    continue;
                 }
 
                 // Dispatch the raw, unsequenced bunch to the channel
-                // ReceivedRawBunch(bunchReader, bunch);
+                ReceivedRawBunch(bunchReader, bunch);
             }
 
             if (!bitReader.AtEnd())
@@ -1095,10 +1163,12 @@ namespace FortniteReplayReaderDecompressor
             var compressedSize = ReadInt32();
             var compressedBuffer = ReadBytes(compressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, compressedBuffer.Length, decompressedSize);
-            var archive = new Core.BinaryReader(new MemoryStream(output));
-            archive.EngineNetworkVersion = Replay.Header.EngineNetworkVersion;
-            archive.NetworkVersion = Replay.Header.NetworkVersion;
-            archive.ReplayHeaderFlags = Replay.Header.Flags;
+            var archive = new Core.BinaryReader(new MemoryStream(output))
+            {
+                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                NetworkVersion = Replay.Header.NetworkVersion,
+                ReplayHeaderFlags = Replay.Header.Flags
+            };
             return archive;
         }
     }

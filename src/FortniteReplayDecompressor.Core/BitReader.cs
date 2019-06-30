@@ -378,5 +378,15 @@ namespace FortniteReplayReaderDecompressor.Core
             // TODO: pop makes it sound like a list...
             Position = MarkPosition;
         }
+
+        public override int GetBitsLeft()
+        {
+            return Bits.Length - Position;
+        }
+
+        public override void AppendDataFromChecked(bool[] data)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -467,10 +467,10 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedRawBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReceivedRawBunch(DataBunch bunch)
         {
             // bDeleted =
-            ReceivedNextBunch(bitReader, bunch);
+            ReceivedNextBunch(bunch);
 
             // if (bDeleted) return;
             // else { We shouldn't hit this path on 100% reliable connections }
@@ -481,7 +481,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedNextBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReceivedNextBunch(DataBunch bunch)
         {
             // We received the next bunch. Basically at this point:
             //	-We know this is in order if reliable
@@ -524,14 +524,15 @@ namespace FortniteReplayReaderDecompressor
 
                     // InPartialBunch = new FInBunch(Bunch, false);
                     PartialBunch = new DataBunch(bunch);
-
-                    if (!bunch.bHasPackageMapExports && bitReader.GetBitsLeft() > 0)
+                    var bitsLeft = bunch.Archive.GetBitsLeft();
+                    if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                     {
-                        if (bitReader.GetBitsLeft() % 8 != 0)
+                        if (bitsLeft % 8 != 0)
                         {
                             return;
                         }
 
+                        PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
                         // InPartialBunch->AppendDataFromChecked( Bunch.GetDataPosChecked(), Bunch.GetBitsLeft() );
                     }
                     else
@@ -541,6 +542,11 @@ namespace FortniteReplayReaderDecompressor
                 }
                 else
                 {
+                    // Merge in next partial bunch to InPartialBunch if:
+                    // -We have a valid InPartialBunch
+                    // -The current InPartialBunch wasn't already complete
+                    // -ChSequence is next in partial sequence
+                    // -Reliability flag matches
                     var bSequenceMatches = false;
 
                     if (PartialBunch != null)
@@ -557,38 +563,32 @@ namespace FortniteReplayReaderDecompressor
                     // if (InPartialBunch && !InPartialBunch->bPartialFinal && bSequenceMatches && InPartialBunch->bReliable == Bunch.bReliable)
                     if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
                     {
-                        if (!bunch.bHasPackageMapExports && bitReader.GetBitsLeft() > 0)
+                        var bitsLeft = bunch.Archive.GetBitsLeft();
+                        if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                         {
-                            //    InPartialBunch->AppendDataFromChecked(Bunch.GetDataPosChecked(), Bunch.GetBitsLeft());
+                            PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
+                            // InPartialBunch->AppendDataFromChecked( Bunch.GetDataPosChecked(), Bunch.GetBitsLeft() );
                         }
 
                         // Only the final partial bunch should ever be non byte aligned. This is enforced during partial bunch creation
                         // This is to ensure fast copies/appending of partial bunches. The final partial bunch may be non byte aligned.
-                        //if (!Bunch.bHasPackageMapExports && !Bunch.bPartialFinal && (Bunch.GetBitsLeft() % 8 != 0))
-                        //{
-                        //    UE_LOG(LogNetPartialBunch, Warning, TEXT("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned. bHasPackageMapExports = %d, bPartialFinal = %d, BitsLeft = %u. %s"),
-                        //        Bunch.bHasPackageMapExports ? 1 : 0, Bunch.bPartialFinal ? 1 : 0, Bunch.GetBitsLeft(), *Describe());
-                        //    Bunch.SetError();
-                        //    return false;
-                        //}
+                        if (!bunch.bHasPackageMapExports && !bunch.bPartialFinal && (bitsLeft % 8 != 0))
+                        {
+                            // "Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned."
+                            return;
+                        }
 
                         // Advance the sequence of the current partial bunch so we know what to expect next
                         PartialBunch.ChSequence = bunch.ChSequence;
 
                         if (bunch.bPartialFinal)
                         {
-                            //if (Bunch.bHasPackageMapExports)
-                            //{
-                            //    // Shouldn't have these, they only go in initial partial export bunches
-                            //    UE_LOG(LogNetPartialBunch, Warning, TEXT("Corrupt partial bunch. Final partial bunch has package map exports. %s"), *Describe());
-                            //    Bunch.SetError();
-                            //    return false;
-                            //}
-
-
-
+                            if (bunch.bHasPackageMapExports)
+                            {
+                                // "Corrupt partial bunch. Final partial bunch has package map exports."
+                                return;
+                            }
                             // HandleBunch = InPartialBunch;
-
                             PartialBunch.bPartialFinal = true;
                             PartialBunch.bClose = bunch.bClose;
                             PartialBunch.bDormant = bunch.bDormant;
@@ -608,7 +608,7 @@ namespace FortniteReplayReaderDecompressor
             }
 
             // Receive it in sequence.
-            ReceivedSequencedBunch(bitReader, bunch);
+            ReceivedSequencedBunch(bunch);
         }
 
         /// <summary>
@@ -616,16 +616,16 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedSequencedBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReceivedSequencedBunch(DataBunch bunch)
         {
             // if ( !Closing ) {
             switch (bunch.ChName)
             {
                 case ChannelName.Actor:
-                    ReceivedActorBunch(bitReader, bunch);
+                    ReceivedActorBunch(bunch);
                     break;
                 case ChannelName.Control:
-                    ReceivedControlBunch(bitReader, bunch);
+                    ReceivedControlBunch(bunch);
                     break;
                 default:
                     throw new Exception();
@@ -644,12 +644,12 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedControlBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReceivedControlBunch(DataBunch bunch)
         {
             // control channel
-            while (!bitReader.AtEnd())
+            while (!bunch.Archive.AtEnd())
             {
-                var messageType = bitReader.ReadByte();
+                var messageType = bunch.Archive.ReadByte();
             }
         }
 
@@ -658,14 +658,14 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ReceivedActorBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReceivedActorBunch(DataBunch bunch)
         {
             if (bunch.bHasMustBeMappedGUIDs)
             {
-                var numMustBeMappedGUIDs = bitReader.ReadUInt16();
+                var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
-                    var guid = bitReader.ReadIntPacked();
+                    var guid = bunch.Archive.ReadIntPacked();
                 }
             }
 
@@ -674,12 +674,12 @@ namespace FortniteReplayReaderDecompressor
             {
                 // FBitReaderMark (how does this even work??)
                 // Take a sneak peak at the actor guid so we have a copy of it now
-                bitReader.Mark();
-                var actorGuid = bitReader.ReadIntPacked();
-                bitReader.Pop();
+                bunch.Archive.Mark();
+                var actorGuid = bunch.Archive.ReadIntPacked();
+                bunch.Archive.Pop();
             }
 
-            ProcessBunch(bitReader, bunch);
+            ProcessBunch(bunch);
         }
 
         /// <summary>
@@ -687,7 +687,7 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
-        public virtual void ProcessBunch(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ProcessBunch(DataBunch bunch)
         {
             if (!Actor)
             {
@@ -696,9 +696,9 @@ namespace FortniteReplayReaderDecompressor
                 // SerializeNewActor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
                 var netGuid = new NetworkGUID();
-                InternalLoadObject(bitReader); // TODO: out netGuid
+                InternalLoadObject(bunch.Archive); // TODO: out netGuid
 
-                if (bitReader.AtEnd() && netGuid.IsDynamic())
+                if (bunch.Archive.AtEnd() && netGuid.IsDynamic())
                 {
                     return;
                 }
@@ -706,56 +706,56 @@ namespace FortniteReplayReaderDecompressor
                 if (netGuid.IsDynamic())
                 {
                     var ArchetypeNetGUID = new NetworkGUID();
-                    InternalLoadObject(bitReader); // out ArchetypeNetGUID
+                    InternalLoadObject(bunch.Archive); // out ArchetypeNetGUID
 
-                    if (bitReader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
+                    if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
                     {
-                        InternalLoadObject(bitReader);
+                        InternalLoadObject(bunch.Archive);
                     }
 
                     // bSerializeLocation
-                    if (bitReader.ReadBit())
+                    if (bunch.Archive.ReadBit())
                     {
                         // Location.NetSerialize(Ar, this, SerSuccess);
-                        bitReader.ReadPackedVector(10, 24);
+                        bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeRotation
-                    if (bitReader.ReadBit())
+                    if (bunch.Archive.ReadBit())
                     {
                         // Rotation.NetSerialize(Ar, this, SerSuccess);
-                        bitReader.ReadPackedVector(10, 24);
+                        bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeScale
-                    if (bitReader.ReadBit())
+                    if (bunch.Archive.ReadBit())
                     {
                         // Scale.NetSerialize(Ar, this, SerSuccess);
-                        bitReader.ReadPackedVector(10, 24);
+                        bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeVelocity
-                    if (bitReader.ReadBit())
+                    if (bunch.Archive.ReadBit())
                     {
                         // Velocity.NetSerialize(Ar, this, SerSuccess);
-                        bitReader.ReadPackedVector(10, 24);
+                        bunch.Archive.ReadPackedVector(10, 24);
                     }
                 }
 
                 Actor = true;
             }
 
-            while (!bitReader.AtEnd())
+            while (!bunch.Archive.AtEnd())
             {
                 // FNetBitReader Reader( Bunch.PackageMap, 0 );
 
-                ReadContentBlockPayload(bitReader, bunch);
+                ReadContentBlockPayload(bunch);
                 // if (empty) continue
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
 
-                while (ReadFieldHeaderAndPayload(bitReader, bunch))
+                while (ReadFieldHeaderAndPayload(bunch))
                 {
-                    bitReader.ReadIntPacked();
+                    bunch.Archive.ReadIntPacked();
                     // not sure...
                 }
             }
@@ -769,26 +769,26 @@ namespace FortniteReplayReaderDecompressor
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         /// <returns></returns>
-        public virtual bool ReadFieldHeaderAndPayload(FBitArchive bitReader, DataBunch bunch)
+        public virtual bool ReadFieldHeaderAndPayload(DataBunch bunch)
         {
-            if (bitReader.AtEnd())
+            if (bunch.Archive.AtEnd())
             {
                 return false;
             }
 
             // NetFieldExportGroup.Num ?
-            var netFieldExportHandle = bitReader.ReadInt(2);
-            var numPayloadBits = bitReader.ReadIntPacked();
+            var netFieldExportHandle = bunch.Archive.ReadInt(2);
+            var numPayloadBits = bunch.Archive.ReadIntPacked();
             return true;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        public virtual void ReadContentBlockPayload(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReadContentBlockPayload(DataBunch bunch)
         {
-            ReadContentBlockHeader(bitReader, bunch);
-            var numPayloadBits = bitReader.ReadIntPacked();
+            ReadContentBlockHeader(bunch);
+            var numPayloadBits = bunch.Archive.ReadIntPacked();
             // FNetBitReader?
             // A bit reader that serializes FNames and UObject* through a network packagemap.
         }
@@ -796,10 +796,10 @@ namespace FortniteReplayReaderDecompressor
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        public virtual void ReadContentBlockHeader(FBitArchive bitReader, DataBunch bunch)
+        public virtual void ReadContentBlockHeader(DataBunch bunch)
         {
-            var bOutHasRepLayout = bitReader.ReadBit();
-            var bIsActor = bitReader.ReadBit();
+            var bOutHasRepLayout = bunch.Archive.ReadBit();
+            var bIsActor = bunch.Archive.ReadBit();
             if (bIsActor)
             {
                 // If this is for the actor on the channel, we don't need to read anything else
@@ -808,9 +808,9 @@ namespace FortniteReplayReaderDecompressor
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
-            InternalLoadObject(bitReader);
+            InternalLoadObject(bunch.Archive);
 
-            var bStablyNamed = bitReader.ReadBit();
+            var bStablyNamed = bunch.Archive.ReadBit();
             if (bStablyNamed)
             {
                 // If this is a stably named sub-object, we shouldn't need to create it. Don't raise a bunch error though because this may happen while a level is streaming out.
@@ -818,7 +818,7 @@ namespace FortniteReplayReaderDecompressor
             }
 
             // Serialize the class in case we have to spawn it.
-            InternalLoadObject(bitReader);
+            InternalLoadObject(bunch.Archive);
         }
 
         /// <summary>
@@ -994,7 +994,7 @@ namespace FortniteReplayReaderDecompressor
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
-                var bunchReader = new Core.BitReader(bitReader.ReadBits(bunchDataBits))
+                bunch.Archive = new Core.BitReader(bitReader.ReadBits(bunchDataBits))
                 {
                     EngineNetworkVersion = bitReader.EngineNetworkVersion,
                     NetworkVersion = bitReader.NetworkVersion,
@@ -1003,7 +1003,7 @@ namespace FortniteReplayReaderDecompressor
 
                 if (bunch.bHasPackageMapExports)
                 {
-                    ReceiveNetGUIDBunch(bunchReader);
+                    ReceiveNetGUIDBunch(bunch.Archive);
                 }
 
                 // Can't handle other channels until control channel exists.
@@ -1036,7 +1036,7 @@ namespace FortniteReplayReaderDecompressor
                 //            for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 //            {
                 //                // FNetworkGUID NetGUID
-                //                var guid = bunchReader.ReadIntPacked();
+                //                var guid = bunch.Archive.ReadIntPacked();
                 //            }
                 //        }
 
@@ -1099,7 +1099,7 @@ namespace FortniteReplayReaderDecompressor
                 }
 
                 // Dispatch the raw, unsequenced bunch to the channel
-                ReceivedRawBunch(bunchReader, bunch);
+                ReceivedRawBunch(bunch);
             }
 
             if (!bitReader.AtEnd())

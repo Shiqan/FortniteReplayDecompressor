@@ -2,6 +2,7 @@
 using System.Collections;
 using System.IO;
 using System.Text;
+using FortniteReplayReaderDecompressor.Core.Extensions;
 using FortniteReplayReaderDecompressor.Core.Models;
 
 namespace FortniteReplayReaderDecompressor.Core
@@ -12,7 +13,7 @@ namespace FortniteReplayReaderDecompressor.Core
     /// </summary>
     public class BitReader : FBitArchive
     {
-        private readonly BitArray Bits;
+        private BitArray Bits { get; set; }
 
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
@@ -131,12 +132,12 @@ namespace FortniteReplayReaderDecompressor.Core
                 }
             }
 
-            return result;
+            return result; 
         }
 
         public override T ReadByteAsEnum<T>()
         {
-            throw new NotImplementedException();
+            return (T)Enum.ToObject(typeof(T), ReadByte());
         }
 
         public override byte[] ReadBytes(int byteCount)
@@ -386,7 +387,7 @@ namespace FortniteReplayReaderDecompressor.Core
 
         public override void AppendDataFromChecked(bool[] data)
         {
-            throw new NotImplementedException();
-        }
+            Bits = Bits.Append(data);
+        } 
     }
 }

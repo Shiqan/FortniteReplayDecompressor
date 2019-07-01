@@ -10,6 +10,7 @@ namespace FortniteReplayReaderDecompressor.Core.Models
     /// </summary>
     public class DataBunch
     {
+        // TODO: make BunchArchive?
         public DataBunch()
         {
 
@@ -17,6 +18,7 @@ namespace FortniteReplayReaderDecompressor.Core.Models
 
         public DataBunch(DataBunch InBunch)
         {
+            Archive = InBunch.Archive;
             PacketId = InBunch.PacketId;
             ChIndex = InBunch.ChIndex;
             ChType = InBunch.ChType;
@@ -35,7 +37,7 @@ namespace FortniteReplayReaderDecompressor.Core.Models
             bIgnoreRPCs = InBunch.bIgnoreRPCs;
             CloseReason = InBunch.CloseReason;
         }
-
+        public FBitArchive Archive { get; set; } 
         public int PacketId { get; set; }
         //FInBunch* Next;
         //UNetConnection* Connection;

@@ -621,10 +621,10 @@ namespace FortniteReplayReaderDecompressor
             // if ( !Closing ) {
             switch (bunch.ChName)
             {
-                case ChannelName.Actor:
+                case "Actor":
                     ReceivedActorBunch(bunch);
                     break;
-                case ChannelName.Control:
+                case "Control":
                     ReceivedControlBunch(bunch);
                     break;
                 default:
@@ -940,7 +940,7 @@ namespace FortniteReplayReaderDecompressor
                 bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
 
                 var chType = ChannelType.None;
-                var chName = ChannelName.None;
+                var chName = "";
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
@@ -949,15 +949,15 @@ namespace FortniteReplayReaderDecompressor
 
                     if (chType == ChannelType.Control)
                     {
-                        chName = ChannelName.Control;
+                        chName = ChannelName.Control.ToString();
                     }
                     else if (chType == ChannelType.Voice)
                     {
-                        chName = ChannelName.Voice;
+                        chName = ChannelName.Voice.ToString();
                     }
                     else if (chType == ChannelType.Actor)
                     {
-                        chName = ChannelName.Actor;
+                        chName = ChannelName.Actor.ToString();
                     }
                 }
                 else
@@ -965,18 +965,17 @@ namespace FortniteReplayReaderDecompressor
                     if (bunch.bReliable || bunch.bOpen)
                     {
                         //chName = UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
-                        var name = StaticParseName(bitReader);
-                        Enum.TryParse(name, out chName);
+                        chName = StaticParseName(bitReader);
 
-                        if (chName == ChannelName.Control)
+                        if (chName.Equals(ChannelName.Control.ToString()))
                         {
                             chType = ChannelType.Control;
                         }
-                        else if (chName == ChannelName.Voice)
+                        else if (chName.Equals(ChannelName.Voice.ToString()))
                         {
                             chType = ChannelType.Voice;
                         }
-                        else if (chName == ChannelName.Actor)
+                        else if (chName.Equals(ChannelName.Actor.ToString()))
                         {
                             chType = ChannelType.Actor;
                         }
@@ -1000,6 +999,21 @@ namespace FortniteReplayReaderDecompressor
                     NetworkVersion = bitReader.NetworkVersion,
                     ReplayHeaderFlags = bitReader.ReplayHeaderFlags
                 };
+
+                // debugging
+                bunch.Archive.Mark();
+                var align = bunch.Archive.GetBitsLeft() % 8;
+                if (align != 0)
+                {
+                    var append = new bool[align];
+                    for (var i = 0; i < align; i++)
+                    {
+                        append[i] = false;
+                    }
+                    bunch.Archive.AppendDataFromChecked(append);
+                }
+                Debug($"bunches/bunch-{bunch.ChIndex}-{bunch.ChName}", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
+                bunch.Archive.Pop();
 
                 if (bunch.bHasPackageMapExports)
                 {
@@ -1087,7 +1101,7 @@ namespace FortniteReplayReaderDecompressor
                 //}
 
                 // debugging
-                if (bunch.ChName == ChannelName.Control)
+                if (bunch.ChName == ChannelName.Control.ToString())
                 {
                     Control = true;
                 }

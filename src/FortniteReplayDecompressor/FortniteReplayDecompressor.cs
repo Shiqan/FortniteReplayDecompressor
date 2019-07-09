@@ -15,6 +15,7 @@ namespace FortniteReplayReaderDecompressor
         private int replayDataIndex = 0;
         private int packetIndex = 0;
         private int externalDataIndex = 0;
+        private int bunchIndex = 0;
 
         private int InPacketId;
         private bool Actor; // TODO: per channel (i think)
@@ -279,7 +280,17 @@ namespace FortniteReplayReaderDecompressor
 
                 // SerializeDemoFrameFromQueuedDemoPackets
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-                ReadDemoFrameIntoPlaybackPackets(archive);
+                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(archive);
+                var startPos = archive.BaseStream.Position;
+                foreach (var packet in playbackPackets)
+                {
+                    if (packet.State == PacketState.Success)
+                    {
+                        File.WriteAllBytes($"packets/checkpoint-packet-{packetIndex}-{replayDataIndex}-{startPos}-{archive.BaseStream.Position}.dump", packet.Data);
+                        ReceivedRawPacket(packet);
+                        packetIndex++;
+                    }
+                }
             }
         }
 
@@ -831,7 +842,17 @@ namespace FortniteReplayReaderDecompressor
 
             if (lastByte != 0)
             {
-                var bitArchive = new Core.BitReader(packet.Data)
+
+                var bitSize = (packet.Data.Length * 8) - 1;
+
+                // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
+                while (!((lastByte & 0x80) >= 1))
+                {
+                    lastByte *= 2;
+                    bitSize--;
+                }
+
+                var bitArchive = new BitReader(packet.Data, bitSize)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
@@ -883,6 +904,7 @@ namespace FortniteReplayReaderDecompressor
                 var bunch = new DataBunch();
 
                 var bControl = bitReader.ReadBit();
+                bunch.PacketId = InPacketId;
                 bunch.bOpen = bControl ? bitReader.ReadBit() : false;
                 bunch.bClose = bControl ? bitReader.ReadBit() : false;
 
@@ -993,7 +1015,7 @@ namespace FortniteReplayReaderDecompressor
                 var maxPacket = 1024 * 2;
                 var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
-                bunch.Archive = new Core.BitReader(bitReader.ReadBits(bunchDataBits))
+                bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits))
                 {
                     EngineNetworkVersion = bitReader.EngineNetworkVersion,
                     NetworkVersion = bitReader.NetworkVersion,
@@ -1012,8 +1034,9 @@ namespace FortniteReplayReaderDecompressor
                     }
                     bunch.Archive.AppendDataFromChecked(append);
                 }
-                Debug($"bunches/bunch-{bunch.ChIndex}-{bunch.ChName}", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
+                Debug($"bunches/bunch-{bunch.ChIndex}-{bunchIndex}-{bunch.ChName}", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
                 bunch.Archive.Pop();
+                bunchIndex++;
 
                 if (bunch.bHasPackageMapExports)
                 {
@@ -1106,14 +1129,13 @@ namespace FortniteReplayReaderDecompressor
                     Control = true;
                 }
 
-
                 if (!Control)
                 {
                     continue;
                 }
 
                 // Dispatch the raw, unsequenced bunch to the channel
-                ReceivedRawBunch(bunch);
+                //ReceivedRawBunch(bunch);
             }
 
             if (!bitReader.AtEnd())
@@ -1155,7 +1177,7 @@ namespace FortniteReplayReaderDecompressor
                     {
                         if (packet.State == PacketState.Success)
                         {
-                            File.WriteAllBytes($"packets/packet-{packetIndex}-{replayDataIndex}-{startPos}-{archive.BaseStream.Position}.dump", packet.Data);
+                            File.WriteAllBytes($"packets/replaydata-packet-{packetIndex}-{replayDataIndex}-{startPos}-{archive.BaseStream.Position}.dump", packet.Data);
                             ReceivedRawPacket(packet);
                             packetIndex++;
                         }

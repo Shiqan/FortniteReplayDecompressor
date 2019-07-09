@@ -100,5 +100,12 @@ namespace FortniteReplayDecompressor.Test
             reader = new BitReader(new byte[] { 14 });
             Assert.Equal(7u, reader.ReadIntPacked());
         }
+
+        [Fact]
+        public void ReadIntMaxTest()
+        {
+            reader = new BitReader(new byte[] { 1 });
+            Assert.Equal(1u, reader.ReadInt(3));
+        }
     }
 }

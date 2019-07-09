@@ -21,6 +21,11 @@ namespace FortniteReplayReaderDecompressor.Core
         public int Position { get; private set; }
 
         /// <summary>
+        /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill bytes.
+        /// </summary>
+        public int LastBit { get; private set; }
+
+        /// <summary>
         /// For pushing and popping FBitReaderMark positions.
         /// </summary>
         public int MarkPosition { get; private set; }
@@ -35,6 +40,12 @@ namespace FortniteReplayReaderDecompressor.Core
             Bits = new BitArray(input);
         }
 
+        public BitReader(byte[] input, int bitCount)
+        {
+            Bits = new BitArray(input);
+            LastBit = bitCount;
+        }
+
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bool[].
         /// </summary>
@@ -45,13 +56,19 @@ namespace FortniteReplayReaderDecompressor.Core
             Bits = new BitArray(input);
         }
 
+        public BitReader(bool[] input, int bitCount)
+        {
+            Bits = new BitArray(input);
+            LastBit = bitCount;
+        }
+
         /// <summary>
         /// Returns whether <see cref="Position"/> in current <see cref="Bits"/> is greater than the lenght of the current <see cref="Bits"/>.
         /// </summary>
         /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
         public override bool AtEnd()
         {
-            return Position >= Bits.Length;
+            return Position >= Bits.Length || Position >= LastBit;
         }
 
         /// <summary>
@@ -110,7 +127,7 @@ namespace FortniteReplayReaderDecompressor.Core
         /// Returns the bit at <see cref="Position"/> and advances the <see cref="Position"/> by one bit.
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>
-        /// <seealso cref="PeekBit"/>
+        /// <seealso cref="ReadBit"/>
         /// <exception cref="IndexOutOfRangeException"></exception>
         public override bool ReadBoolean()
         {
@@ -263,8 +280,10 @@ namespace FortniteReplayReaderDecompressor.Core
                     break;
                 }
             }
+
             return value;
         }
+
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210

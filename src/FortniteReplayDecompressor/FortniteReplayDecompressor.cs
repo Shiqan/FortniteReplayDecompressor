@@ -299,6 +299,9 @@ namespace FortniteReplayReaderDecompressor
         /// </summary>
         public virtual void ReadExternalData(FArchive archive)
         {
+            if (!Directory.Exists("external")) // Creates directory "external" if it doesn't already exist
+                Directory.CreateDirectory("external");
+
             while (true)
             {
                 var externalDataNumBits = archive.ReadIntPacked();
@@ -1167,6 +1170,11 @@ namespace FortniteReplayReaderDecompressor
 
             using (var archive = Decompress())
             {
+                if (!Directory.Exists("packets")) // Creates directory "packets" if it doesn't already exist
+                    Directory.CreateDirectory("packets");
+
+                if (!Directory.Exists("bunches")) // Creates directory "bunches" if it doesn't already exist
+                    Directory.CreateDirectory("bunches");
                 while (!archive.AtEnd())
                 {
                     var startPos = archive.BaseStream.Position;

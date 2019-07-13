@@ -21,7 +21,7 @@ namespace FortniteReplayReaderDecompressor.Core
         public int Position { get; private set; }
 
         /// <summary>
-        /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill bytes.
+        /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
         /// </summary>
         public int LastBit { get; private set; }
 

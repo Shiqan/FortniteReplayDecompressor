@@ -17,10 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Packets\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="FortniteReplayReader">
       <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.dll</HintPath>
     </Reference>
@@ -55,6 +51,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="NetExportGuids\NetExportGuid2.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Packets\PackageMapExport\packet0.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Packets\PackageMapExport\packet1.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Packets\packet0.dump">

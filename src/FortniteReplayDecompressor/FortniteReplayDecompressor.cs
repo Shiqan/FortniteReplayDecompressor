@@ -466,7 +466,12 @@ namespace FortniteReplayReaderDecompressor
             }
 
             var numGUIDsInBunch = bitArchive.ReadInt32();
-            //if (NumGUIDsInBunch > MAX_GUID_COUNT)
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1027
+            const int MAX_GUID_COUNT = 2048;
+            if (numGUIDsInBunch > MAX_GUID_COUNT)
+            {
+                return;
+            }
 
             var numGUIDsRead = 0;
             while (numGUIDsRead < numGUIDsInBunch)
@@ -1026,19 +1031,19 @@ namespace FortniteReplayReaderDecompressor
                 };
 
                 // debugging
-                bunch.Archive.Mark();
-                var align = bunch.Archive.GetBitsLeft() % 8;
-                if (align != 0)
-                {
-                    var append = new bool[align];
-                    for (var i = 0; i < align; i++)
-                    {
-                        append[i] = false;
-                    }
-                    bunch.Archive.AppendDataFromChecked(append);
-                }
-                Debug($"bunches/bunch-{bunch.ChIndex}-{bunchIndex}-{bunch.ChName}", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
-                bunch.Archive.Pop();
+                //bunch.Archive.Mark();
+                //var align = bunch.Archive.GetBitsLeft() % 8;
+                //if (align != 0)
+                //{
+                //    var append = new bool[align];
+                //    for (var i = 0; i < align; i++)
+                //    {
+                //        append[i] = false;
+                //    }
+                //    bunch.Archive.AppendDataFromChecked(append);
+                //}
+                //Debug($"bunches/bunch-{bunch.ChIndex}-{bunchIndex}-{bunch.ChName}", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
+                //bunch.Archive.Pop();
                 bunchIndex++;
 
                 if (bunch.bHasPackageMapExports)

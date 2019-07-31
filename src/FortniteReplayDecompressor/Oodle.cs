@@ -1,7 +1,7 @@
-﻿using System;
+﻿using FortniteReplayReaderDecompressor.Core.Exceptions;
 using System.Runtime.InteropServices;
 
-namespace FortniteReplayReader
+namespace FortniteReplayReaderDecompressor
 {
     /// <summary>  
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleUtils.cpp 
@@ -29,7 +29,7 @@ namespace FortniteReplayReader
             }
             else
             {
-                throw new Exception("There was an error while decompressing.");
+                throw new OodleException("There was an error while decompressing.");
             }
         }
     }

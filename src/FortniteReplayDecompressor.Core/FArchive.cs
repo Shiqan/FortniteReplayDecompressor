@@ -1,4 +1,5 @@
-﻿using FortniteReplayReader.Core.Models.Enums;
+﻿using FortniteReplayReaderDecompressor.Core.Models;
+using FortniteReplayReaderDecompressor.Core.Models.Enums;
 using System;
 using System.IO;
 
@@ -13,8 +14,14 @@ namespace FortniteReplayReaderDecompressor.Core
         public EngineNetworkVersionHistory EngineNetworkVersion { get; set; }
         public ReplayHeaderFlags ReplayHeaderFlags { get; set; }
         public NetworkVersionHistory NetworkVersion { get; set; }
+        public ReplayVersionHistory ReplayVersion { get; set; }
+        public abstract int Position { get; protected set; }
         public bool ArIsError { get; protected set; }
 
+        /// <summary>
+        /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L693
+        /// </summary>
         public virtual bool HasLevelStreamingFixes()
         {
             return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;

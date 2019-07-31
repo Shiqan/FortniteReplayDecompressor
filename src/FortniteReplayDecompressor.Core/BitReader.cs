@@ -18,7 +18,7 @@ namespace FortniteReplayReaderDecompressor.Core
         /// <summary>
         /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
         /// </summary>
-        public int Position { get; private set; }
+        public override int Position { get; protected set; }
 
         /// <summary>
         /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
@@ -38,6 +38,7 @@ namespace FortniteReplayReaderDecompressor.Core
         public BitReader(byte[] input)
         {
             Bits = new BitArray(input);
+            LastBit = Bits.Length;
         }
 
         public BitReader(byte[] input, int bitCount)
@@ -54,6 +55,7 @@ namespace FortniteReplayReaderDecompressor.Core
         public BitReader(bool[] input)
         {
             Bits = new BitArray(input);
+            LastBit = Bits.Length;
         }
 
         public BitReader(bool[] input, int bitCount)

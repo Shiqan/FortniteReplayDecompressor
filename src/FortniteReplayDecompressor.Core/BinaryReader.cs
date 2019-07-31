@@ -9,8 +9,9 @@ namespace FortniteReplayReaderDecompressor.Core
     /// </summary>
     public class BinaryReader : FArchive, IDisposable
     {
-        private System.IO.BinaryReader Reader;
+        private readonly System.IO.BinaryReader Reader;
         public Stream BaseStream => Reader.BaseStream;
+        public override int Position { get => (int)BaseStream.Position; protected set => Seek(value); }
 
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.

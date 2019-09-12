@@ -1,8 +1,5 @@
 ﻿using FortniteReplayReader.Core.Models;
 using FortniteReplayReader.Core.Models.Enums;
-using FortniteReplayReaderDecompressor;
-using FortniteReplayReaderDecompressor.Core;
-using FortniteReplayReaderDecompressor.Core.Models;
 using System.IO;
 using Xunit;
 
@@ -53,7 +50,7 @@ namespace FortniteReplayDecompressor.Test
                     {
                         EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_UPDATE9,
                         NetworkVersion = NetworkVersionHistory.HISTORY_UPDATE9,
-                        Flags = (ReplayHeaderFlags) 3,
+                        Flags = (ReplayHeaderFlags)3,
                     }
                 };
 

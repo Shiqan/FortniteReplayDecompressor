@@ -1,7 +1,9 @@
-﻿using FortniteReplayReaderDecompressor;
+﻿using FortniteReplayDecompressor;
+using FortniteReplayReaderDecompressor;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
-using static System.Environment;
 
 namespace ConsoleReader
 {
@@ -9,6 +11,18 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
+            var serviceProvider = new ServiceCollection()
+                .AddLogging(loggingBuilder =>
+                {
+                    loggingBuilder.AddConsole();
+                })
+                .BuildServiceProvider();
+
+            //configure console logging
+            //serviceProvider
+            //    .GetService<ILoggerFactory>()
+            //    .AddConsole();
+
             //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
             //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
             ////var replayFilesFolder = @"D:\Projects\FortniteReplayCollection";
@@ -34,8 +48,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
             using (var stream = File.Open(replayFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                var reader = new ReplayReader();
-                reader.Read(stream);
+                var reader = new FortniteReplayReader();
+                var replay = reader.ReadReplay(stream);
             }
 
             Console.WriteLine("---- done ----");

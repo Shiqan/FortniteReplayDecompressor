@@ -1,5 +1,3 @@
-using FortniteReplayReaderDecompressor;
-using FortniteReplayReaderDecompressor.Core;
 using System;
 using Xunit;
 
@@ -20,7 +18,7 @@ namespace FortniteReplayDecompressor.Test
 
         [Fact]
         public void ReadBitTest()
-        {            
+        {
             for (var i = 0; i < expectedBits.Length; i++)
             {
                 Assert.Equal(expectedBits[i], reader.ReadBit());
@@ -82,7 +80,7 @@ namespace FortniteReplayDecompressor.Test
         [Fact]
         public void ReadUInt32Test()
         {
-            reader = new BitReader(new byte[] { 10, 58, 0,  0 });
+            reader = new BitReader(new byte[] { 10, 58, 0, 0 });
             Assert.Equal(14858u, reader.ReadUInt32());
         }
 

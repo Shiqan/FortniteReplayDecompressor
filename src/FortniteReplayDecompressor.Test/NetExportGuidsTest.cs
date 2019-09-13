@@ -1,5 +1,4 @@
-﻿using FortniteReplayReaderDecompressor;
-using System.IO;
+﻿using System.IO;
 using Xunit;
 
 namespace FortniteReplayDecompressor.Test

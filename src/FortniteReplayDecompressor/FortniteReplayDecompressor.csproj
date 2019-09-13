@@ -2,29 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <AssemblyName>FortniteReplayReaderDecompressor</AssemblyName>
-    <RootNamespace>FortniteReplayReaderDecompressor</RootNamespace>
+    <AssemblyName>FortniteReplayDecompressor</AssemblyName>
+    <RootNamespace>FortniteReplayDecompressor</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <Content Include="../../oodle/oo2core_5_win64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FortniteReplayDecompressor.Core\FortniteReplayDecompressor.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FortniteReplayReader">
-      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.dll</HintPath>
-    </Reference>
-    <Reference Include="FortniteReplayReader.Core">
-      <HintPath>..\..\..\FortniteReplayReader\src\FortniteReplayReader\bin\Debug\netcoreapp3.0\FortniteReplayReader.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="oo2core_5_win64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
+  </ItemGroup>
+  
 </Project>

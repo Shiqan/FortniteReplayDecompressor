@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -15,6 +16,25 @@ namespace Unreal.Core
         public ReplayHeaderFlags ReplayHeaderFlags { get; set; }
         public NetworkVersionHistory NetworkVersion { get; set; }
         public ReplayVersionHistory ReplayVersion { get; set; }
+
+        public int Major { get; private set; }
+        public int Minor { get; private set; }
+
+        public string Branch
+        {
+            get { return Branch; }
+            set
+            {
+                var regex = new Regex(@"\+\+Fortnite\+Release\-(?<major>\d+)\.(?<minor>\d*)");
+                var result = regex.Match(value);
+                if (result.Success)
+                {
+                    Major = int.Parse(result.Groups["major"]?.Value ?? "0");
+                    Minor = int.Parse(result.Groups["minor"]?.Value ?? "0");
+                }
+            }
+        }
+
         public abstract int Position { get; protected set; }
         public bool ArIsError { get; protected set; }
 

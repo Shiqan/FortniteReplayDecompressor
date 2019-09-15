@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FortniteReplayDecompressor\FortniteReplayDecompressor.csproj" />
+    <ProjectReference Include="..\FortniteReplayDecompressor\FortniteReplayReader.csproj" />
   </ItemGroup>
 
   <ItemGroup>

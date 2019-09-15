@@ -46,7 +46,7 @@ namespace Unreal.Core
         private Dictionary<uint, uint> RejectedChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
-        public virtual Replay ReadReplay(FArchive archive)
+        public virtual T ReadReplay(FArchive archive)
         {
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
@@ -260,6 +260,7 @@ namespace Unreal.Core
                 header.Patch = archive.ReadUInt16();
                 header.Changelist = archive.ReadUInt32();
                 header.Branch = archive.ReadFString();
+                archive.Branch = header.Branch;
             }
             else
             {
@@ -370,7 +371,16 @@ namespace Unreal.Core
                 var externalData = archive.ReadBytes(externalDataNumBytes);
 
                 // this is a bitreader...
-                //var bitReader = new BitReader(externalData);
+                var bitReader = new BitReader(externalData);
+                // FCharacterSample
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
+                //var location = bitReader.ReadPackedVector(10, 24);
+                //var velocity = bitReader.ReadPackedVector(10, 24);
+                //var acceleration = bitReader.ReadPackedVector(10, 24);
+                //var rotation = bitReader.ReadSerializeCompressed();
+                //var remoteViewPitch = bitReader.ReadByte();
+                //var time = bitReader.ReadSingle();
+
                 //var unknownString = bitReader.ReadExternalData();
 
                 //if (!NetGuidCache.ContainsKey(netGuid))
@@ -1364,7 +1374,7 @@ namespace Unreal.Core
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
-            var output = Oodle.DecompressReplayData(compressedBuffer, compressedBuffer.Length, decompressedSize);
+            var output = Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize);
             var decompressed = new Core.BinaryReader(new MemoryStream(output))
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,

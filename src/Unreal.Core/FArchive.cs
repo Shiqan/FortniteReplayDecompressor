@@ -36,7 +36,7 @@ namespace Unreal.Core
         }
 
         public abstract int Position { get; protected set; }
-        public bool ArIsError { get; protected set; }
+        public bool IsError { get; set; } = false;
 
         /// <summary>
         /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
@@ -48,7 +48,6 @@ namespace Unreal.Core
         }
 
         public abstract bool AtEnd();
-        public virtual bool IsError() { return ArIsError; }
         public abstract T ReadUInt32AsEnum<T>();
         public abstract T ReadByteAsEnum<T>();
         public abstract T[] ReadArray<T>(Func<T> func1);

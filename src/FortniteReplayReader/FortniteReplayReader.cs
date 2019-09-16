@@ -209,7 +209,7 @@ namespace FortniteReplayReader
 
                 elim.GunType = archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
-                elim.Time = info.StartTime.MillisecondsToTimeStamp();
+                elim.Time = info?.StartTime.MillisecondsToTimeStamp();
                 return elim;
             }
             catch (Exception ex)

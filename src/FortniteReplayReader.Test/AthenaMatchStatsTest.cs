@@ -1,24 +1,19 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using System;
+using System.IO;
 using Xunit;
 
 namespace FortniteReplayReader.Test
 {
     public class TestAthenaMatchStats
     {
-        private FortniteReplay LoadReplayInfo(string path)
-        {
-            var replayReader = new FortniteReplayReader();
-            return replayReader.ReadReplay(path);
-        }
-
-        private void AssertReplay(Stats expected, Stats actual)
+        private void AssertEqual(Stats expected, Stats actual)
         {
             Assert.Equal(expected.Eliminations, actual.Eliminations);
             Assert.Equal(expected.Assists, actual.Assists);
             Assert.Equal(expected.Revives, actual.Revives);
-            Assert.Equal(expected.Accuracy, Math.Round(actual.Accuracy * 100));
+            Assert.Equal(expected.Accuracy, (float) Math.Round(actual.Accuracy * 100));
             Assert.Equal(expected.MaterialsUsed, actual.MaterialsUsed);
             Assert.Equal(expected.MaterialsGathered, actual.MaterialsGathered);
             Assert.Equal(expected.DamageTaken, actual.DamageTaken);
@@ -26,14 +21,50 @@ namespace FortniteReplayReader.Test
             Assert.Equal(expected.OtherDamage, actual.OtherDamage);
             Assert.Equal(expected.DamageToPlayers, actual.DamageToPlayers);
             Assert.Equal(expected.DamageToStructures, actual.DamageToStructures);
-            Assert.Equal((int)expected.TotalTraveled, actual.TotalTraveled.CentimetersToDistance());
+            Assert.Equal(expected.TotalTraveled, (uint) actual.TotalTraveled.CentimetersToDistance());
+        }
+
+        [Fact]
+        public void TestAthenaMatchStats0()
+        {
+            var data = $"AthenaMatchStats/matchstats0.dump";
+            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var archive = new Unreal.Core.BinaryReader(stream);
+            var reader = new FortniteReplayReader();
+            var result = reader.ParseMatchStats(archive, null);
+
+            Assert.True(archive.AtEnd());
+
+            var expected = new Stats
+            {
+                Info = null,
+                Unknown = 0,
+                Accuracy = 24f,
+                Eliminations = 0,
+                Assists = 2,
+                WeaponDamage = 314,
+                OtherDamage = 14,
+                Revives = 0,
+                DamageTaken = 338,
+                DamageToStructures = 1026,
+                MaterialsGathered = 28,
+                MaterialsUsed = 10,
+                TotalTraveled = 1,
+            };
+
+            AssertEqual(expected, result);
         }
 
         [Fact]
         public void TestAthenaMatchStats1()
         {
-            var replayFile = @"Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
-            var replay = LoadReplayInfo(replayFile);
+            var data = $"AthenaMatchStats/matchstats1.dump";
+            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var archive = new Unreal.Core.BinaryReader(stream);
+            var reader = new FortniteReplayReader();
+            var result = reader.ParseMatchStats(archive, null);
+
+            Assert.True(archive.AtEnd());
 
             var expected = new Stats
             {
@@ -50,38 +81,19 @@ namespace FortniteReplayReader.Test
                 TotalTraveled = 1,
             };
 
-            AssertReplay(expected, replay.Stats);
+            AssertEqual(expected, result);
         }
 
         [Fact]
         public void TestAthenaMatchStats2()
         {
-            var replayFile = @"Replays/UnsavedReplay-2018.10.17-20.22.26.replay";
-            var replay = LoadReplayInfo(replayFile);
+            var data = $"AthenaMatchStats/matchstats2.dump";
+            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var archive = new Unreal.Core.BinaryReader(stream);
+            var reader = new FortniteReplayReader();
+            var result = reader.ParseMatchStats(archive, null);
 
-            var expected = new Stats
-            {
-                Eliminations = 2,
-                Revives = 0,
-                Assists = 0,
-                Accuracy = 53,
-                MaterialsUsed = 110,
-                MaterialsGathered = 531,
-                DamageTaken = 301,
-                WeaponDamage = 377,
-                OtherDamage = 68,
-                DamageToStructures = 6905,
-                TotalTraveled = 2,
-            };
-
-            AssertReplay(expected, replay.Stats);
-        }
-
-        [Fact]
-        public void TestAthenaMatchStats3()
-        {
-            var replayFile = @"Replays/UnsavedReplay-2018.10.17-20.33.41.replay";
-            var replay = LoadReplayInfo(replayFile);
+            Assert.True(archive.AtEnd());
 
             var expected = new Stats
             {
@@ -98,15 +110,7 @@ namespace FortniteReplayReader.Test
                 TotalTraveled = 4,
             };
 
-            AssertReplay(expected, replay.Stats);
-        }
-
-        [Fact]
-        public void TestAthenaMatchStatsUpdate910()
-        {
-            var replayFile = @"Replays/UnsavedReplay-2019.05.22-16.58.41.replay";
-            var replay = LoadReplayInfo(replayFile);
-            Assert.NotEmpty(replay.Eliminations);
+            AssertEqual(expected, result);
         }
     }
 }

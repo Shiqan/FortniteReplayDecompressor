@@ -117,7 +117,7 @@ namespace Unreal.Core
                 {
                     if (packet.State == PacketState.Success)
                     {
-                    //    ReceivedRawPacket(packet);
+                        //    ReceivedRawPacket(packet);
                     }
                 }
             }
@@ -1382,6 +1382,7 @@ namespace Unreal.Core
                 ReplayHeaderFlags = Replay.Header.Flags,
                 ReplayVersion = Replay.Info.FileVersion
             };
+
             _logger?.LogInformation($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return decompressed;
         }

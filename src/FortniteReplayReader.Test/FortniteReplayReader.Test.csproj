@@ -17,10 +17,51 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="AthenaMatchStats\" />
+    <Folder Include="AthenaTeamStats\" />
     <Folder Include="Replays\" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="AthenaMatchStats\matchstats0.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AthenaMatchStats\matchstats1.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AthenaMatchStats\matchstats2.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AthenaTeamStats\teamstats0.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="AthenaTeamStats\teamstats1.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season4.0.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season4.2.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season4.3.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season5.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season6.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season7.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season8.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="PlayerElims\season9.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Replays\UnsavedReplay-2018.10.06-22.00.32.replay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

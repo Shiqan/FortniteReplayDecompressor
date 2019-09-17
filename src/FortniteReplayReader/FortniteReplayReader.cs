@@ -1,6 +1,6 @@
-﻿using FortniteReplayReader.Models;
-using FortniteReplayReader.Exceptions;
+﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
+using FortniteReplayReader.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -11,11 +11,12 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader
 {
-    public class FortniteReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
+    public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
-        public FortniteReplayReader()
+        public ReplayReader(ILogger logger = null)
         {
             Replay = new FortniteReplay();
+            _logger = logger;
         }
 
         public FortniteReplay ReadReplay(string fileName)

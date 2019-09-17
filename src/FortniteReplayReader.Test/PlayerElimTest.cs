@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-4.0"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -33,7 +33,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-4.2"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -48,7 +48,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-4.3"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -63,7 +63,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-5.41"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -78,7 +78,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-6.00"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -93,7 +93,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-7.10"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -108,7 +108,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = "++Fortnite+Release-8.20"
             };
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -125,7 +125,7 @@ namespace FortniteReplayReader.Test
                 Branch = "++Fortnite+Release-9.10"
             };
 
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());

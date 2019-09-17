@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Test
             var data = $"AthenaTeamStats/teamstats0.dump";
             using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseTeamStats(archive, null);
 
             Assert.True(archive.AtEnd());
@@ -28,7 +28,7 @@ namespace FortniteReplayReader.Test
             var data = $"AthenaTeamStats/teamstats1.dump";
             using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new FortniteReplayReader();
+            var reader = new ReplayReader();
             var result = reader.ParseTeamStats(archive, null);
 
             Assert.True(archive.AtEnd());

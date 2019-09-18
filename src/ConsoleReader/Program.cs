@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using static System.Environment;
 
 namespace ConsoleReader
 {
@@ -18,15 +19,14 @@ namespace ConsoleReader
             var logger = provider.GetService<ILogger<Program>>();
 
             //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
-            ////var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-            //var replayFilesFolder = @"D:\Projects\FortniteReplayCollection";
+            //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
+            ////var replayFilesFolder = @"D:\Projects\FortniteReplayCollection";
             //var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             //foreach (var replayFile in replayFiles)
             //{
-            //    using var stream = File.Open(replayFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            //    var reader = new FortniteReplayReader.FortniteReplayReader(logger);
-            //    var replay = reader.ReadReplay(stream);
+            //    var reader = new ReplayReader(logger);
+            //    var replay = reader.ReadReplay(replayFile);
             //}
 
             //var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
@@ -35,7 +35,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/UnsavedReplay-2019.05.22-16.58.41.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.06.14-19.49.16.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.06.30-20.39.37.replay";
-            var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
+            var replayFile = "Replays/UnsavedReplay-2019.09.12-21.39.37.replay";
+            //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
             var reader = new ReplayReader(logger);
             var replay = reader.ReadReplay(replayFile);
 

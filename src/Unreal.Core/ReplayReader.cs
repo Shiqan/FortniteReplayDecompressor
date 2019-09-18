@@ -53,6 +53,16 @@ namespace Unreal.Core
             return Replay;
         }
 
+        public virtual void Debug(string filename, string directory, byte[] data)
+        {
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.WriteAllBytes($"{directory}/{filename}.dump", data);
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
         /// </summary>
@@ -231,6 +241,7 @@ namespace Unreal.Core
 
             if (magic != NetworkMagic)
             {
+                _logger?.LogError($"Header.Magic != NETWORK_DEMO_MAGIC. Header.Magic: {magic}, NETWORK_DEMO_MAGIC: {NetworkMagic}");
                 throw new InvalidReplayException($"Header.Magic != NETWORK_DEMO_MAGIC. Header.Magic: {magic}, NETWORK_DEMO_MAGIC: {NetworkMagic}");
             }
 
@@ -241,6 +252,7 @@ namespace Unreal.Core
 
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_EXTRA_VERSION)
             {
+                _logger.LogError($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
                 throw new InvalidReplayException($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
             }
 
@@ -369,17 +381,30 @@ namespace Unreal.Core
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
                 var externalData = archive.ReadBytes(externalDataNumBytes);
+                Debug($"externaldata-{externalDataIndex}", "externaldata", externalData);
+
+
+                // replayout setexternaldata
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
+                // FMemory::Memcpy(ExternalData.GetData(), Src, NumBytes);
 
                 // this is a bitreader...
-                var bitReader = new BitReader(externalData);
+                //var bitReader = new BitReader(externalData);
+                //bitReader.ReadBytes(3); // always 19 FB 01 ?
+                //var size = bitReader.ReadUInt32();
+
                 // FCharacterSample
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h#L2656
                 //var location = bitReader.ReadPackedVector(10, 24);
                 //var velocity = bitReader.ReadPackedVector(10, 24);
                 //var acceleration = bitReader.ReadPackedVector(10, 24);
                 //var rotation = bitReader.ReadSerializeCompressed();
                 //var remoteViewPitch = bitReader.ReadByte();
-                //var time = bitReader.ReadSingle();
+                //if (!bitReader.AtEnd())
+                //{
+                //    var time = bitReader.ReadSingle();
+                //}
 
                 //var unknownString = bitReader.ReadExternalData();
 
@@ -1247,6 +1272,21 @@ namespace Unreal.Core
                     ReplayHeaderFlags = bitReader.ReplayHeaderFlags
                 };
                 bunchIndex++;
+
+                // debugging
+                bunch.Archive.Mark();
+                var align = bunch.Archive.GetBitsLeft() % 8;
+                if (align != 0)
+                {
+                    var append = new bool[align];
+                    for (var i = 0; i < align; i++)
+                    {
+                        append[i] = false;
+                    }
+                    bunch.Archive.AppendDataFromChecked(append);
+                }
+                Debug($"bunch-{bunchIndex}-{bunch.ChIndex}-{bunch.ChName}", "bunches", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
+                bunch.Archive.Pop();
 
                 if (bunch.bHasPackageMapExports)
                 {

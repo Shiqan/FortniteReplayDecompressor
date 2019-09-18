@@ -301,9 +301,9 @@ namespace Unreal.Core
             var dy = ReadInt(max);
             var dz = ReadInt(max);
 
-            var x = dx - bias / scaleFactor;
-            var y = dy - bias / scaleFactor;
-            var z = dz - bias / scaleFactor;
+            var x = (dx - bias) / scaleFactor;
+            var y = (dy - bias) / scaleFactor;
+            var z = (dz - bias) / scaleFactor;
 
             return new FVector(x, y, z);
         }
@@ -423,7 +423,6 @@ namespace Unreal.Core
         {
             MarkPosition = Position;
         }
-
 
         /// <summary>
         /// Set Position back to <see cref="MarkPosition"/>

@@ -43,7 +43,6 @@ namespace Unreal.Core
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
         private Dictionary<uint, string> Channels = new Dictionary<uint, string>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
-        private Dictionary<uint, uint> RejectedChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
 
         public virtual T ReadReplay(FArchive archive)
@@ -788,6 +787,7 @@ namespace Unreal.Core
                     {
                         if (bitsLeft % 8 != 0)
                         {
+                            _logger?.LogWarning($"Corrupt partial bunch. Initial partial bunches are expected to be byte-aligned. BitsLeft = {bitsLeft % 8}.");
                             return;
                         }
 
@@ -822,6 +822,7 @@ namespace Unreal.Core
                     if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
                     {
                         var bitsLeft = bunch.Archive.GetBitsLeft();
+                        _logger?.LogDebug($"Merging Partial Bunch: {bitsLeft} Bytes");
                         if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                         {
                             PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
@@ -832,7 +833,7 @@ namespace Unreal.Core
                         // This is to ensure fast copies/appending of partial bunches. The final partial bunch may be non byte aligned.
                         if (!bunch.bHasPackageMapExports && !bunch.bPartialFinal && (bitsLeft % 8 != 0))
                         {
-                            _logger?.LogInformation("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned.");
+                            _logger?.LogWarning("Corrupt partial bunch. Non-final partial bunches are expected to be byte-aligned.");
                             return;
                         }
 
@@ -843,7 +844,7 @@ namespace Unreal.Core
                         {
                             if (bunch.bHasPackageMapExports)
                             {
-                                // "Corrupt partial bunch. Final partial bunch has package map exports."
+                                _logger?.LogWarning("Corrupt partial bunch. Final partial bunch has package map exports.");
                                 return;
                             }
                             // HandleBunch = InPartialBunch;
@@ -1140,6 +1141,7 @@ namespace Unreal.Core
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
             InPacketId++;
 
+            var rejectedChannels = new Dictionary<uint, uint>();
             while (!bitReader.AtEnd())
             {
                 // For demo backwards compatibility, old replays still have this bit
@@ -1260,6 +1262,7 @@ namespace Unreal.Core
                 Channel = Channels.ContainsKey(bunch.ChIndex);
 
                 // If there's an existing channel and the bunch specified it's channel type, make sure they match.
+                // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
@@ -1290,6 +1293,7 @@ namespace Unreal.Core
 
                 if (bunch.bHasPackageMapExports)
                 {
+                    // Driver->NetGUIDInBytes += (BunchDataBits + (HeaderPos - IncomingStartPos)) >> 3 ??
                     ReceiveNetGUIDBunch(bunch.Archive);
                 }
 
@@ -1352,7 +1356,7 @@ namespace Unreal.Core
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
                 //if (!Channel && !bunch.bReliable)
                 //{
-                //    if (bunch.bOpen && (bunch.bClose || bunch.bPartial))
+                //    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
                 //    {
                 //        continue;
                 //    }
@@ -1361,27 +1365,23 @@ namespace Unreal.Core
                 // Create channel if necessary
                 //if (!Channel)
                 //{
-                //    if (RejectedChannels.ContainsKey(bunch.ChIndex))
+                //    if (rejectedChannels.ContainsKey(bunch.ChIndex))
                 //    {
+                //        _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
                 //        continue;
                 //    }
-                //    // if ( !Driver->IsKnownChannelName( Bunch.ChName ) )
 
+                //if (!Driver->IsKnownChannelName(Bunch.ChName))
+                //{
+                //    CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION
+                //}
+
+                //    // Reliable (either open or later), so create new channel.
                 //    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
                 //    Channel = true;
                 //    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
+                //    // Notify the server of the new channel.
                 //    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
-                //}
-
-                //// debugging
-                //if (bunch.ChName == ChannelName.Control.ToString())
-                //{
-                //    Control = true;
-                //}
-
-                //if (!Control)
-                //{
-                //    continue;
                 //}
 
                 // Dispatch the raw, unsequenced bunch to the channel

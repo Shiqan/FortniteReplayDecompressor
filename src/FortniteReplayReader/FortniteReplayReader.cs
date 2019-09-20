@@ -181,7 +181,7 @@ namespace FortniteReplayReader
                 };
 
                 // "++Fortnite+Release-9.10"
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_UPDATE9 && archive.Major >= 9)
+                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && archive.Major >= 9)
                 {
                     archive.SkipBytes(87);
                     elim.Eliminated = archive.ReadGUID();

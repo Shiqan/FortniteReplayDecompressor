@@ -30,6 +30,7 @@ namespace Unreal.Core
         protected T Replay { get; set; }
 
         private int replayDataIndex = 0;
+        private int checkpointIndex = 0;
         private int packetIndex = 0;
         private int externalDataIndex = 0;
         private int bunchIndex = 0;
@@ -126,10 +127,13 @@ namespace Unreal.Core
                 {
                     if (packet.State == PacketState.Success)
                     {
-                        //    ReceivedRawPacket(packet);
+                        Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "packet", packet.Data);
+                        packetIndex++;
+                        ReceivedRawPacket(packet);
                     }
                 }
             }
+            checkpointIndex++;
         }
 
         /// <summary>
@@ -797,6 +801,8 @@ namespace Unreal.Core
                     {
                         _logger?.LogInformation("Received New partial bunch. It only contained NetGUIDs.");
                     }
+
+                    return;
                 }
                 else
                 {
@@ -842,11 +848,14 @@ namespace Unreal.Core
 
                         if (bunch.bPartialFinal)
                         {
+                            _logger?.LogDebug("Completed Partial Bunch.");
+
                             if (bunch.bHasPackageMapExports)
                             {
                                 _logger?.LogWarning("Corrupt partial bunch. Final partial bunch has package map exports.");
                                 return;
                             }
+
                             // HandleBunch = InPartialBunch;
                             PartialBunch.bPartialFinal = true;
                             PartialBunch.bClose = bunch.bClose;
@@ -854,7 +863,25 @@ namespace Unreal.Core
                             PartialBunch.CloseReason = bunch.CloseReason;
                             PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
                             PartialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
+
+                            PartialBunch.Archive.Mark();
+                            var alignpartial = PartialBunch.Archive.GetBitsLeft() % 8;
+                            if (alignpartial != 0)
+                            {
+                                var append = new bool[alignpartial];
+                                for (var i = 0; i < alignpartial; i++)
+                                {
+                                    append[i] = false;
+                                }
+                                PartialBunch.Archive.AppendDataFromChecked(append);
+                            }
+                            Debug($"partialbunch-{PartialBunch.ChIndex}-{PartialBunch.ChName}", "partialbunches", PartialBunch.Archive.ReadBytes(PartialBunch.Archive.GetBitsLeft() / 8));
+                            PartialBunch.Archive.Pop();
+
+                            ReceivedSequencedBunch(PartialBunch);
+                            return;
                         }
+                        return;
                     }
                     else
                     {
@@ -866,7 +893,22 @@ namespace Unreal.Core
                 // bunch size check...
             }
 
+            // something with opening channels...
+
             // Receive it in sequence.
+            bunch.Archive.Mark();
+            var align = bunch.Archive.GetBitsLeft() % 8;
+            if (align != 0)
+            {
+                var append = new bool[align];
+                for (var i = 0; i < align; i++)
+                {
+                    append[i] = false;
+                }
+                bunch.Archive.AppendDataFromChecked(append);
+            }
+            Debug($"bunch-{bunch.ChIndex}-{bunch.ChName}", "bunches", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
+            bunch.Archive.Pop();
             ReceivedSequencedBunch(bunch);
         }
 
@@ -877,6 +919,8 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         public virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
+            return false;
+
             // if ( !Closing ) {
             switch (bunch.ChName)
             {
@@ -1003,22 +1047,33 @@ namespace Unreal.Core
                     }
                 }
 
+                //SetChannelActor(NewChannelActor);
+
+                //NotifyActorChannelOpen(Actor, Bunch);
+
+                //RepFlags.bNetInitial = true;
+
                 Actor = true;
             }
 
+            //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
+            //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
+
+            //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
             {
                 // FNetBitReader Reader( Bunch.PackageMap, 0 );
 
                 ReadContentBlockPayload(bunch);
+
                 // if (empty) continue
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
 
-                while (ReadFieldHeaderAndPayload(bunch))
-                {
-                    bunch.Archive.ReadIntPacked();
-                    // not sure...
-                }
+                //while (ReadFieldHeaderAndPayload(bunch))
+                //{
+                //    bunch.Archive.ReadIntPacked();
+                //    // not sure...
+                //}
             }
             // PostReceivedBunch, not interesting?
 

@@ -1,7 +1,7 @@
 ﻿namespace Unreal.Core.Models.Enums
 {
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33
+    /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33
     /// </summary>
     public enum EngineNetworkVersionHistory
     {
@@ -15,6 +15,6 @@
         HISTORY_ACKS_INCLUDED_IN_HEADER = 8,            // Bump version since acks are now sent as part of the header
         HISTORY_NETEXPORT_SERIALIZATION = 9,            // Bump version due to serialization change to FNetFieldExport
         HISTORY_NETEXPORT_SERIALIZE_FIX = 10,           // Bump version to fix net field export name serialization
-        HISTORY_UPDATE9 = 11,                           // Update 9 (not in unreal engine source code yet)
+        HISTORY_FAST_ARRAY_DELTA_STRUCT = 11,           // Bump version to allow fast array serialization, delta struct serialization.
     }
 }

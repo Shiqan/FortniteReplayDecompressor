@@ -17,12 +17,13 @@ namespace Unreal.Core
         public NetworkVersionHistory NetworkVersion { get; set; }
         public ReplayVersionHistory ReplayVersion { get; set; }
 
-        public int Major { get; private set; }
-        public int Minor { get; private set; }
+        public int Major { get; private set; } = 0;
+        public int Minor { get; private set; } = 0;
 
+        private string _branch;
         public string Branch
         {
-            get { return Branch; }
+            get { return _branch; }
             set
             {
                 var regex = new Regex(@"\+\+Fortnite\+Release\-(?<major>\d+)\.(?<minor>\d*)");
@@ -32,6 +33,7 @@ namespace Unreal.Core
                     Major = int.Parse(result.Groups["major"]?.Value ?? "0");
                     Minor = int.Parse(result.Groups["minor"]?.Value ?? "0");
                 }
+                _branch = value;
             }
         }
 

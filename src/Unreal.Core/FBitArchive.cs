@@ -12,7 +12,7 @@ namespace Unreal.Core
         public abstract bool ReadBit();
         public abstract bool[] ReadBits(int bitCount);
         public abstract bool[] ReadBits(uint bitCount);
-        public abstract uint ReadInt(int maxValue);
+        public abstract uint ReadSerializedInt(int maxValue);
         public abstract FVector ReadPackedVector(int scaleFactor, int maxBits);
         public abstract FRotator ReadSerializeCompressed();
         public abstract void Mark();

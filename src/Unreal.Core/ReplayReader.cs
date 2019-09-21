@@ -448,7 +448,7 @@ namespace Unreal.Core
                 return ((UnrealNames)nameIndex).ToString();
             }
 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
+               // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
             // MAX_NETWORKED_HARDCODED_NAME = 410
 
             // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
@@ -888,6 +888,7 @@ namespace Unreal.Core
                         // Merge problem - delete InPartialBunch. This is mainly so that in the unlikely chance that ChSequence wraps around, we wont merge two completely separate partial bunches.
                         // We shouldn't hit this path on 100% reliable connections
                         _logger?.LogError("Merge problem:  We shouldn't hit this path on 100% reliable connections");
+                        return;
                     }
                 }
                 // bunch size check...
@@ -919,19 +920,15 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         public virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
-            return false;
-
             // if ( !Closing ) {
             switch (bunch.ChName)
             {
-                case "Actor":
-                    ReceivedActorBunch(bunch);
-                    break;
                 case "Control":
                     ReceivedControlBunch(bunch);
                     break;
                 default:
-                    throw new Exception();
+                    ReceivedActorBunch(bunch);
+                    break;
             };
             // }
 
@@ -1093,7 +1090,7 @@ namespace Unreal.Core
             }
 
             // NetFieldExportGroup.Num ?
-            var netFieldExportHandle = bunch.Archive.ReadInt(2);
+            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(2);
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             return true;
         }
@@ -1222,7 +1219,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    var closeReason = bitReader.ReadInt((int)ChannelCloseReason.MAX);
+                    var closeReason = bitReader.ReadSerializedInt((int)ChannelCloseReason.MAX);
                     bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)closeReason : ChannelCloseReason.Destroyed;
                     bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
                 }
@@ -1232,7 +1229,7 @@ namespace Unreal.Core
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_MAX_ACTOR_CHANNELS_CUSTOMIZATION)
                 {
-                    bunch.ChIndex = bitReader.ReadInt(OLD_MAX_ACTOR_CHANNELS);
+                    bunch.ChIndex = bitReader.ReadSerializedInt(OLD_MAX_ACTOR_CHANNELS);
                 }
                 else
                 {
@@ -1273,7 +1270,7 @@ namespace Unreal.Core
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
-                    var type = bitReader.ReadInt((int)ChannelType.MAX);
+                    var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
                     chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
                     if (chType == ChannelType.Control)
@@ -1294,7 +1291,15 @@ namespace Unreal.Core
                     if (bunch.bReliable || bunch.bOpen)
                     {
                         //chName = UPackageMap::StaticSerializeName(Reader, Bunch.ChName);
-                        chName = StaticParseName(bitReader);
+                        try
+                        {
+                            chName = StaticParseName(bitReader);
+                        }
+                        catch
+                        {
+                            _logger.LogError("Channel name serialization failed.");
+                            return;
+                        }
 
                         if (chName.Equals(ChannelName.Control.ToString()))
                         {
@@ -1321,7 +1326,7 @@ namespace Unreal.Core
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
-                var bunchDataBits = bitReader.ReadInt(maxPacket * 8);
+                var bunchDataBits = bitReader.ReadSerializedInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
                 bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits))
                 {

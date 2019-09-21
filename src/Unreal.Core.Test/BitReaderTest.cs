@@ -100,10 +100,10 @@ namespace Unreal.Core.Test
         }
 
         [Fact]
-        public void ReadIntMaxTest()
+        public void ReadSerializedIntTest()
         {
             reader = new BitReader(new byte[] { 1 });
-            Assert.Equal(1u, reader.ReadInt(3));
+            Assert.Equal(1u, reader.ReadSerializedInt(3));
         }
     }
 }

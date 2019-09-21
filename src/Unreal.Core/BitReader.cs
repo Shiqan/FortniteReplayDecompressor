@@ -217,14 +217,16 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Retuns uint.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69
         /// </summary>
         /// <param name="maxValue"></param>
         /// <returns>uint</returns>
         /// <exception cref="OverflowException"></exception>
-        public override uint ReadInt(int maxValue)
+        public override uint ReadSerializedInt(int maxValue)
         {
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
+            //  const int32 LengthBits = FMath::CeilLogTwo(ValueMax); ???
+
             uint value = 0;
             for (uint mask = 1; (value + mask) < maxValue; mask *= 2)
             {
@@ -293,13 +295,13 @@ namespace Unreal.Core
         /// <returns>Vector</returns>
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
         {
-            var bits = ReadInt(maxBits);
+            var bits = ReadSerializedInt(maxBits);
             var bias = 1 << ((int)bits + 1);
             var max = 1 << ((int)bits + 2);
 
-            var dx = ReadInt(max);
-            var dy = ReadInt(max);
-            var dz = ReadInt(max);
+            var dx = ReadSerializedInt(max);
+            var dy = ReadSerializedInt(max);
+            var dz = ReadSerializedInt(max);
 
             var x = (dx - bias) / scaleFactor;
             var y = (dy - bias) / scaleFactor;

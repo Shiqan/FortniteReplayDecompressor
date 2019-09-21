@@ -121,7 +121,7 @@ namespace FortniteReplayReader.Test
             using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream)
             {
-                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_UPDATE9,
+                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT,
                 Branch = "++Fortnite+Release-9.10"
             };
 

@@ -1219,8 +1219,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    var closeReason = bitReader.ReadSerializedInt((int)ChannelCloseReason.MAX);
-                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)closeReason : ChannelCloseReason.Destroyed;
+                    bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)bitReader.ReadSerializedInt((int)ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
                     bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
                 }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Unreal.Core.Models
 {
@@ -9,7 +10,12 @@ namespace Unreal.Core.Models
     {
         public string PathName { get; set; }
         public uint PathNameIndex { get; set; }
-        public uint NetFieldExportsLenght { get; set; }
+        public uint NetFieldExportsLength { get; set; }
         public IList<NetFieldExport> NetFieldExports { get; set; }
+
+        public bool IsValidIndex(uint handle)
+        {
+            return handle >= 0 && handle < NetFieldExportsLength;
+        }
     }
 }

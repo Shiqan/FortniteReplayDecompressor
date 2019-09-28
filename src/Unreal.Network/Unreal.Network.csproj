@@ -9,4 +9,8 @@
     <Folder Include="Models\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
+  </ItemGroup>
+
 </Project>

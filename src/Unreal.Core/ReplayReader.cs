@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Unreal.Core.Exceptions;
+using Unreal.Core.Extensions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Encryption;
@@ -36,15 +37,17 @@ namespace Unreal.Core
         private int bunchIndex = 0;
 
         private int InPacketId;
-        private bool Actor; // TODO: per channel (i think)
-        private bool Control;
-        private bool Channel;
         private DataBunch PartialBunch;
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
         private Dictionary<uint, string> Channels = new Dictionary<uint, string>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
+        private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
+        private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap = new Dictionary<string, NetFieldExportGroup>();
+        private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup = new Dictionary<uint, NetFieldExportGroup>();
+
+        // DemoNetDriver -> SeenLevelStatuses TODO: dont think we need it...
 
         public virtual T ReadReplay(FArchive archive)
         {
@@ -114,10 +117,19 @@ namespace Unreal.Core
 
                 // SerializeNetFieldExportGroupMap 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
+
+                // Clear all of our mappings, since we're starting over
+                //GuidCache->NetFieldExportGroupMap.Reset(); TODO: :wutface:
+
                 var numNetFieldExportGroups = binaryArchive.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
                 {
-                    ReadNetFieldExportGroupMap(binaryArchive);
+                    var group = ReadNetFieldExportGroupMap(binaryArchive);
+
+                    // Add the export group to the map
+                    // TODO: find out how to handle conflicts
+                    //NetFieldExportGroupMap.Add(group.PathName, group);
+                    //NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
                 }
 
                 // SerializeDemoFrameFromQueuedDemoPackets
@@ -384,8 +396,6 @@ namespace Unreal.Core
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
                 var externalData = archive.ReadBytes(externalDataNumBytes);
-                Debug($"externaldata-{externalDataIndex}", "externaldata", externalData);
-
 
                 // replayout setexternaldata
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
@@ -409,13 +419,7 @@ namespace Unreal.Core
                 //    var time = bitReader.ReadSingle();
                 //}
 
-                //var unknownString = bitReader.ReadExternalData();
-
-                //if (!NetGuidCache.ContainsKey(netGuid))
-                //{
-                //    NetGuidCache.Add(netGuid, unknownString);
-                //}
-
+                Debug($"externaldata-{externalDataIndex}", "externaldata", externalData);
                 externalDataIndex++;
             }
         }
@@ -507,11 +511,11 @@ namespace Unreal.Core
             {
                 PathName = archive.ReadFString(),
                 PathNameIndex = archive.ReadIntPacked(),
-                NetFieldExportsLenght = archive.ReadIntPacked(),
+                NetFieldExportsLength = archive.ReadIntPacked(),
                 NetFieldExports = new List<NetFieldExport>()
             };
 
-            for (var i = 0; i < group.NetFieldExportsLenght; i++)
+            for (var i = 0; i < group.NetFieldExportsLength; i++)
             {
                 var netFieldExport = ReadNetFieldExport(archive);
                 if (netFieldExport != null)
@@ -542,8 +546,7 @@ namespace Unreal.Core
             for (var i = 0; i < numGuids; i++)
             {
                 var size = archive.ReadInt32();
-                //var guid = ReadBytes(size);
-                InternalLoadObject(archive);
+                InternalLoadObject(archive); // TODO: only burning data?
             }
         }
 
@@ -557,14 +560,50 @@ namespace Unreal.Core
             {
                 var pathNameIndex = archive.ReadIntPacked();
                 var isExported = archive.ReadIntPacked() == 1;
+                NetFieldExportGroup group;
 
                 if (isExported)
                 {
                     var pathName = archive.ReadFString();
                     var numExports = archive.ReadIntPacked();
+
+                    if (!NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    {
+                        group = new NetFieldExportGroup
+                        {
+                            PathName = pathName,
+                            PathNameIndex = pathNameIndex,
+                            NetFieldExportsLength = numExports
+                        };
+
+                        // TODO: 0 is reserved !?
+                        group.NetFieldExports = new List<NetFieldExport>((int)numExports);
+
+                        NetFieldExportGroupMap.Add(pathName, group);
+                    }
+
+                    NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
+                }
+                else
+                {
+                    group = NetFieldExportGroupIndexToGroup[pathNameIndex];
                 }
 
-                ReadNetFieldExport(archive);
+                var netField = ReadNetFieldExport(archive);
+
+                // TODO: fix this...
+                //if (group.IsValidIndex(netField.Handle))
+                //{
+                //    if (netField.Handle < group.NetFieldExports.Count)
+                //    {
+                //        netField.Incompatible = group.NetFieldExports[(int) netField.Handle].Incompatible;
+                //        group.NetFieldExports[(int) netField.Handle] = netField;
+                //    }
+                //    else
+                //    {
+                //        group.NetFieldExports.Add(netField);
+                //    }
+                //}
             }
         }
 
@@ -649,20 +688,50 @@ namespace Unreal.Core
             for (var i = 0; i < numLayoutCmdExports; i++)
             {
                 var pathNameIndex = bitArchive.ReadIntPacked();
+                NetFieldExportGroup group;
+
                 if (bitArchive.ReadBit())
                 {
                     var pathName = bitArchive.ReadFString();
-                    var maxExports = bitArchive.ReadInt32();
+                    var numExports = bitArchive.ReadUInt32();
+
+                    if (!NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    {
+                        group = new NetFieldExportGroup
+                        {
+                            PathName = pathName,
+                            PathNameIndex = pathNameIndex,
+                            NetFieldExportsLength = numExports
+                        };
+                        NetFieldExportGroupMap.Add(pathName, group);
+                    }
+
+                    NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
+                }
+                else
+                {
+                    group = NetFieldExportGroupIndexToGroup[pathNameIndex];
                 }
 
-                var netFieldExport = ReadNetFieldExport(bitArchive);
+                var netField = ReadNetFieldExport(bitArchive);
+
+                if (group.IsValidIndex(netField.Handle))
+                {
+                    //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
+                    group.NetFieldExports[(int)netField.Handle] = netField;
+                }
+                else
+                {
+                    // ReceiveNetFieldExports: Invalid NetFieldExport Handle
+                    // InBunch.SetError();
+                }
             }
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
         /// </summary>
-        public virtual void InternalLoadObject(FArchive archive)
+        public virtual NetworkGUID InternalLoadObject(FArchive archive)
         {
             // TODO: INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
             var netGuid = new NetworkGUID()
@@ -672,7 +741,7 @@ namespace Unreal.Core
 
             if (!netGuid.IsValid())
             {
-                return;
+                return null;
             }
 
             var flags = archive.ReadByteAsEnum<ExportFlags>();
@@ -680,7 +749,7 @@ namespace Unreal.Core
             // outerguid
             if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
             {
-                InternalLoadObject(archive);
+                var outerGuid = InternalLoadObject(archive);
 
                 var pathName = archive.ReadFString();
                 if (!NetGuidCache.ContainsKey(netGuid.Value))
@@ -691,7 +760,11 @@ namespace Unreal.Core
                 {
                     var networkChecksum = archive.ReadUInt32();
                 }
+
+                return netGuid;
             }
+
+            return netGuid;
         }
 
 
@@ -897,19 +970,6 @@ namespace Unreal.Core
             // something with opening channels...
 
             // Receive it in sequence.
-            bunch.Archive.Mark();
-            var align = bunch.Archive.GetBitsLeft() % 8;
-            if (align != 0)
-            {
-                var append = new bool[align];
-                for (var i = 0; i < align; i++)
-                {
-                    append[i] = false;
-                }
-                bunch.Archive.AppendDataFromChecked(append);
-            }
-            Debug($"bunch-{bunch.ChIndex}-{bunch.ChName}", "bunches", bunch.Archive.ReadBytes(bunch.Archive.GetBitsLeft() / 8));
-            bunch.Archive.Pop();
             ReceivedSequencedBunch(bunch);
         }
 
@@ -972,7 +1032,8 @@ namespace Unreal.Core
             }
 
             // if actor == null
-            if (!Actor && bunch.bOpen)
+            var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
+            if (!actor && bunch.bOpen)
             {
                 // FBitReaderMark (how does this even work??)
                 // Take a sneak peak at the actor guid so we have a copy of it now
@@ -991,14 +1052,14 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         public virtual void ProcessBunch(DataBunch bunch)
         {
-            if (!Actor)
+            var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
+            if (!actor)
             {
                 // Initialize client if first time through.
 
                 // SerializeNewActor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
-                var netGuid = new NetworkGUID();
-                InternalLoadObject(bunch.Archive); // TODO: out netGuid
+                var netGuid = InternalLoadObject(bunch.Archive);
 
                 if (bunch.Archive.AtEnd() && netGuid.IsDynamic())
                 {
@@ -1007,40 +1068,41 @@ namespace Unreal.Core
 
                 if (netGuid.IsDynamic())
                 {
-                    var ArchetypeNetGUID = new NetworkGUID();
-                    InternalLoadObject(bunch.Archive); // out ArchetypeNetGUID
+                    var archetypeNetGUID = InternalLoadObject(bunch.Archive);
 
-                    if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
-                    {
-                        InternalLoadObject(bunch.Archive);
-                    }
+                    // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
+                    //if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
+                    //{
+                    //    InternalLoadObject(bunch.Archive);
+                    //}
 
+                    // FVector_NetQuantize10
                     // bSerializeLocation
                     if (bunch.Archive.ReadBit())
                     {
                         // Location.NetSerialize(Ar, this, SerSuccess);
-                        bunch.Archive.ReadPackedVector(10, 24);
+                        var location = bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeRotation
                     if (bunch.Archive.ReadBit())
                     {
                         // Rotation.NetSerialize(Ar, this, SerSuccess);
-                        bunch.Archive.ReadPackedVector(10, 24);
+                        var rotation = bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeScale
                     if (bunch.Archive.ReadBit())
                     {
                         // Scale.NetSerialize(Ar, this, SerSuccess);
-                        bunch.Archive.ReadPackedVector(10, 24);
+                        var scale = bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeVelocity
                     if (bunch.Archive.ReadBit())
                     {
                         // Velocity.NetSerialize(Ar, this, SerSuccess);
-                        bunch.Archive.ReadPackedVector(10, 24);
+                        var velocity = bunch.Archive.ReadPackedVector(10, 24);
                     }
                 }
 
@@ -1050,7 +1112,7 @@ namespace Unreal.Core
 
                 //RepFlags.bNetInitial = true;
 
-                Actor = true;
+                ChannelActors.Add(bunch.ChIndex, true);
             }
 
             //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
@@ -1059,21 +1121,34 @@ namespace Unreal.Core
             //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
             {
-                // FNetBitReader Reader( Bunch.PackageMap, 0 );
+                //FNetBitReader Reader(Bunch.PackageMap, 0 );
+                //bool bHasRepLayout = false;
 
                 ReadContentBlockPayload(bunch);
 
-                // if (empty) continue
+                if (bunch.Archive.AtEnd())
+                {
+                    continue;
+                }
+
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
 
-                //while (ReadFieldHeaderAndPayload(bunch))
-                //{
-                //    bunch.Archive.ReadIntPacked();
-                //    // not sure...
-                //}
+                // see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L610
+                //FNetBitReader Reader(Bunch.PackageMap );
+                //// Read fields from stream
+                //const FFieldNetCache* FieldCache = nullptr;
+
+                // RepLayout.cpp
+                // FRepLayout::ReceiveProperties(
+                //      ReceiveProperties_BackwardsCompatible
+                //          ReceiveProperties_BackwardsCompatible_r
+                while (ReadFieldHeaderAndPayload(bunch))
+                {
+                    bunch.Archive.ReadIntPacked();
+                    // not sure...
+                }
             }
             // PostReceivedBunch, not interesting?
-
         }
 
         /// <summary>
@@ -1088,10 +1163,14 @@ namespace Unreal.Core
             {
                 return false;
             }
-
-            // NetFieldExportGroup.Num ?
+            // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
             var netFieldExportHandle = bunch.Archive.ReadSerializedInt(2);
+
+            // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
+            // *OutField = ClassCache->GetFromChecksum( NetFieldExport.CompatibleChecksum );
             var numPayloadBits = bunch.Archive.ReadIntPacked();
+            // OutPayload.SetData( Bunch, NumPayloadBits );
+
             return true;
         }
 
@@ -1100,10 +1179,23 @@ namespace Unreal.Core
         /// </summary>
         public virtual void ReadContentBlockPayload(DataBunch bunch)
         {
+            bool bObjectDeleted = false;
+            //// Read the content block header and payload
+            //UObject* RepObj = ReadContentBlockPayload(Bunch, Reader, bHasRepLayout);
+
             ReadContentBlockHeader(bunch);
+
+            //if (bObjectDeleted)
+            //{
+            //    OutPayload.SetData(Bunch, 0);
+
+            //    // Nothing else in this block, continue on
+            //    return nullptr;
+            //}
+
             var numPayloadBits = bunch.Archive.ReadIntPacked();
-            // FNetBitReader?
-            // A bit reader that serializes FNames and UObject* through a network packagemap.
+            //OutPayload.SetData(Bunch, NumPayloadBits);
+            //return RepObj;
         }
 
         /// <summary>
@@ -1121,7 +1213,7 @@ namespace Unreal.Core
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
-            InternalLoadObject(bunch.Archive);
+            var netGuid = InternalLoadObject(bunch.Archive);
 
             var bStablyNamed = bunch.Archive.ReadBit();
             if (bStablyNamed)
@@ -1131,7 +1223,7 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
-            InternalLoadObject(bunch.Archive);
+            var classNetGUID = InternalLoadObject(bunch.Archive);
         }
 
         /// <summary>
@@ -1241,14 +1333,12 @@ namespace Unreal.Core
 
                 if (bunch.bReliable)
                 {
-                    // TODO
+                    // We can derive the sequence for 100% reliable connections
+                    //Bunch.ChSequence = InReliable[Bunch.ChIndex] + 1;
+
                     if (InReliable.ContainsKey(bunch.ChIndex))
                     {
                         bunch.ChSequence = InReliable[bunch.ChIndex] + 1;
-                    }
-                    else
-                    {
-                        bunch.ChSequence = 0;
                     }
                 }
                 else if (bunch.bPartial)
@@ -1318,7 +1408,7 @@ namespace Unreal.Core
                 bunch.ChName = chName;
 
                 // UChannel* Channel = Channels[Bunch.ChIndex];
-                Channel = Channels.ContainsKey(bunch.ChIndex);
+                var channel = Channels.ContainsKey(bunch.ChIndex);
 
                 // If there's an existing channel and the bunch specified it's channel type, make sure they match.
                 // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
@@ -1357,7 +1447,7 @@ namespace Unreal.Core
                 }
 
                 // Can't handle other channels until control channel exists.
-                //if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control))
+                //if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control.ToString()))
                 //{
                 //    if (!Channels.ContainsKey(0))
                 //    {
@@ -1380,6 +1470,7 @@ namespace Unreal.Core
                 //    var bNewlyOpenedActorChannel = bunch.bOpen && (chName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
                 //    if (bNewlyOpenedActorChannel)
                 //    {
+                //          // GetActorGUIDFromOpenBunch(Bunch);
                 //        if (bunch.bHasMustBeMappedGUIDs)
                 //        {
                 //            var numMustBeMappedGUIDs = bunchReader.ReadUInt16();
@@ -1407,10 +1498,10 @@ namespace Unreal.Core
                 //}
 
                 // Ignore if reliable packet has already been processed.
-                //if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
-                //{
-                //    continue;
-                //}
+                if (bunch.bReliable && InReliable.ContainsKey(bunch.ChIndex) && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                {
+                    continue;
+                }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
                 //if (!Channel && !bunch.bReliable)
@@ -1422,28 +1513,28 @@ namespace Unreal.Core
                 //}
 
                 // Create channel if necessary
-                //if (!Channel)
-                //{
-                //    if (rejectedChannels.ContainsKey(bunch.ChIndex))
-                //    {
-                //        _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
-                //        continue;
-                //    }
+                if (!channel)
+                {
+                    if (rejectedChannels.ContainsKey(bunch.ChIndex))
+                    {
+                        _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
+                        continue;
+                    }
 
-                //if (!Driver->IsKnownChannelName(Bunch.ChName))
-                //{
-                //    CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION
-                //}
+                    //if (!Driver->IsKnownChannelName(Bunch.ChName))
+                    //{
+                    //    CLOSE_CONNECTION_DUE_TO_SECURITY_VIOLATION
+                    //}
 
-                //    // Reliable (either open or later), so create new channel.
-                //    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-                //    Channel = true;
-                //    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
-                //    // Notify the server of the new channel.
-                //    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
-                //}
+                    // Reliable (either open or later), so create new channel.
+                    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
+                    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
+                    // Notify the server of the new channel.
+                    // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
+                }
 
                 // Dispatch the raw, unsequenced bunch to the channel
+                // Channel->ReceivedRawBunch( Bunch, bLocalSkipAck ); //warning: May destroy channel.
                 ReceivedRawBunch(bunch);
             }
 

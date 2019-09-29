@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
@@ -119,7 +120,8 @@ namespace Unreal.Core
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
 
                 // Clear all of our mappings, since we're starting over
-                //GuidCache->NetFieldExportGroupMap.Reset(); TODO: :wutface:
+                NetFieldExportGroupMap.Clear();
+                NetFieldExportGroupIndexToGroup.Clear();
 
                 var numNetFieldExportGroups = binaryArchive.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
@@ -127,9 +129,8 @@ namespace Unreal.Core
                     var group = ReadNetFieldExportGroupMap(binaryArchive);
 
                     // Add the export group to the map
-                    // TODO: find out how to handle conflicts
-                    //NetFieldExportGroupMap.Add(group.PathName, group);
-                    //NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
+                    NetFieldExportGroupMap.Add(group.PathName, group);
+                    NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
                 }
 
                 // SerializeDemoFrameFromQueuedDemoPackets
@@ -452,7 +453,7 @@ namespace Unreal.Core
                 return ((UnrealNames)nameIndex).ToString();
             }
 
-               // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
             // MAX_NETWORKED_HARDCODED_NAME = 410
 
             // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
@@ -580,9 +581,10 @@ namespace Unreal.Core
                         group.NetFieldExports = new List<NetFieldExport>((int)numExports);
 
                         NetFieldExportGroupMap.Add(pathName, group);
+                        NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group); //TODO outside if statement!?
                     }
-
-                    NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
+                    //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
+                    //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
                 }
                 else
                 {
@@ -591,19 +593,9 @@ namespace Unreal.Core
 
                 var netField = ReadNetFieldExport(archive);
 
-                // TODO: fix this...
-                //if (group.IsValidIndex(netField.Handle))
-                //{
-                //    if (netField.Handle < group.NetFieldExports.Count)
-                //    {
-                //        netField.Incompatible = group.NetFieldExports[(int) netField.Handle].Incompatible;
-                //        group.NetFieldExports[(int) netField.Handle] = netField;
-                //    }
-                //    else
-                //    {
-                //        group.NetFieldExports.Add(netField);
-                //    }
-                //}
+                // preserve compatibility flag
+                netField.Incompatible = group.NetFieldExports.Where(i => i.Name.Equals(netField.Name))?.FirstOrDefault()?.Incompatible ?? netField.Incompatible;
+                group.NetFieldExports = group.NetFieldExports.Replace(i => i.Name.Equals(netField.Name), netField).ToList(); // TODO MonkaS
             }
         }
 
@@ -752,10 +744,12 @@ namespace Unreal.Core
                 var outerGuid = InternalLoadObject(archive);
 
                 var pathName = archive.ReadFString();
+
                 if (!NetGuidCache.ContainsKey(netGuid.Value))
                 {
                     NetGuidCache.Add(netGuid.Value, pathName);
                 }
+
                 if (flags >= ExportFlags.bHasNetworkChecksum)
                 {
                     var networkChecksum = archive.ReadUInt32();
@@ -1123,50 +1117,122 @@ namespace Unreal.Core
             {
                 //FNetBitReader Reader(Bunch.PackageMap, 0 );
                 //bool bHasRepLayout = false;
-
-                ReadContentBlockPayload(bunch);
+                var bHasRepLayout = ReadContentBlockPayload(bunch);
 
                 if (bunch.Archive.AtEnd())
                 {
+                    // Nothing else in this block, continue on (should have been a delete or create block)
                     continue;
                 }
 
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
-
-                // see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L610
-                //FNetBitReader Reader(Bunch.PackageMap );
-                //// Read fields from stream
-                //const FFieldNetCache* FieldCache = nullptr;
-
-                // RepLayout.cpp
-                // FRepLayout::ReceiveProperties(
-                //      ReceiveProperties_BackwardsCompatible
-                //          ReceiveProperties_BackwardsCompatible_r
-                while (ReadFieldHeaderAndPayload(bunch))
-                {
-                    bunch.Archive.ReadIntPacked();
-                    // not sure...
-                }
+                ReceivedReplicatorBunch(bunch, bHasRepLayout);
             }
             // PostReceivedBunch, not interesting?
         }
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L610
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
+        /// </summary>
+        /// <param name="bunch"></param>
+        public virtual void ReceivedReplicatorBunch(DataBunch bunch, bool bHasRepLayout)
+        {
+            // Handle replayout properties
+            if (bHasRepLayout)
+            {
+                // TODO track bHasReplicatedProperties per channel?
+                //if (!bHasReplicatedProperties)
+                //{
+                //    bHasReplicatedProperties = true;        // Persistent, not reset until PostNetReceive is called
+                //    PreNetReceive();
+                //}
+
+                //if (Connection->Driver->ShouldReceiveRepNotifiesForObject(Object))
+                //{
+                //    ReceivePropFlags |= EReceivePropertiesFlags::RepNotifies;
+                //}
+
+                //if (RepFlags.bSkipRoleSwap)
+                //{
+                //    ReceivePropFlags |= EReceivePropertiesFlags::SkipRoleSwap;
+                //}
+
+                // if ( !RepLayout->ReceiveProperties(OwningChannel, ObjectClass, RepState.Get(), ( void* )Object, Bunch, bLocalHasUnmapped, bGuidsChanged, ReceivePropFlags ) )
+                // RepLayout.cpp
+                // FRepLayout::ReceiveProperties(
+                //      ReceiveProperties_BackwardsCompatible
+                //          ReceiveProperties_BackwardsCompatible_r
+            }
+
+            //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
+
+            // Read fields from stream
+            // const FFieldNetCache* FieldCache = nullptr;
+
+            // TODO figure out where NetFieldExportGroup is coming from
+            while (ReadFieldHeaderAndPayload(bunch, null))
+            {
+                //if (FieldCache == nullptr)
+                //{
+                //    UE_LOG(LogNet, Warning, TEXT("ReceivedBunch: FieldCache == nullptr: %s"), *Object->GetFullName());
+                //    continue;
+                //}
+
+                //if (FieldCache->bIncompatible)
+                //{
+                //    // We've already warned about this property once, so no need to continue to do so
+                //    UE_LOG(LogNet, Verbose, TEXT("ReceivedBunch: FieldCache->bIncompatible == true. Object: %s, Field: %s"), *Object->GetFullName(), *FieldCache->Field->GetFName().ToString());
+                //    continue;
+                //}
+
+
+                // Handle property
+                // if (UProperty * ReplicatedProp = Cast<UProperty>(FieldCache->Field))
+                // {
+                // We should only be receiving custom delta properties (since RepLayout handles the rest)
+                //if (!Retirement[ReplicatedProp->RepIndex].CustomDelta)
+
+                //// Call PreNetReceive if we haven't yet
+                //if (!bHasReplicatedProperties)
+                //{
+                //    bHasReplicatedProperties = true;        // Persistent, not reset until PostNetReceive is called
+                //    PreNetReceive();
+                //}
+
+                // // Receive array index (static sized array, i.e. MemberVariable[4])
+                // bunch.Archive.ReadIntPacked();
+
+                // Call the custom delta serialize function to handle it
+                //CppStructOps->NetDeltaSerialize(Parms, Data);
+
+                // Successfully received it.
+                // }
+                //else
+                //{
+                // Handle function call
+                //Cast<UFunction>(FieldCache->Field)
+                //}
+            }
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
         /// </summary>
         /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         /// <returns></returns>
-        public virtual bool ReadFieldHeaderAndPayload(DataBunch bunch)
+        public virtual bool ReadFieldHeaderAndPayload(DataBunch bunch, NetFieldExportGroup group)
         {
             if (bunch.Archive.AtEnd())
             {
                 return false;
             }
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(2);
+            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(Math.Max((int) group.NetFieldExportsLength, 2));
 
             // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
+            // var netfieldexport = group.NetFieldExports[(int) netFieldExportHandle];
+
             // *OutField = ClassCache->GetFromChecksum( NetFieldExport.CompatibleChecksum );
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             // OutPayload.SetData( Bunch, NumPayloadBits );
@@ -1177,13 +1243,14 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        public virtual void ReadContentBlockPayload(DataBunch bunch)
+        public virtual bool ReadContentBlockPayload(DataBunch bunch)
         {
-            bool bObjectDeleted = false;
+            //bool bObjectDeleted = false;
             //// Read the content block header and payload
             //UObject* RepObj = ReadContentBlockPayload(Bunch, Reader, bHasRepLayout);
+            // sets bObjectDeleted and bOutHasRepLayout
 
-            ReadContentBlockHeader(bunch);
+            var bOutHasRepLayout = ReadContentBlockHeader(bunch);
 
             //if (bObjectDeleted)
             //{
@@ -1196,19 +1263,23 @@ namespace Unreal.Core
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             //OutPayload.SetData(Bunch, NumPayloadBits);
             //return RepObj;
+
+            return bOutHasRepLayout;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        public virtual void ReadContentBlockHeader(DataBunch bunch)
+        public virtual bool ReadContentBlockHeader(DataBunch bunch)
         {
+            //  bool& bObjectDeleted, bool& bOutHasRepLayout 
+            //var bObjectDeleted = false;
             var bOutHasRepLayout = bunch.Archive.ReadBit();
             var bIsActor = bunch.Archive.ReadBit();
             if (bIsActor)
             {
                 // If this is for the actor on the channel, we don't need to read anything else
-                return;
+                return bOutHasRepLayout;
             }
 
             // We need to handle a sub-object
@@ -1219,11 +1290,18 @@ namespace Unreal.Core
             if (bStablyNamed)
             {
                 // If this is a stably named sub-object, we shouldn't need to create it. Don't raise a bunch error though because this may happen while a level is streaming out.
-                return;
+                return bOutHasRepLayout;
             }
 
             // Serialize the class in case we have to spawn it.
             var classNetGUID = InternalLoadObject(bunch.Archive);
+
+            //if (!classNetGUID.IsValid())
+            //{
+            //    bObjectDeleted = true;
+            //}
+
+            return bOutHasRepLayout;
         }
 
         /// <summary>

@@ -287,8 +287,9 @@ namespace Unreal.Core
                 byte nextByte = 0;
                 if (currentByte != 0)
                 {
+                    Mark();
                     nextByte = ReadByte(); // this should be PeekByte
-                    Position -= 8; // we've read too much here, we should read 8 bits but we read 16.
+                    Pop();
                 }
 
                 OldPos += 8;

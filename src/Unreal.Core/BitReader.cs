@@ -28,7 +28,7 @@ namespace Unreal.Core
         /// <summary>
         /// For pushing and popping FBitReaderMark positions.
         /// </summary>
-        public int MarkPosition { get; set; }
+        public int MarkPosition { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
@@ -346,6 +346,30 @@ namespace Unreal.Core
             return new FVector(x, y, z);
         }
 
+        public override FRotator ReadRotationShort()
+        {
+            float pitch = 0;
+            float yaw = 0;
+            float roll = 0;
+
+            if (ReadBit()) // Pitch
+            {
+                pitch = ReadInt16() * 360 / 65536;
+            }
+
+            if (ReadBit())
+            {
+                yaw = ReadInt16() * 360 / 65536;
+            }
+
+            if (ReadBit())
+            {
+                roll = ReadInt16() * 360 / 65536;
+            }
+
+            FRotator rotator = new FRotator(pitch, yaw, roll);
+            return rotator;
+        }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79

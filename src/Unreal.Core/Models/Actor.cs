@@ -10,7 +10,7 @@ namespace Unreal.Core.Models
         public NetworkGUID Archetype { get; set; }
         public NetworkGUID Level { get; set; }
         public FVector Location { get; set; }
-        public FVector Rotation { get; set; }
+        public FRotator Rotation { get; set; }
         public FVector Scale { get; set; }
         public FVector Velocity { get; set; }
     }

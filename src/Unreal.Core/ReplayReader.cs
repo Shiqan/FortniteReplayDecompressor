@@ -1067,7 +1067,7 @@ namespace Unreal.Core
 
                     if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
                     {
-                        //inActor.Level = InternalLoadObject(bunch.Archive);
+                        inActor.Level = InternalLoadObject(bunch.Archive);
                     }
                     // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
                     //if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
@@ -1087,7 +1087,7 @@ namespace Unreal.Core
                     if (bunch.Archive.ReadBit())
                     {
                         // Rotation.NetSerialize(Ar, this, SerSuccess);
-                        inActor.Rotation = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Rotation = bunch.Archive.ReadRotationShort();
                     }
 
                     // bSerializeScale

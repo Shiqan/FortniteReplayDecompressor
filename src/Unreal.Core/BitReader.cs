@@ -137,6 +137,24 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// Returns the byte at <see cref="Position"/>
+        /// </summary>
+        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
+        public override byte PeekByte()
+        {
+            var result = new byte();
+            for (var i = 0; i < 8; i++)
+            {
+                if (PeekBit())
+                {
+                    result |= (byte)(1 << i);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
         /// </summary>
         /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
@@ -287,9 +305,7 @@ namespace Unreal.Core
                 byte nextByte = 0;
                 if (currentByte != 0)
                 {
-                    Mark();
-                    nextByte = ReadByte(); // this should be PeekByte
-                    Pop();
+                    nextByte = PeekByte();
                 }
 
                 OldPos += 8;
@@ -328,6 +344,31 @@ namespace Unreal.Core
             var z = (dz - bias) / scaleFactor;
 
             return new FVector(x, y, z);
+        }
+
+        public override FRotator ReadRotationShort()
+        {
+            float pitch = 0;
+            float yaw = 0;
+            float roll = 0;
+
+            if (ReadBit()) // Pitch
+            {
+                pitch = ReadInt16() * 360 / 65536;
+            }
+
+            if (ReadBit())
+            {
+                yaw = ReadInt16() * 360 / 65536;
+            }
+
+            if (ReadBit())
+            {
+                roll = ReadInt16() * 360 / 65536;
+            }
+
+            FRotator rotator = new FRotator(pitch, yaw, roll);
+            return rotator;
         }
 
         /// <summary>

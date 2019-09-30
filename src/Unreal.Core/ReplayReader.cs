@@ -41,7 +41,7 @@ namespace Unreal.Core
         private DataBunch PartialBunch;
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
-        private Dictionary<uint, string> Channels = new Dictionary<uint, string>(); // TODO: UChannel
+        private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
         private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
@@ -1049,21 +1049,26 @@ namespace Unreal.Core
             var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
             if (!actor)
             {
+                Actor inActor = new Actor();
                 // Initialize client if first time through.
 
                 // SerializeNewActor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
-                var netGuid = InternalLoadObject(bunch.Archive);
+                inActor.ActorNetGUID = InternalLoadObject(bunch.Archive);
 
-                if (bunch.Archive.AtEnd() && netGuid.IsDynamic())
+                if (bunch.Archive.AtEnd() && inActor.ActorNetGUID.IsDynamic())
                 {
                     return;
                 }
 
-                if (netGuid.IsDynamic())
+                if (inActor.ActorNetGUID.IsDynamic())
                 {
-                    var archetypeNetGUID = InternalLoadObject(bunch.Archive);
+                    inActor.Archetype = InternalLoadObject(bunch.Archive);
 
+                    if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
+                    {
+                        inActor.Level = InternalLoadObject(bunch.Archive);
+                    }
                     // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
                     //if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
                     //{
@@ -1075,28 +1080,28 @@ namespace Unreal.Core
                     if (bunch.Archive.ReadBit())
                     {
                         // Location.NetSerialize(Ar, this, SerSuccess);
-                        var location = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Location = bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeRotation
                     if (bunch.Archive.ReadBit())
                     {
                         // Rotation.NetSerialize(Ar, this, SerSuccess);
-                        var rotation = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Rotation = bunch.Archive.ReadRotationShort();
                     }
 
                     // bSerializeScale
                     if (bunch.Archive.ReadBit())
                     {
                         // Scale.NetSerialize(Ar, this, SerSuccess);
-                        var scale = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Scale = bunch.Archive.ReadPackedVector(10, 24);
                     }
 
                     // bSerializeVelocity
                     if (bunch.Archive.ReadBit())
                     {
                         // Velocity.NetSerialize(Ar, this, SerSuccess);
-                        var velocity = bunch.Archive.ReadPackedVector(10, 24);
+                        inActor.Velocity = bunch.Archive.ReadPackedVector(10, 24);
                     }
                 }
 
@@ -1162,6 +1167,9 @@ namespace Unreal.Core
                 // FRepLayout::ReceiveProperties(
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
+
+                /*uint handle = bunch.Archive.ReadIntPacked();
+                Channels[0] */
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1228,7 +1236,7 @@ namespace Unreal.Core
                 return false;
             }
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(Math.Max((int) group.NetFieldExportsLength, 2));
+            var netFieldExportHandle = bunch.Archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
 
             // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
             // var netfieldexport = group.NetFieldExports[(int) netFieldExportHandle];
@@ -1606,7 +1614,15 @@ namespace Unreal.Core
 
                     // Reliable (either open or later), so create new channel.
                     // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-                    Channels.Add(bunch.ChIndex, bunch.ChName.ToString());
+
+                    var newChannel = new UChannel()
+                    {
+                        ChannelName = bunch.ChName,
+                        ChannelType = bunch.ChType,
+                        ChannelIndex = bunch.ChIndex,
+                    };
+
+                    Channels.Add(bunch.ChIndex, newChannel);
                     // Notify the server of the new channel.
                     // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
                 }

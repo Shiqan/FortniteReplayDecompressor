@@ -1,4 +1,6 @@
-﻿namespace Unreal.Core.Models
+﻿using Unreal.Core.Models.Enums;
+
+namespace Unreal.Core.Models
 {
     /// <summary>
     /// Base class of communication channels.
@@ -6,6 +8,10 @@
     /// </summary>
     public class UChannel
     {
-        // TODO
+        public string ChannelName { get; set; }
+        public uint ChannelIndex { get; set; }
+        public ChannelType ChannelType { get; set; }
+
+        public Actor Actor { get; set; }
     }
 }

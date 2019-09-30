@@ -28,7 +28,7 @@ namespace Unreal.Core
         /// <summary>
         /// For pushing and popping FBitReaderMark positions.
         /// </summary>
-        public int MarkPosition { get; private set; }
+        public int MarkPosition { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
@@ -134,6 +134,24 @@ namespace Unreal.Core
         public override bool ReadBoolean()
         {
             return ReadBit();
+        }
+
+        /// <summary>
+        /// Returns the byte at <see cref="Position"/>
+        /// </summary>
+        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
+        public override byte PeekByte()
+        {
+            var result = new byte();
+            for (var i = 0; i < 8; i++)
+            {
+                if (PeekBit())
+                {
+                    result |= (byte)(1 << i);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -287,9 +305,7 @@ namespace Unreal.Core
                 byte nextByte = 0;
                 if (currentByte != 0)
                 {
-                    Mark();
-                    nextByte = ReadByte(); // this should be PeekByte
-                    Pop();
+                    nextByte = PeekByte();
                 }
 
                 OldPos += 8;
@@ -329,6 +345,7 @@ namespace Unreal.Core
 
             return new FVector(x, y, z);
         }
+
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79

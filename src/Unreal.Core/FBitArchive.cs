@@ -9,6 +9,7 @@ namespace Unreal.Core
     public abstract class FBitArchive : FArchive
     {
         public abstract bool PeekBit();
+        public abstract byte PeekByte();
         public abstract bool ReadBit();
         public abstract bool[] ReadBits(int bitCount);
         public abstract bool[] ReadBits(uint bitCount);

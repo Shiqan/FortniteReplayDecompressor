@@ -547,7 +547,7 @@ namespace Unreal.Core
             for (var i = 0; i < numGuids; i++)
             {
                 var size = archive.ReadInt32();
-                InternalLoadObject(archive); // TODO: only burning data?
+                InternalLoadObject(archive, true); // TODO: only burning data? // netguidguess
             }
         }
 
@@ -723,7 +723,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
         /// </summary>
-        public virtual NetworkGUID InternalLoadObject(FArchive archive)
+        public virtual NetworkGUID InternalLoadObject(FArchive archive, bool exportGUIDs)
         {
             // TODO: INTERNAL_LOAD_OBJECT_RECURSION_LIMIT  = 16
             var netGuid = new NetworkGUID()
@@ -736,26 +736,29 @@ namespace Unreal.Core
                 return null;
             }
 
-            var flags = archive.ReadByteAsEnum<ExportFlags>();
-
-            // outerguid
-            if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
+            if (netGuid.IsDefault() || exportGUIDs)
             {
-                var outerGuid = InternalLoadObject(archive);
+                var flags = archive.ReadByteAsEnum<ExportFlags>();
 
-                var pathName = archive.ReadFString();
-
-                if (!NetGuidCache.ContainsKey(netGuid.Value))
+                // outerguid
+                if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
                 {
-                    NetGuidCache.Add(netGuid.Value, pathName);
-                }
+                    var outerGuid = InternalLoadObject(archive, true);
 
-                if (flags >= ExportFlags.bHasNetworkChecksum)
-                {
-                    var networkChecksum = archive.ReadUInt32();
-                }
+                    var pathName = archive.ReadFString();
 
-                return netGuid;
+                    if (!NetGuidCache.ContainsKey(netGuid.Value))
+                    {
+                        NetGuidCache.Add(netGuid.Value, pathName);
+                    }
+
+                    if (flags >= ExportFlags.bHasNetworkChecksum)
+                    {
+                        var networkChecksum = archive.ReadUInt32();
+                    }
+
+                    return netGuid;
+                }
             }
 
             return netGuid;
@@ -787,7 +790,7 @@ namespace Unreal.Core
             var numGUIDsRead = 0;
             while (numGUIDsRead < numGUIDsInBunch)
             {
-                InternalLoadObject(bitArchive);
+                InternalLoadObject(bitArchive, true);
                 numGUIDsRead++;
             }
         }
@@ -1054,7 +1057,7 @@ namespace Unreal.Core
 
                 // SerializeNewActor
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
-                inActor.ActorNetGUID = InternalLoadObject(bunch.Archive);
+                inActor.ActorNetGUID = InternalLoadObject(bunch.Archive, false);
 
                 if (bunch.Archive.AtEnd() && inActor.ActorNetGUID.IsDynamic())
                 {
@@ -1063,11 +1066,11 @@ namespace Unreal.Core
 
                 if (inActor.ActorNetGUID.IsDynamic())
                 {
-                    inActor.Archetype = InternalLoadObject(bunch.Archive);
+                    inActor.Archetype = InternalLoadObject(bunch.Archive, false);
 
                     if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
                     {
-                        inActor.Level = InternalLoadObject(bunch.Archive);
+                        inActor.Level = InternalLoadObject(bunch.Archive, false);
                     }
                     // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
                     //if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
@@ -1104,7 +1107,7 @@ namespace Unreal.Core
                         inActor.Velocity = bunch.Archive.ReadPackedVector(10, 24);
                     }
                 }
-
+                Channels[bunch.ChIndex].Actor = inActor;
                 //SetChannelActor(NewChannelActor);
 
                 //NotifyActorChannelOpen(Actor, Bunch);
@@ -1167,9 +1170,6 @@ namespace Unreal.Core
                 // FRepLayout::ReceiveProperties(
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
-
-                /*uint handle = bunch.Archive.ReadIntPacked();
-                Channels[0] */
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1292,7 +1292,7 @@ namespace Unreal.Core
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
-            var netGuid = InternalLoadObject(bunch.Archive);
+            var netGuid = InternalLoadObject(bunch.Archive, false);
 
             var bStablyNamed = bunch.Archive.ReadBit();
             if (bStablyNamed)
@@ -1302,7 +1302,7 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
-            var classNetGUID = InternalLoadObject(bunch.Archive);
+            var classNetGUID = InternalLoadObject(bunch.Archive, false);
 
             //if (!classNetGUID.IsValid())
             //{
@@ -1422,10 +1422,11 @@ namespace Unreal.Core
                     // We can derive the sequence for 100% reliable connections
                     //Bunch.ChSequence = InReliable[Bunch.ChIndex] + 1;
 
-                    if (InReliable.ContainsKey(bunch.ChIndex))
+                    if (!InReliable.ContainsKey(bunch.ChIndex))
                     {
-                        bunch.ChSequence = InReliable[bunch.ChIndex] + 1;
+                        InReliable.Add(bunch.ChIndex, 0);
                     }
+                    bunch.ChSequence = InReliable[bunch.ChIndex] + 1;
                 }
                 else if (bunch.bPartial)
                 {

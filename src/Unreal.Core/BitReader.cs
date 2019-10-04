@@ -145,12 +145,12 @@ namespace Unreal.Core
             var result = new byte();
             for (var i = 0; i < 8; i++)
             {
-                if (PeekBit())
+                if (ReadBit())
                 {
                     result |= (byte)(1 << i);
                 }
             }
-
+            Position -= 8; // reset our position
             return result;
         }
 

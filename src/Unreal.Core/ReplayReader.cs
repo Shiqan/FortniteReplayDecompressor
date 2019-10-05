@@ -1177,7 +1177,7 @@ namespace Unreal.Core
                 if (Channels[bunch.ChIndex].Actor.Archetype != null)
                 {
                     uint archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
-                    NetFieldExportGroup netFieldExportGroup;
+                    NetFieldExportGroup netFieldExportGroup = new NetFieldExportGroup();
 
                     if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
                     {
@@ -1207,6 +1207,10 @@ namespace Unreal.Core
                     }
 
                     handle = handle--; // remove 1 because we need to be able to see a 0 before
+
+                    NetFieldExport export = netFieldExportGroup.NetFieldExports[(int)handle];
+
+                    uint numBits = bunch.Archive.ReadIntPacked();
                 }
                 else
                 {

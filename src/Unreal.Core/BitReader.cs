@@ -142,15 +142,9 @@ namespace Unreal.Core
         /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
         public override byte PeekByte()
         {
-            var result = new byte();
-            for (var i = 0; i < 8; i++)
-            {
-                if (ReadBit())
-                {
-                    result |= (byte)(1 << i);
-                }
-            }
-            Position -= 8; // reset our position
+            var result = ReadByte();
+            Position -= 8;
+
             return result;
         }
 
@@ -346,6 +340,11 @@ namespace Unreal.Core
             return new FVector(x, y, z);
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
+        /// </summary>
+        /// <returns></returns>
         public override FRotator ReadRotationShort()
         {
             float pitch = 0;
@@ -366,41 +365,6 @@ namespace Unreal.Core
             {
                 roll = ReadInt16() * 360 / 65536;
             }
-
-            FRotator rotator = new FRotator(pitch, yaw, roll);
-            return rotator;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
-        /// </summary>
-        /// <returns></returns>
-        public override FRotator ReadSerializeCompressed()
-        {
-            var bytePitch = 0;
-            var byteYaw = 0;
-            var byteRoll = 0;
-
-            if (ReadBit())
-            {
-                bytePitch = ReadByte();
-            }
-
-            if (ReadBit())
-            {
-                byteYaw = ReadByte();
-            }
-
-            if (ReadBit())
-            {
-                byteRoll = ReadByte();
-            }
-
-            // Rotator.h
-            // DecompressAxisFromByte (Angle * 360.0 / 256.0);
-            var pitch = (bytePitch * 360) / 256;
-            var yaw = (byteYaw * 360) / 256;
-            var roll = (byteRoll * 360) / 256;
 
             return new FRotator(pitch, yaw, roll);
         }

@@ -41,7 +41,7 @@ namespace Unreal.Core
         private DataBunch PartialBunch;
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
-        private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>(); // TODO: UChannel
+        private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
         private Dictionary<uint, NetFieldExportGroup> ArchetypeToNetFieldGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -1070,17 +1070,12 @@ namespace Unreal.Core
                 {
                     inActor.Archetype = InternalLoadObject(bunch.Archive, false);
 
+                    // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
                     if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
                     {
                         inActor.Level = InternalLoadObject(bunch.Archive, false);
                     }
-                    // if (Ar.IsSaving() || (Connection && (Connection->EngineNetworkProtocolVersion >= EEngineNetworkVersionHistory::HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)))
-                    //if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_NEW_ACTOR_OVERRIDE_LEVEL)
-                    //{
-                    //    InternalLoadObject(bunch.Archive);
-                    //}
 
-                    // FVector_NetQuantize10
                     // bSerializeLocation
                     if (bunch.Archive.ReadBit())
                     {
@@ -1442,7 +1437,7 @@ namespace Unreal.Core
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
             InPacketId++;
 
-            var rejectedChannels = new Dictionary<uint, uint>();
+            //var rejectedChannels = new Dictionary<uint, uint>();
             while (!bitReader.AtEnd())
             {
                 // For demo backwards compatibility, old replays still have this bit
@@ -1601,6 +1596,7 @@ namespace Unreal.Core
                 if (bunch.bHasPackageMapExports)
                 {
                     // Driver->NetGUIDInBytes += (BunchDataBits + (HeaderPos - IncomingStartPos)) >> 3 ??
+                    // Cast<UPackageMapClient>( PackageMap )->ReceiveNetGUIDBunch( Bunch );
                     ReceiveNetGUIDBunch(bunch.Archive);
                 }
 
@@ -1673,11 +1669,11 @@ namespace Unreal.Core
                 // Create channel if necessary
                 if (!channel)
                 {
-                    if (rejectedChannels.ContainsKey(bunch.ChIndex))
-                    {
-                        _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
-                        continue;
-                    }
+                    //if (rejectedChannels.ContainsKey(bunch.ChIndex))
+                    //{
+                    //    _logger?.LogDebug($"Ignoring Bunch for ChIndex {bunch.ChIndex}, as the channel was already rejected while processing this packet.");
+                    //    continue;
+                    //}
 
                     //if (!Driver->IsKnownChannelName(Bunch.ChName))
                     //{

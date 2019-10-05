@@ -44,6 +44,7 @@ namespace Unreal.Core
         private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>(); // TODO: UChannel
         private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
+        private Dictionary<uint, NetFieldExportGroup> ArchetypeToNetFieldGroup = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
         private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap = new Dictionary<string, NetFieldExportGroup>();
         private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -239,7 +240,7 @@ namespace Unreal.Core
                     {
                         if (packet.State == PacketState.Success)
                         {
-                            //ReceivedRawPacket(packet);
+                            ReceivedRawPacket(packet);
                         }
                     }
                 }
@@ -593,6 +594,7 @@ namespace Unreal.Core
 
                 var netField = ReadNetFieldExport(archive);
 
+                group.NetFieldExports.Add(netField);
                 // preserve compatibility flag
                 netField.Incompatible = group.NetFieldExports.Where(i => i.Name.Equals(netField.Name))?.FirstOrDefault()?.Incompatible ?? netField.Incompatible;
                 group.NetFieldExports = group.NetFieldExports.Replace(i => i.Name.Equals(netField.Name), netField).ToList(); // TODO MonkaS
@@ -1148,6 +1150,8 @@ namespace Unreal.Core
             // Handle replayout properties
             if (bHasRepLayout)
             {
+                bool doChecksum = bunch.Archive.ReadBit();
+
                 // TODO track bHasReplicatedProperties per channel?
                 //if (!bHasReplicatedProperties)
                 //{
@@ -1170,6 +1174,44 @@ namespace Unreal.Core
                 // FRepLayout::ReceiveProperties(
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
+                if (Channels[bunch.ChIndex].Actor.Archetype != null)
+                {
+                    uint archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
+                    NetFieldExportGroup netFieldExportGroup;
+
+                    if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
+                    {
+                        var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
+                        path = RemoveAllPathPrefixes(path);
+                        foreach (string groupPath in NetFieldExportGroupMap.Keys)
+                        {
+                            string groupPathFixed = RemoveAllPathPrefixes(groupPath); // to do, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                            if (groupPathFixed.Contains(path))
+                            {
+                                netFieldExportGroup = NetFieldExportGroupMap[groupPath];
+                                ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
+                    }
+
+                    uint handle = bunch.Archive.ReadIntPacked(); // remove 1 because it can't be 0
+
+                    if (handle == 0)
+                    {
+                        return;
+                    }
+
+                    handle = handle--; // remove 1 because we need to be able to see a 0 before
+                }
+                else
+                {
+                    Console.WriteLine("no archetype for reading - would be impossible to read what");
+                }
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1178,6 +1220,7 @@ namespace Unreal.Core
             // const FFieldNetCache* FieldCache = nullptr;
 
             // TODO figure out where NetFieldExportGroup is coming from
+            /*
             while (ReadFieldHeaderAndPayload(bunch, null))
             {
                 //if (FieldCache == nullptr)
@@ -1220,7 +1263,31 @@ namespace Unreal.Core
                 // Handle function call
                 //Cast<UFunction>(FieldCache->Field)
                 //}
+
             }
+            */
+        }
+
+        private string RemoveAllPathPrefixes(string path)
+        {
+            path = RemovePathPrefix(path, "Default__");
+
+            if (path.Contains("."))
+            {
+                int index = path.IndexOf(".");
+                path = path.Remove(0, index + 1);
+            }
+            return path;
+        }
+
+        private string RemovePathPrefix(string path,string ToRemove)
+        {
+            if (path.Contains(ToRemove))
+            {
+                int index = path.IndexOf(ToRemove);
+                path = path.Remove(index, ToRemove.Length);
+            }
+            return path;
         }
 
         /// <summary>

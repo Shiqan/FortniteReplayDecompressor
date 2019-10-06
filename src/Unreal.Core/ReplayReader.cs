@@ -1131,6 +1131,8 @@ namespace Unreal.Core
                 }
 
                 // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
+                // Don't consider this catastrophic in replays
+                // continue;
                 ReceivedReplicatorBunch(bunch, bHasRepLayout);
             }
             // PostReceivedBunch, not interesting?
@@ -1145,6 +1147,7 @@ namespace Unreal.Core
             // Handle replayout properties
             if (bHasRepLayout)
             {
+                // if ENABLE_PROPERTY_CHECKSUMS
                 bool doChecksum = bunch.Archive.ReadBit();
 
                 // TODO track bHasReplicatedProperties per channel?
@@ -1169,10 +1172,12 @@ namespace Unreal.Core
                 // FRepLayout::ReceiveProperties(
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
+
+                // while (true)
                 if (Channels[bunch.ChIndex].Actor.Archetype != null)
                 {
                     uint archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
-                    NetFieldExportGroup netFieldExportGroup = new NetFieldExportGroup();
+                    NetFieldExportGroup netFieldExportGroup = null;
 
                     if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
                     {
@@ -1194,18 +1199,44 @@ namespace Unreal.Core
                         netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
                     }
 
-                    uint handle = bunch.Archive.ReadIntPacked(); // remove 1 because it can't be 0
+                    uint handle = bunch.Archive.ReadIntPacked();
 
                     if (handle == 0)
                     {
+                        // We're done
                         return;
                     }
 
-                    handle = handle--; // remove 1 because we need to be able to see a 0 before
+                    // We purposely add 1 on save, so we can reserve 0 for "done"
+                    handle = handle--;
 
                     NetFieldExport export = netFieldExportGroup.NetFieldExports[(int)handle];
 
                     uint numBits = bunch.Archive.ReadIntPacked();
+
+                    if (export.Incompatible)
+                    {
+                        _logger?.LogInformation("Incompatible export");
+                        // We've already warned that this property doesn't load anymore
+                        //continue;
+                    }
+
+                    bunch.Archive.Mark();
+                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int) Math.Ceiling(numBits / 8.0), 1)));
+                    bunch.Archive.Pop();
+
+                    var cmdReader = new BitReader(bunch.Archive.ReadBits(numBits));
+                    cmdReader.NetSerializeItem();
+
+                    // RepLayout 3139
+                    // Find this property
+                    // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
+                    // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
+
+                    // RepLayout 2516
+                    // ReceivePropertyHelper
+                    // Read the property
+                    // Cmd.Property->NetSerializeItem(Bunch, Bunch.PackageMap, Data + SwappedCmd);
                 }
                 else
                 {
@@ -1267,6 +1298,7 @@ namespace Unreal.Core
             */
         }
 
+        // see UObjectBaseUtility
         private string RemoveAllPathPrefixes(string path)
         {
             path = RemovePathPrefix(path, "Default__");
@@ -1279,7 +1311,7 @@ namespace Unreal.Core
             return path;
         }
 
-        private string RemovePathPrefix(string path,string ToRemove)
+        private string RemovePathPrefix(string path, string ToRemove)
         {
             if (path.Contains(ToRemove))
             {

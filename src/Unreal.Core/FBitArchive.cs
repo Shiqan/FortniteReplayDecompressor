@@ -20,5 +20,6 @@ namespace Unreal.Core
         public abstract void Pop();
         public abstract int GetBitsLeft();
         public abstract void AppendDataFromChecked(bool[] data);
+        public abstract void NetSerializeItem();
     }
 }

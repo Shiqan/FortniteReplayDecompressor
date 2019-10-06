@@ -470,5 +470,10 @@ namespace Unreal.Core
         {
             Bits = Bits.Append(data);
         }
+
+        public override void NetSerializeItem()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

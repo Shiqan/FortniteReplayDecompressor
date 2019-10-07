@@ -1,4 +1,5 @@
 ﻿using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
@@ -20,6 +21,6 @@ namespace Unreal.Core
         public abstract void Pop();
         public abstract int GetBitsLeft();
         public abstract void AppendDataFromChecked(bool[] data);
-        public abstract void NetSerializeItem();
+        public abstract void NetSerializeItem(RepLayoutCmdType type);
     }
 }

@@ -21,6 +21,8 @@ namespace Unreal.Core
         public int Minor { get; private set; } = 0;
 
         private string _branch;
+
+        // TODO see NetworkVerisonBase.h
         public string Branch
         {
             get { return _branch; }

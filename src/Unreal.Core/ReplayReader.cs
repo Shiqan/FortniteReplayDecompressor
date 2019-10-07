@@ -69,12 +69,15 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
         public virtual void ReadCheckpoint(FArchive archive)
         {
+            // TODO add support for bDeltaCheckpoint ??
+
             var info = new CheckpointInfo
             {
                 Id = archive.ReadFString(),
@@ -85,66 +88,68 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using (var binaryArchive = Decompress(archive))
+            using var binaryArchive = Decompress(archive);
+
+            // SerializeDeletedStartupActors
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
+
+            if (binaryArchive.HasLevelStreamingFixes())
             {
-                // SerializeDeletedStartupActors
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
+                var packetOffset = binaryArchive.ReadInt64();
+            }
 
-                if (binaryArchive.HasLevelStreamingFixes())
+            if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+            {
+                var levelForCheckpoint = binaryArchive.ReadInt32();
+            }
+
+            if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
+            {
+                var deletedNetStartupActors = binaryArchive.ReadArray(binaryArchive.ReadFString);
+            }
+
+            // SerializeGuidCache
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1591
+            var count = binaryArchive.ReadInt32();
+            for (var i = 0; i < count; i++)
+            {
+                var guid = binaryArchive.ReadIntPacked();
+                var outerGuid = binaryArchive.ReadIntPacked();
+                var path = binaryArchive.ReadFString();
+                var checksum = binaryArchive.ReadUInt32();
+                var flags = binaryArchive.ReadByte();
+
+                // TODO DemoNetDriver 5319
+                // GuidCache->ObjectLookup.Add(Guid, CacheObject);
+            }
+
+            // SerializeNetFieldExportGroupMap 
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
+
+            // Clear all of our mappings, since we're starting over
+            NetFieldExportGroupMap.Clear();
+            NetFieldExportGroupIndexToGroup.Clear();
+
+            var numNetFieldExportGroups = binaryArchive.ReadUInt32();
+            for (var i = 0; i < numNetFieldExportGroups; i++)
+            {
+                var group = ReadNetFieldExportGroupMap(binaryArchive);
+
+                // Add the export group to the map
+                NetFieldExportGroupMap.Add(group.PathName, group);
+                NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
+            }
+
+            // SerializeDemoFrameFromQueuedDemoPackets
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
+            var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+            foreach (var packet in playbackPackets)
+            {
+                if (packet.State == PacketState.Success)
                 {
-                    var packetOffset = binaryArchive.ReadInt64();
-                }
-
-                if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
-                {
-                    var levelForCheckpoint = binaryArchive.ReadInt32();
-                }
-
-                if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
-                {
-                    var deletedNetStartupActors = binaryArchive.ReadArray(binaryArchive.ReadFString);
-                }
-
-                // SerializeGuidCache
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1591
-                var count = binaryArchive.ReadInt32();
-                for (var i = 0; i < count; i++)
-                {
-                    var guid = binaryArchive.ReadIntPacked();
-                    var outerGuid = binaryArchive.ReadIntPacked();
-                    var path = binaryArchive.ReadFString();
-                    var checksum = binaryArchive.ReadUInt32();
-                    var flags = binaryArchive.ReadByte();
-                }
-
-                // SerializeNetFieldExportGroupMap 
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
-
-                // Clear all of our mappings, since we're starting over
-                NetFieldExportGroupMap.Clear();
-                NetFieldExportGroupIndexToGroup.Clear();
-
-                var numNetFieldExportGroups = binaryArchive.ReadUInt32();
-                for (var i = 0; i < numNetFieldExportGroups; i++)
-                {
-                    var group = ReadNetFieldExportGroupMap(binaryArchive);
-
-                    // Add the export group to the map
-                    NetFieldExportGroupMap.Add(group.PathName, group);
-                    NetFieldExportGroupIndexToGroup.Add(group.PathNameIndex, group);
-                }
-
-                // SerializeDemoFrameFromQueuedDemoPackets
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-                foreach (var packet in playbackPackets)
-                {
-                    if (packet.State == PacketState.Success)
-                    {
-                        Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "packet", packet.Data);
-                        packetIndex++;
-                        ReceivedRawPacket(packet);
-                    }
+                    Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "packet", packet.Data);
+                    packetIndex++;
+                    ReceivedRawPacket(packet);
                 }
             }
             checkpointIndex++;
@@ -228,20 +233,18 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            using (var binaryArchive = Decompress(archive))
+            using var binaryArchive = Decompress(archive);
+            while (!binaryArchive.AtEnd())
             {
-                while (!binaryArchive.AtEnd())
-                {
-                    var startPos = binaryArchive.BaseStream.Position;
-                    var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
+                var startPos = binaryArchive.BaseStream.Position;
+                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
-                    // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
-                    foreach (var packet in playbackPackets)
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
+                foreach (var packet in playbackPackets)
+                {
+                    if (packet.State == PacketState.Success)
                     {
-                        if (packet.State == PacketState.Success)
-                        {
-                            ReceivedRawPacket(packet);
-                        }
+                        ReceivedRawPacket(packet);
                     }
                 }
             }
@@ -553,7 +556,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1497
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
         /// </summary>
         public virtual void ReadNetFieldExports(FArchive archive)
         {
@@ -589,15 +592,23 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    group = NetFieldExportGroupIndexToGroup[pathNameIndex];
+                    NetFieldExportGroupIndexToGroup.TryGetValue(pathNameIndex, out group);
                 }
 
                 var netField = ReadNetFieldExport(archive);
 
-                group.NetFieldExports.Add(netField);
-                // preserve compatibility flag
-                netField.Incompatible = group.NetFieldExports.Where(i => i.Name.Equals(netField.Name))?.FirstOrDefault()?.Incompatible ?? netField.Incompatible;
-                group.NetFieldExports = group.NetFieldExports.Replace(i => i.Name.Equals(netField.Name), netField).ToList(); // TODO MonkaS
+                if (group != null)
+                {
+                    group.NetFieldExports.Add(netField);
+                    // preserve compatibility flag
+                    netField.Incompatible = group.NetFieldExports.Where(i => i.Name.Equals(netField.Name))?.FirstOrDefault()?.Incompatible ?? netField.Incompatible;
+                    group.NetFieldExports = group.NetFieldExports.Replace(i => i.Name.Equals(netField.Name), netField).ToList(); // TODO MonkaS
+
+                }
+                else
+                {
+                    _logger.LogInformation("ReceiveNetFieldExports: Unable to find NetFieldExportGroup for export.");
+                }
             }
         }
 
@@ -1054,12 +1065,20 @@ namespace Unreal.Core
             var actor = ChannelActors.ContainsKey(bunch.ChIndex) ? ChannelActors[bunch.ChIndex] : false;
             if (!actor)
             {
-                Actor inActor = new Actor();
-                // Initialize client if first time through.
+                if (!bunch.bOpen)
+                {
+                    _logger?.LogError("New actor channel received non-open packet.");
+                    return;
+                }
 
-                // SerializeNewActor
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
-                inActor.ActorNetGUID = InternalLoadObject(bunch.Archive, false);
+                var inActor = new Actor
+                {
+                    // Initialize client if first time through.
+
+                    // SerializeNewActor
+                    // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L257
+                    ActorNetGUID = InternalLoadObject(bunch.Archive, false)
+                };
 
                 if (bunch.Archive.AtEnd() && inActor.ActorNetGUID.IsDynamic())
                 {
@@ -1114,6 +1133,8 @@ namespace Unreal.Core
                 ChannelActors.Add(bunch.ChIndex, true);
             }
 
+            // RepFlags.bNetOwner = true; // ActorConnection == Connection is always true??
+
             //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
             //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
 
@@ -1148,7 +1169,7 @@ namespace Unreal.Core
             if (bHasRepLayout)
             {
                 // if ENABLE_PROPERTY_CHECKSUMS
-                bool doChecksum = bunch.Archive.ReadBit();
+                var doChecksum = bunch.Archive.ReadBit();
 
                 // TODO track bHasReplicatedProperties per channel?
                 //if (!bHasReplicatedProperties)
@@ -1176,16 +1197,16 @@ namespace Unreal.Core
                 // while (true)
                 if (Channels[bunch.ChIndex].Actor.Archetype != null)
                 {
-                    uint archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
+                    var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
                     NetFieldExportGroup netFieldExportGroup = null;
 
                     if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
                     {
                         var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
                         path = RemoveAllPathPrefixes(path);
-                        foreach (string groupPath in NetFieldExportGroupMap.Keys)
+                        foreach (var groupPath in NetFieldExportGroupMap.Keys)
                         {
-                            string groupPathFixed = RemoveAllPathPrefixes(groupPath); // to do, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                            var groupPathFixed = RemoveAllPathPrefixes(groupPath); // to do, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
                             if (groupPathFixed.Contains(path))
                             {
                                 netFieldExportGroup = NetFieldExportGroupMap[groupPath];
@@ -1199,7 +1220,7 @@ namespace Unreal.Core
                         netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
                     }
 
-                    uint handle = bunch.Archive.ReadIntPacked();
+                    var handle = bunch.Archive.ReadIntPacked();
 
                     if (handle == 0)
                     {
@@ -1210,9 +1231,9 @@ namespace Unreal.Core
                     // We purposely add 1 on save, so we can reserve 0 for "done"
                     handle = handle--;
 
-                    NetFieldExport export = netFieldExportGroup.NetFieldExports[(int)handle];
+                    var export = netFieldExportGroup.NetFieldExports[(int)handle];
 
-                    uint numBits = bunch.Archive.ReadIntPacked();
+                    var numBits = bunch.Archive.ReadIntPacked();
 
                     if (export.Incompatible)
                     {
@@ -1222,11 +1243,15 @@ namespace Unreal.Core
                     }
 
                     bunch.Archive.Mark();
-                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int) Math.Ceiling(numBits / 8.0), 1)));
+                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
                     bunch.Archive.Pop();
 
-                    var cmdReader = new BitReader(bunch.Archive.ReadBits(numBits));
-                    cmdReader.NetSerializeItem();
+                    var cmdReader = new NetBitReader(bunch.Archive.ReadBits(numBits));
+
+                    if (export.Name == "ReplicatedMovement" && numBits > 2)
+                    {
+                        cmdReader.NetSerializeItem(RepLayoutCmdType.RepMovement);
+                    }
 
                     // RepLayout 3139
                     // Find this property
@@ -1305,7 +1330,7 @@ namespace Unreal.Core
 
             if (path.Contains("."))
             {
-                int index = path.IndexOf(".");
+                var index = path.IndexOf(".");
                 path = path.Remove(0, index + 1);
             }
             return path;
@@ -1315,7 +1340,7 @@ namespace Unreal.Core
         {
             if (path.Contains(ToRemove))
             {
-                int index = path.IndexOf(ToRemove);
+                var index = path.IndexOf(ToRemove);
                 path = path.Remove(index, ToRemove.Length);
             }
             return path;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     /// <summary>
     /// Actor is the base class for an Object that can be placed or spawned in a level.

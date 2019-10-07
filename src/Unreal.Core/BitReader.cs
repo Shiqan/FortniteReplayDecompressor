@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
@@ -471,7 +472,7 @@ namespace Unreal.Core
             Bits = Bits.Append(data);
         }
 
-        public override void NetSerializeItem()
+        public override void NetSerializeItem(RepLayoutCmdType type)
         {
             throw new NotImplementedException();
         }

@@ -4,6 +4,7 @@ using FortniteReplayReader.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
@@ -30,6 +31,31 @@ namespace FortniteReplayReader
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
             return ReadReplay(archive);
+        }
+
+        private string _branch;
+        public int Major { get; set; }
+        public int Minor { get; set; }
+        public string Branch
+        {
+            get { return _branch; }
+            set
+            {
+                var regex = new Regex(@"\+\+Fortnite\+Release\-(?<major>\d+)\.(?<minor>\d*)");
+                var result = regex.Match(value);
+                if (result.Success)
+                {
+                    Major = int.Parse(result.Groups["major"]?.Value ?? "0");
+                    Minor = int.Parse(result.Groups["minor"]?.Value ?? "0");
+                }
+                _branch = value;
+            }
+        }
+
+        public override void ReadReplayHeader(FArchive archive)
+        {
+            base.ReadReplayHeader(archive);
+            Branch = Replay.Header.Branch;
         }
 
         /// <summary>
@@ -181,7 +207,7 @@ namespace FortniteReplayReader
                 };
 
                 // "++Fortnite+Release-9.10"
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && archive.Major >= 9)
+                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
                 {
                     archive.SkipBytes(87);
                     elim.Eliminated = archive.ReadGUID();
@@ -191,12 +217,12 @@ namespace FortniteReplayReader
                 else
                 {
                     // "++Fortnite+Release-4.0"
-                    if (archive.Major <= 4 && archive.Minor < 2)
+                    if (Major <= 4 && Minor < 2)
                     {
                         archive.SkipBytes(12);
                     }
                     // "++Fortnite+Release-4.2"
-                    else if (archive.Major == 4 && archive.Minor <= 2)
+                    else if (Major == 4 && Minor <= 2)
                     {
                         archive.SkipBytes(40);
                     }

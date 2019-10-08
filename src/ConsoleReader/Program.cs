@@ -29,8 +29,8 @@ namespace ConsoleReader
             //    var replay = reader.ReadReplay(replayFile);
             //}
 
-            var replayFile = "Replays/shootergame.replay";
-            //var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
+            //var replayFile = "Replays/shootergame.replay";
+            var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.04.05-20.22.58.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.05.03-21.24.46.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.05.22-16.58.41.replay";

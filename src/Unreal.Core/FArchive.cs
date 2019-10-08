@@ -16,29 +16,7 @@ namespace Unreal.Core
         public ReplayHeaderFlags ReplayHeaderFlags { get; set; }
         public NetworkVersionHistory NetworkVersion { get; set; }
         public ReplayVersionHistory ReplayVersion { get; set; }
-
-        public int Major { get; private set; } = 0;
-        public int Minor { get; private set; } = 0;
-
-        private string _branch;
-
-        // TODO see NetworkVerisonBase.h
-        public string Branch
-        {
-            get { return _branch; }
-            set
-            {
-                var regex = new Regex(@"\+\+Fortnite\+Release\-(?<major>\d+)\.(?<minor>\d*)");
-                var result = regex.Match(value);
-                if (result.Success)
-                {
-                    Major = int.Parse(result.Groups["major"]?.Value ?? "0");
-                    Minor = int.Parse(result.Groups["minor"]?.Value ?? "0");
-                }
-                _branch = value;
-            }
-        }
-
+        public NetworkReplayVersion NetworkReplayVersion { get; set; }
         public abstract int Position { get; protected set; }
         public bool IsError { get; set; } = false;
 

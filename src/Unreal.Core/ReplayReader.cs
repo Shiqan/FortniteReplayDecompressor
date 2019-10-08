@@ -292,7 +292,15 @@ namespace Unreal.Core
                 header.Patch = archive.ReadUInt16();
                 header.Changelist = archive.ReadUInt32();
                 header.Branch = archive.ReadFString();
-                archive.Branch = header.Branch;
+                
+                archive.NetworkReplayVersion = new NetworkReplayVersion()
+                {
+                    Major = header.Major,
+                    Minor = header.Minor,
+                    Patch = header.Patch,
+                    Changelist = header.Changelist,
+                    Branch = header.Branch
+                };
             }
             else
             {

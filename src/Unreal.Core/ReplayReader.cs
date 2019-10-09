@@ -236,7 +236,6 @@ namespace Unreal.Core
             using var binaryArchive = Decompress(archive);
             while (!binaryArchive.AtEnd())
             {
-                var startPos = binaryArchive.BaseStream.Position;
                 var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
@@ -292,7 +291,7 @@ namespace Unreal.Core
                 header.Patch = archive.ReadUInt16();
                 header.Changelist = archive.ReadUInt32();
                 header.Branch = archive.ReadFString();
-                
+
                 archive.NetworkReplayVersion = new NetworkReplayVersion()
                 {
                     Major = header.Major,
@@ -533,6 +532,7 @@ namespace Unreal.Core
                 var netFieldExport = ReadNetFieldExport(archive);
                 if (netFieldExport != null)
                 {
+                    // TODO fix null fields
                     group.NetFieldExports.Add(netFieldExport);
                 }
             }
@@ -764,7 +764,7 @@ namespace Unreal.Core
                 // outerguid
                 if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
                 {
-                    var outerGuid = InternalLoadObject(archive, true);
+                    var outerGuid = InternalLoadObject(archive, true); // TODO: archetype?
 
                     var pathName = archive.ReadFString();
 
@@ -1058,6 +1058,12 @@ namespace Unreal.Core
                 bunch.Archive.Mark();
                 var actorGuid = bunch.Archive.ReadIntPacked();
                 bunch.Archive.Pop();
+
+                // we can now map guid to channel, even if all the bunches get queued
+                //if (Connection->InternalAck)
+                //{
+                //    Connection->NotifyActorNetGUID(this);
+                //}
             }
 
             ProcessBunch(bunch);
@@ -1202,79 +1208,14 @@ namespace Unreal.Core
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
 
-                // while (true)
-                if (Channels[bunch.ChIndex].Actor.Archetype != null)
-                {
-                    var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
-                    NetFieldExportGroup netFieldExportGroup = null;
+                ReceiveProperties(bunch); 
+                // TODO bool
+                //if (!ReceiveProperties())
+                //{
+                //    _logger?.LogError("RepLayout->ReceiveProperties FAILED");
+                //    return false;
+                //}
 
-                    if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
-                    {
-                        var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
-                        path = RemoveAllPathPrefixes(path);
-                        foreach (var groupPath in NetFieldExportGroupMap.Keys)
-                        {
-                            var groupPathFixed = RemoveAllPathPrefixes(groupPath); // to do, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                            if (groupPathFixed.Contains(path))
-                            {
-                                netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                                ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
-                    }
-
-                    var handle = bunch.Archive.ReadIntPacked();
-
-                    if (handle == 0)
-                    {
-                        // We're done
-                        return;
-                    }
-
-                    // We purposely add 1 on save, so we can reserve 0 for "done"
-                    handle = handle--;
-
-                    var export = netFieldExportGroup.NetFieldExports[(int)handle];
-
-                    var numBits = bunch.Archive.ReadIntPacked();
-
-                    if (export.Incompatible)
-                    {
-                        _logger?.LogInformation("Incompatible export");
-                        // We've already warned that this property doesn't load anymore
-                        //continue;
-                    }
-
-                    bunch.Archive.Mark();
-                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
-                    bunch.Archive.Pop();
-
-                    var cmdReader = new NetBitReader(bunch.Archive.ReadBits(numBits));
-
-                    if (export.Name == "ReplicatedMovement" && numBits > 2)
-                    {
-                        cmdReader.NetSerializeItem(RepLayoutCmdType.RepMovement);
-                    }
-
-                    // RepLayout 3139
-                    // Find this property
-                    // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
-                    // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
-
-                    // RepLayout 2516
-                    // ReceivePropertyHelper
-                    // Read the property
-                    // Cmd.Property->NetSerializeItem(Bunch, Bunch.PackageMap, Data + SwappedCmd);
-                }
-                else
-                {
-                    Console.WriteLine("no archetype for reading - would be impossible to read what");
-                }
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1283,7 +1224,6 @@ namespace Unreal.Core
             // const FFieldNetCache* FieldCache = nullptr;
 
             // TODO figure out where NetFieldExportGroup is coming from
-            /*
             while (ReadFieldHeaderAndPayload(bunch, null))
             {
                 //if (FieldCache == nullptr)
@@ -1326,9 +1266,117 @@ namespace Unreal.Core
                 // Handle function call
                 //Cast<UFunction>(FieldCache->Field)
                 //}
-
             }
-            */
+        }
+
+        /// <summary>
+        ///  RepLayout.cpp
+        ///  ReceiveProperties 2895,
+        ///  ReceiveProperties_BackwardsCompatible 2971
+        ///  and ReceiveProperties_BackwardsCompatible_r 3022
+        /// </summary>
+        /// <param name="bunch"></param>
+        public virtual void ReceiveProperties(DataBunch bunch)
+        {
+            if (Channels[bunch.ChIndex].Actor.Archetype != null)
+            {
+                var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
+                NetFieldExportGroup netFieldExportGroup = null;
+
+                if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
+                {
+                    var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
+                    path = RemoveAllPathPrefixes(path);
+                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
+                    {
+                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                        if (groupPathFixed.Contains(path))
+                        {
+                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
+                            ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
+                }
+
+                while (true)
+                {
+                    var handle = bunch.Archive.ReadIntPacked();
+
+                    if (handle == 0)
+                    {
+                        // We're done
+                        break;
+                        // return true;
+                    }
+
+                    // We purposely add 1 on save, so we can reserve 0 for "done"
+                    handle--;
+
+                    // TODO remove loop...
+                    var export = netFieldExportGroup.NetFieldExports.First(i => i.Handle == handle);
+                    //var export = netFieldExportGroup.NetFieldExports[(int)handle];
+
+                    var numBits = bunch.Archive.ReadIntPacked();
+
+                    if (export.Incompatible)
+                    {
+                        _logger?.LogInformation("Incompatible export");
+                        // We've already warned that this property doesn't load anymore
+                        continue;
+                    }
+
+                    bunch.Archive.Mark();
+                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
+                    bunch.Archive.Pop();
+
+                    var cmdReader = new NetBitReader(bunch.Archive.ReadBits(numBits));
+
+                    if (export.Name == "ReplicatedMovement" && numBits > 2)
+                    {
+                        cmdReader.NetSerializeItem(RepLayoutCmdType.RepMovement);
+                    }
+
+                    else if (numBits == 1)
+                    {
+                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyBool);
+                    }
+
+                    else if (numBits <= 2)
+                    {
+                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyByte);
+                    }
+
+                    else
+                    {
+                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyObject);
+                    }
+
+                    if (!cmdReader.AtEnd() || cmdReader.IsError) // TODO finally implement isError properly...
+                    {
+                        // allow until we figured out how dafuq this sh*t works
+                        _logger?.LogWarning($"Property {export.Name} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                        continue;
+
+                        //_logger?.LogError("Property didn't read proper number of bits.");
+                        //return;
+                        //return false;
+                    }
+
+                    // RepLayout 3139
+                    // Find this property
+                    // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
+                    // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
+                }
+            }
+            else
+            {
+                _logger?.LogError("No archetype for reading - would be impossible to read that");
+            }
         }
 
         // see UObjectBaseUtility
@@ -1366,6 +1414,7 @@ namespace Unreal.Core
             {
                 return false;
             }
+
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
             var netFieldExportHandle = bunch.Archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
 

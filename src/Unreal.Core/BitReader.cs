@@ -298,9 +298,9 @@ namespace Unreal.Core
 
                 byte currentByte = ReadByte();
                 byte nextByte = 0;
-                if (currentByte != 0)
+                if (BitsUsed != 0)
                 {
-                    nextByte = PeekByte();
+                    nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
                 }
 
                 OldPos += 8;

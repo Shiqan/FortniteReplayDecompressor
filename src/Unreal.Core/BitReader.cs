@@ -100,6 +100,23 @@ namespace Unreal.Core
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// </summary>
+        /// <param name="bits">The number of bits to read.</param>
+        /// <returns>int</returns>
+        public int ReadBitsToInt(int bitCount)
+        {
+            var result = new byte();
+            for (var i = 0; i < bitCount; i++)
+            {
+                if (ReadBit())
+                {
+                    result |= (byte)(1 << i);
+                }
+            }
+            return (int) result;
+        }
 
         /// <summary>
         /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
@@ -189,7 +206,8 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
-            throw new NotImplementedException();
+            // https://github.com/dotnet/corefx/issues/10013
+            return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
         }
 
         /// <summary>
@@ -226,7 +244,7 @@ namespace Unreal.Core
 
         public override string ReadGUID()
         {
-            throw new NotImplementedException();
+            return ReadBytesToString(16);
         }
 
         /// <summary>

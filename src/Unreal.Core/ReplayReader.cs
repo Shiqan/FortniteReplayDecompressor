@@ -68,6 +68,11 @@ namespace Unreal.Core
             File.WriteAllBytes($"{directory}/{filename}.dump", data);
         }
 
+        public void Debug(string filename, string line)
+        {
+            File.AppendAllLines($"{filename}.txt", new string[1] { line });
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
@@ -147,7 +152,7 @@ namespace Unreal.Core
             {
                 if (packet.State == PacketState.Success)
                 {
-                    Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "packet", packet.Data);
+                    Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "checkpoint-packets", packet.Data);
                     packetIndex++;
                     ReceivedRawPacket(packet);
                 }
@@ -243,10 +248,13 @@ namespace Unreal.Core
                 {
                     if (packet.State == PacketState.Success)
                     {
+                        Debug($"replaydata-{replayDataIndex}-packet-{packetIndex}", "replay-packets", packet.Data);
+                        packetIndex++;
                         ReceivedRawPacket(packet);
                     }
                 }
             }
+            replayDataIndex++;
         }
 
         /// <summary>
@@ -1059,6 +1067,7 @@ namespace Unreal.Core
                 var actorGuid = bunch.Archive.ReadIntPacked();
                 bunch.Archive.Pop();
 
+                // TODO set channel actor here??
                 // we can now map guid to channel, even if all the bunches get queued
                 //if (Connection->InternalAck)
                 //{
@@ -1179,6 +1188,37 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         public virtual void ReceivedReplicatorBunch(DataBunch bunch, bool bHasRepLayout)
         {
+            NetFieldExportGroup netFieldExportGroup = null;
+            if (Channels[bunch.ChIndex].Actor.Archetype != null)
+            {
+                var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
+
+                if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
+                {
+                    var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
+                    path = RemoveAllPathPrefixes(path);
+                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
+                    {
+                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                        if (groupPathFixed.Contains(path))
+                        {
+                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
+                            ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
+                }
+            }
+            else
+            {
+                _logger?.LogError("No archetype for reading - would be impossible to read that");
+                return;
+            }
+
             // Handle replayout properties
             if (bHasRepLayout)
             {
@@ -1208,14 +1248,13 @@ namespace Unreal.Core
                 //      ReceiveProperties_BackwardsCompatible
                 //          ReceiveProperties_BackwardsCompatible_r
 
-                ReceiveProperties(bunch); 
                 // TODO bool
                 //if (!ReceiveProperties())
                 //{
                 //    _logger?.LogError("RepLayout->ReceiveProperties FAILED");
                 //    return false;
                 //}
-
+                ReceiveProperties(bunch, netFieldExportGroup);
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1224,7 +1263,7 @@ namespace Unreal.Core
             // const FFieldNetCache* FieldCache = nullptr;
 
             // TODO figure out where NetFieldExportGroup is coming from
-            while (ReadFieldHeaderAndPayload(bunch, null))
+            while (ReadFieldHeaderAndPayload(bunch, netFieldExportGroup))
             {
                 //if (FieldCache == nullptr)
                 //{
@@ -1276,106 +1315,97 @@ namespace Unreal.Core
         ///  and ReceiveProperties_BackwardsCompatible_r 3022
         /// </summary>
         /// <param name="bunch"></param>
-        public virtual void ReceiveProperties(DataBunch bunch)
+        public virtual void ReceiveProperties(DataBunch bunch, NetFieldExportGroup group)
         {
-            if (Channels[bunch.ChIndex].Actor.Archetype != null)
+            while (true)
             {
-                var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
-                NetFieldExportGroup netFieldExportGroup = null;
+                var handle = bunch.Archive.ReadIntPacked();
 
-                if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
+                if (handle == 0)
                 {
-                    var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
-                    path = RemoveAllPathPrefixes(path);
-                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
-                    {
-                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                        if (groupPathFixed.Contains(path))
-                        {
-                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
+                    // We're done
+                    break;
+                    // return true;
+                }
+
+                // We purposely add 1 on save, so we can reserve 0 for "done"
+                handle--;
+
+                // TODO remove loop...
+                var export = group.NetFieldExports.First(i => i.Handle == handle);
+                //var export = netFieldExportGroup.NetFieldExports[(int)handle];
+
+                var numBits = bunch.Archive.ReadIntPacked();
+
+                Debug("types", $"{ export.Name}\t{export.Type}\t{numBits}");
+
+                if (export.Incompatible)
+                {
+                    _logger?.LogInformation("Incompatible export");
+                    // We've already warned that this property doesn't load anymore
+                    continue;
+                }
+
+                bunch.Archive.Mark();
+                Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
+                bunch.Archive.Pop();
+
+                var cmdReader = new NetBitReader(bunch.Archive.ReadBits(numBits));
+                
+                if (group.PathName == "/Script/FortniteGame.FortPlayerStateAthena")
+                {
+                    switch (export.Name) {
+                        case "PlayerID":
+                            var playerId = cmdReader.ReadInt32();
                             break;
-                        }
+                        case "StartTime":
+                            var startTime = cmdReader.ReadInt32();
+                            break;
+                        case "UniqueId":
+                            cmdReader.SerializePropertyNetId();
+                            break;
+                        case "PlayerNamePrivate":
+                            var playerNamePrivate = cmdReader.ReadFString();
+                            Debug("playernames", playerNamePrivate);
+                            break;
+                        case "PartyOwnerUniqueId":
+                            cmdReader.SerializePropertyNetId();
+                            break;
+                        case "WorldPlayerId":
+                            var worldPlayerId = cmdReader.ReadInt32();
+                            break;
+                        case "Platform":
+                            var platform = cmdReader.ReadFString();
+                            break;
+                        case "Team":
+                        case "TeamIndex":
+                            var teamIndex = cmdReader.ReadBitsToInt(7);
+                            //var teamIndex = cmdReader.ReadByte(); // numbits = 7?
+                            break;
+                        case "SquadListUpdateValue":
+                            var squadListUpdateValue = cmdReader.ReadInt32();
+                            break;
+                        case "SquadId":
+                            var squadId = cmdReader.ReadByte();
+                            break;
                     }
                 }
-                else
+
+                if (!cmdReader.AtEnd() || cmdReader.IsError) // TODO finally implement isError properly...
                 {
-                    netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
+                    // allow until we figured out how this works
+                    _logger?.LogWarning($"Property {export.Name} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                    continue;
+
+                    //_logger?.LogError("Property didn't read proper number of bits.");
+                    //return;
+                    //return false;
                 }
 
-                while (true)
-                {
-                    var handle = bunch.Archive.ReadIntPacked();
-
-                    if (handle == 0)
-                    {
-                        // We're done
-                        break;
-                        // return true;
-                    }
-
-                    // We purposely add 1 on save, so we can reserve 0 for "done"
-                    handle--;
-
-                    // TODO remove loop...
-                    var export = netFieldExportGroup.NetFieldExports.First(i => i.Handle == handle);
-                    //var export = netFieldExportGroup.NetFieldExports[(int)handle];
-
-                    var numBits = bunch.Archive.ReadIntPacked();
-
-                    if (export.Incompatible)
-                    {
-                        _logger?.LogInformation("Incompatible export");
-                        // We've already warned that this property doesn't load anymore
-                        continue;
-                    }
-
-                    bunch.Archive.Mark();
-                    Debug($"cmd-{export.Name}-{bunch.ChIndex}-{numBits}", "cmds", bunch.Archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
-                    bunch.Archive.Pop();
-
-                    var cmdReader = new NetBitReader(bunch.Archive.ReadBits(numBits));
-
-                    if (export.Name == "ReplicatedMovement" && numBits > 2)
-                    {
-                        cmdReader.NetSerializeItem(RepLayoutCmdType.RepMovement);
-                    }
-
-                    else if (numBits == 1)
-                    {
-                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyBool);
-                    }
-
-                    else if (numBits <= 2)
-                    {
-                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyByte);
-                    }
-
-                    else
-                    {
-                        cmdReader.NetSerializeItem(RepLayoutCmdType.PropertyObject);
-                    }
-
-                    if (!cmdReader.AtEnd() || cmdReader.IsError) // TODO finally implement isError properly...
-                    {
-                        // allow until we figured out how dafuq this sh*t works
-                        _logger?.LogWarning($"Property {export.Name} didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
-                        continue;
-
-                        //_logger?.LogError("Property didn't read proper number of bits.");
-                        //return;
-                        //return false;
-                    }
-
-                    // RepLayout 3139
-                    // Find this property
-                    // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
-                    // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
-                }
-            }
-            else
-            {
-                _logger?.LogError("No archetype for reading - would be impossible to read that");
+                // RepLayout 3139
+                // Find this property
+                // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
+                // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
             }
         }
 
@@ -1448,6 +1478,7 @@ namespace Unreal.Core
             //    return nullptr;
             //}
 
+            // TODO create new reader to avoid crashing entire packet
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             //OutPayload.SetData(Bunch, NumPayloadBits);
             //return RepObj;

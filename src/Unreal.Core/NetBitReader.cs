@@ -33,10 +33,101 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyObject:
                     SerializePropertyObject();
                     break;
+                case RepLayoutCmdType.PropertyVector:
+                    SerializePropertyVector();
+                    break;
+                case RepLayoutCmdType.PropertyVector10:
+                    SerializePropertyVector10();
+                    break;
+                case RepLayoutCmdType.PropertyVector100:
+                    SerializePropertyVector100();
+                    break;
+                case RepLayoutCmdType.PropertyRotator:
+                    SerializePropertyRotator();
+                    break;
+                case RepLayoutCmdType.PropertyVectorNormal:
+                    SerializePropertyVectorNormal();
+                    break;
+                case RepLayoutCmdType.PropertyVectorQ:
+                    break;
+                case RepLayoutCmdType.PropertyNetId:
+                    SerializePropertyNetId();
+                    break;
+                case RepLayoutCmdType.PropertyBool:
+                    SerializePropertyBool();
+                    break;
+                case RepLayoutCmdType.PropertyFloat:
+                    SerializePropertyFloat();
+                    break;
+                case RepLayoutCmdType.DynamicArray:
+                    SerializeDynamicArray();
+                    break;
+                case RepLayoutCmdType.Property:
+                    break;
+                case RepLayoutCmdType.PropertyInt:
+                    SerializePropertyInt();
+                    break;
+                case RepLayoutCmdType.PropertyName:
+                    SerializePropertyName();
+                    break;
+                case RepLayoutCmdType.PropertyUInt32:
+                    SerializePropertyUInt32();
+                    break;
+                case RepLayoutCmdType.PropertyPlane:
+                    SerializPropertyPlane();
+                    break;
+                case RepLayoutCmdType.PropertyString:
+                    SerializePropertyString();
+                    break;
+                case RepLayoutCmdType.PropertyUInt64:
+                    SerializePropertyUInt64();
+                    break;
+                case RepLayoutCmdType.PropertyNativeBool:
+                    SerializePropertyNativeBool();
+                    break;
                 default:
                     throw new NotImplementedException();
             };
         }
+
+        /// <summary>
+        /// replayout.cpp 3142
+        /// </summary>
+        public void SerializeDynamicArray()
+        {
+            var arrayNum = ReadIntPacked();
+        }
+
+        public void SerializePropertyInt()
+        {
+            ReadInt32();
+        }
+        
+        public void SerializePropertyUInt32()
+        {
+            ReadUInt32();
+        }
+        
+        public void SerializePropertyUInt64()
+        {
+
+        }
+
+        public void SerializePropertyFloat()
+        {
+            ReadSingle();
+        }
+
+        public void SerializePropertyName()
+        {
+            // TODO StaticSerialzeName
+        }
+        
+        public void SerializePropertyString()
+        {
+            ReadFString();
+        }
+
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
@@ -92,14 +183,103 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// Unrealmath.cpp 59
+        /// </summary>
+        public void SerializePropertyVector()
+        {
+            var x = ReadSingle();
+            var y = ReadSingle();
+            var z = ReadSingle();
+        }
+
+        /// <summary>
+        /// Unrealmath.cpp 65
+        /// </summary>
+        public void SerializeVector2D()
+        {
+            var x = ReadSingle();
+            var y = ReadSingle();
+        }
+
+        /// <summary>
+        /// NetSerialization.cpp 1858
+        /// </summary>
+        public void SerializePropertyVectorNormal()
+        {
+            ReadFixedCompressedFloat();
+            ReadFixedCompressedFloat();
+            ReadFixedCompressedFloat();
+        }
+
+        /// <summary>
+        /// NetSerialization.h 1768
+        /// </summary>
+        public void SerializePropertyVector10()
+        {
+            ReadPackedVector(10, 30);
+        }
+
+        /// <summary>
+        /// NetSerialization.h 1768
+        /// </summary>
+        public void SerializePropertyVector100()
+        {
+            ReadPackedVector(100, 30);
+        }
+        
+        public void SerializPropertyPlane()
+        {
+
+        }
+
+        /// <summary>
+        /// NetSerialization.h 1821
+        /// </summary>
+        public void ReadFixedCompressedFloat()
+        {
+            // Note: enums are used in this function to force bit shifting to be done at compile time
+            // NumBits = 8:
+            //enum { MaxBitValue = (1 << (NumBits - 1)) - 1 };    //   0111 1111 - Max abs value we will serialize
+            //enum { Bias = (1 << (NumBits - 1)) };       //   1000 0000 - Bias to pivot around (in order to support signed values)
+            //enum { SerIntMax = (1 << (NumBits - 0)) };      // 1 0000 0000 - What we pass into SerializeInt
+            //enum { MaxDelta = (1 << (NumBits - 0)) - 1 };   //   1111 1111 - Max delta is
+
+            //    uint32 Delta;
+            //    Ar.SerializeInt(Delta, SerIntMax);
+            //    float UnscaledValue = static_cast<float>(static_cast<int32>(Delta) - Bias);
+
+            //    if (MaxValue > MaxBitValue)
+            //    {
+            //        // We have to scale down, scale needs to be a float:
+            //        const float InvScale = MaxValue / (float)MaxBitValue;
+            //        Value = UnscaledValue * InvScale;
+            //    }
+            //    else
+            //    {
+
+            //enum { scale = MaxBitValue / MaxValue };
+            //const float InvScale = 1.f / (float)scale;
+
+            //Value = UnscaledValue* InvScale;
+        }
+
+        /// <summary>
+        /// Unrealmath.cpp 65
+        /// </summary>
+        public void SerializePropertyRotator()
+        {
+            ReadRotationShort();
+        }
+
+        /// <summary>
         /// PropertyByte.cpp 83
         /// </summary>
         public void SerializePropertyByte(bool isEnum = true)
         {
             // EngineTypes.h
             // ERole
-            var max = 4; 
-            ReadBits(isEnum ? (int) Math.Log2(max) : 8);
+            var max = 4;
+            ReadBits(isEnum ? (int)Math.Log2(max) : 8);
             //Ar.SerializeBits( Data, Enum ? FMath::CeilLogTwo(Enum->GetMaxEnumValue()) : 8 );
         }
 
@@ -107,6 +287,18 @@ namespace Unreal.Core
         /// PropertyBool.cpp 331
         /// </summary>
         public void SerializePropertyBool()
+        {
+            //uint8* ByteValue = (uint8*)Data + ByteOffset;
+            //uint8 Value = ((*ByteValue & FieldMask) != 0);
+            //Ar.SerializeBits(&Value, 1);
+            //*ByteValue = ((*ByteValue) & ~FieldMask) | (Value ? ByteMask : 0);
+            //return true;
+        }        
+        
+        /// <summary>
+        /// PropertyBool.cpp 331
+        /// </summary>
+        public void SerializePropertyNativeBool()
         {
             //uint8* ByteValue = (uint8*)Data + ByteOffset;
             //uint8 Value = ((*ByteValue & FieldMask) != 0);
@@ -185,6 +377,15 @@ namespace Unreal.Core
                 VectorQuantization.RoundOneDecimal => ReadPackedVector(10, 27),
                 _ => ReadPackedVector(1, 24),
             };
+        }
+
+        /// <summary>
+        /// OnlineReplStruct.cpp 209
+        /// </summary>
+        public void SerializePropertyNetId()
+        {
+            //EUniqueIdEncodingFlags EncodingFlags = EUniqueIdEncodingFlags::NotEncoded;
+            //Ar << EncodingFlags;
         }
     }
 }

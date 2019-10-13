@@ -15,7 +15,7 @@ namespace Unreal.Core.Test
                 using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var archive = new Unreal.Core.BinaryReader(stream);
                 var reader = new MockReplayReader();
-                reader.InternalLoadObject(archive);
+                reader.InternalLoadObject(archive, true);
                 Assert.True(archive.AtEnd());
             }
         }

@@ -1317,6 +1317,7 @@ namespace Unreal.Core
         /// <param name="bunch"></param>
         public virtual void ReceiveProperties(DataBunch bunch, NetFieldExportGroup group)
         {
+            Debug("types", $"\n{group.PathName}");
             while (true)
             {
                 var handle = bunch.Archive.ReadIntPacked();
@@ -1379,7 +1380,7 @@ namespace Unreal.Core
                             break;
                         case "Team":
                         case "TeamIndex":
-                            var teamIndex = cmdReader.ReadBitsToInt(7);
+                            var teamIndex = cmdReader.SerializePropertyByte(104);
                             //var teamIndex = cmdReader.ReadByte(); // numbits = 7?
                             break;
                         case "SquadListUpdateValue":
@@ -1389,6 +1390,49 @@ namespace Unreal.Core
                             var squadId = cmdReader.ReadByte();
                             break;
                     }
+                }
+
+                else if (group.PathName == "/Game/Athena/Aircraft/AthenaAircraft.AthenaAircraft_C")
+                {
+                    switch (export.Name)
+                    {
+                        case "FlightStartLocation":
+                            var startLocation = cmdReader.SerializePropertyVector100();
+                            break;
+                        case "FlightStartRotation":
+                            var startRotation = cmdReader.SerializePropertyRotator();
+                            break;
+                        case "FlightSpeed":
+                            cmdReader.ReadSingle();
+                            break;
+                        case "TimeTillFlightEnd":
+                            var flightEnd = cmdReader.ReadSingle();
+                            break;
+                        case "TimeTillDropStart":
+                            var dropStart = cmdReader.ReadSingle();
+                            break;
+                        case "TimeTillDropEnd":
+                            var dropEnd = cmdReader.ReadSingle();
+                            break;
+                    }
+                }
+
+                else if (group.PathName == "/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C")
+                {
+                    switch (export.Name)
+                    {
+                        case "ReplicatedMovement":
+                            cmdReader.SerializeRepMovement();
+                            break;
+                        case "bEditorPlaced":
+                            cmdReader.SerializePropertyBool();
+                            break;
+                    }
+                }
+
+                else
+                {
+                    cmdReader.ReadBits(numBits);
                 }
 
                 if (!cmdReader.AtEnd() || cmdReader.IsError) // TODO finally implement isError properly...

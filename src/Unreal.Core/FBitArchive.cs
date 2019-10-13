@@ -16,11 +16,11 @@ namespace Unreal.Core
         public abstract bool[] ReadBits(uint bitCount);
         public abstract uint ReadSerializedInt(int maxValue);
         public abstract FVector ReadPackedVector(int scaleFactor, int maxBits);
+        public abstract FRotator ReadRotation();
         public abstract FRotator ReadRotationShort();
         public abstract void Mark();
         public abstract void Pop();
         public abstract int GetBitsLeft();
         public abstract void AppendDataFromChecked(bool[] data);
-        public abstract void NetSerializeItem(RepLayoutCmdType type);
     }
 }

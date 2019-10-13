@@ -20,7 +20,7 @@ namespace Unreal.Core
         /// see RepLayout 2516
         /// </summary>
         /// <param name="type"></param>
-        public override void NetSerializeItem(RepLayoutCmdType type)
+        public void NetSerializeItem(RepLayoutCmdType type)
         {
             switch (type)
             {
@@ -28,7 +28,7 @@ namespace Unreal.Core
                     SerializeRepMovement();
                     break;
                 case RepLayoutCmdType.PropertyByte:
-                    SerializePropertyByte();
+                    //SerializePropertyByte();
                     break;
                 case RepLayoutCmdType.PropertyObject:
                     SerializePropertyObject();
@@ -134,16 +134,18 @@ namespace Unreal.Core
         /// </summary>
         public void SerializeRepMovement()
         {
-            // flags
-            ReadBits(2); // TODO read bits as int
-            // location
-            SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
-            // rotation
-            ReadRotationShort();
-            // velocity
-            SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
-            // angular velocity
-            // SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+            var flags = ReadBitsToInt(2);
+            var bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
+            var bRepPhysics = (flags & (1 << 1)) == 1;
+
+            var location = SerializeQuantizedVector(VectorQuantization.RoundTwoDecimals);
+            var rotation = ReadRotation();
+            var velocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+
+            if (bRepPhysics)
+            {
+                var angularVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+            }
 
             //// pack bitfield with flags
             //uint8 Flags = (bSimulatedPhysicSleep << 0) | (bRepPhysics << 1);
@@ -222,9 +224,9 @@ namespace Unreal.Core
         /// <summary>
         /// NetSerialization.h 1768
         /// </summary>
-        public void SerializePropertyVector100()
+        public FVector SerializePropertyVector100()
         {
-            ReadPackedVector(100, 30);
+            return ReadPackedVector(100, 30);
         }
         
         public void SerializPropertyPlane()
@@ -266,21 +268,18 @@ namespace Unreal.Core
         /// <summary>
         /// Unrealmath.cpp 65
         /// </summary>
-        public void SerializePropertyRotator()
+        public FRotator SerializePropertyRotator()
         {
-            ReadRotationShort();
+            return ReadRotationShort();
         }
-
+        
         /// <summary>
         /// PropertyByte.cpp 83
         /// </summary>
-        public void SerializePropertyByte(bool isEnum = true)
+        public int SerializePropertyByte(int enumMaxValue)
         {
-            // EngineTypes.h
-            // ERole
-            var max = 4;
-            ReadBits(isEnum ? (int)Math.Log2(max) : 8);
             //Ar.SerializeBits( Data, Enum ? FMath::CeilLogTwo(Enum->GetMaxEnumValue()) : 8 );
+            return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
         }
 
         /// <summary>

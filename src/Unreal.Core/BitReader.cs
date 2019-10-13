@@ -364,6 +364,35 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
         /// </summary>
         /// <returns></returns>
+        public override FRotator ReadRotation()
+        {
+            float pitch = 0;
+            float yaw = 0;
+            float roll = 0;
+
+            if (ReadBit()) // Pitch
+            {
+                pitch = ReadByte() * 360 / 256;
+            }
+
+            if (ReadBit())
+            {
+                yaw = ReadByte() * 360 / 256;
+            }
+
+            if (ReadBit())
+            {
+                roll = ReadByte() * 360 / 256;
+            }
+
+            return new FRotator(pitch, yaw, roll);
+        }
+        
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
+        /// </summary>
+        /// <returns></returns>
         public override FRotator ReadRotationShort()
         {
             float pitch = 0;
@@ -488,11 +517,6 @@ namespace Unreal.Core
         public override void AppendDataFromChecked(bool[] data)
         {
             Bits = Bits.Append(data);
-        }
-
-        public override void NetSerializeItem(RepLayoutCmdType type)
-        {
-            throw new NotImplementedException();
         }
     }
 }

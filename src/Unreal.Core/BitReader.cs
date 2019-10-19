@@ -247,6 +247,11 @@ namespace Unreal.Core
             return ReadBytesToString(16);
         }
 
+        public override string ReadGUID(int size)
+        {
+            return ReadBytesToString(size);
+        }
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69
         /// </summary>

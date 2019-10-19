@@ -206,22 +206,18 @@ namespace FortniteReplayReader
                     Info = info,
                 };
 
-                // "++Fortnite+Release-9.10"
                 if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
                 {
-                    archive.SkipBytes(87);
-                    elim.Eliminated = archive.ReadGUID();
-                    archive.SkipBytes(2);
-                    elim.Eliminator = archive.ReadGUID();
+                    archive.SkipBytes(85);
+                    elim.Eliminated = ParsePlayer(archive);
+                    elim.Eliminator = ParsePlayer(archive);
                 }
                 else
                 {
-                    // "++Fortnite+Release-4.0"
                     if (Major <= 4 && Minor < 2)
                     {
                         archive.SkipBytes(12);
                     }
-                    // "++Fortnite+Release-4.2"
                     else if (Major == 4 && Minor <= 2)
                     {
                         archive.SkipBytes(40);
@@ -246,5 +242,16 @@ namespace FortniteReplayReader
             }
         }
 
+        public virtual string ParsePlayer(FArchive archive)
+        {
+            // TODO player type enum
+            if (archive.ReadByte() == 0x03)
+            {
+                return "Bot";
+            }
+            // 0x11
+            var size = archive.ReadByte();
+            return archive.ReadGUID(size);
+        }
     }
 }

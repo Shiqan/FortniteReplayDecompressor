@@ -43,6 +43,7 @@ namespace Unreal.Core
         public abstract float ReadSingle();
         public abstract string ReadFString();
         public abstract string ReadGUID();
+        public abstract string ReadGUID(int size);
         public abstract uint ReadIntPacked();
         public abstract ValueTuple<T, U>[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2);
         public abstract bool ReadBoolean();

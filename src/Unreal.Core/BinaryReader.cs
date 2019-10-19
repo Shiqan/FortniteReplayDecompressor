@@ -184,6 +184,19 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// Reads <paramref name="size"/> bytes from the current stream and advances the current position of the stream by <paramref name="size"/>-bytes.
+        /// </summary>
+        /// <param name="size">size</param>
+        /// <returns>A GUID in string format read from this stream.</returns>
+        /// <exception cref="System.IO.EndOfStreamException">Thrown when the end of the stream is reached.</exception>
+        /// <exception cref="System.ObjectDisposedException">Thrown when the stream is closed.</exception>
+        /// <exception cref="System.IO.IOException">Thrown when an I/O error occurs.</exception>
+        public override string ReadGUID(int size)
+        {
+            return ReadBytesToString(size);
+        }
+
+        /// <summary>
         /// Reads a 2-byte signed integer from the current stream and advances the current position of the stream by two bytes.
         /// </summary>
         /// <returns>A 2-byte signed integer read from the current stream.</returns>

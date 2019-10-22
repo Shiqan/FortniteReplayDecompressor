@@ -102,12 +102,12 @@ namespace Unreal.Core
         {
             ReadInt32();
         }
-        
+
         public void SerializePropertyUInt32()
         {
             ReadUInt32();
         }
-        
+
         public void SerializePropertyUInt64()
         {
 
@@ -122,7 +122,7 @@ namespace Unreal.Core
         {
             // TODO StaticSerialzeName
         }
-        
+
         public void SerializePropertyString()
         {
             ReadFString();
@@ -228,7 +228,7 @@ namespace Unreal.Core
         {
             return ReadPackedVector(100, 30);
         }
-        
+
         public void SerializPropertyPlane()
         {
 
@@ -272,7 +272,7 @@ namespace Unreal.Core
         {
             return ReadRotationShort();
         }
-        
+
         /// <summary>
         /// PropertyByte.cpp 83
         /// </summary>
@@ -285,15 +285,16 @@ namespace Unreal.Core
         /// <summary>
         /// PropertyBool.cpp 331
         /// </summary>
-        public void SerializePropertyBool()
+        public bool SerializePropertyBool()
         {
+            return ReadBit();
             //uint8* ByteValue = (uint8*)Data + ByteOffset;
             //uint8 Value = ((*ByteValue & FieldMask) != 0);
             //Ar.SerializeBits(&Value, 1);
             //*ByteValue = ((*ByteValue) & ~FieldMask) | (Value ? ByteMask : 0);
             //return true;
-        }        
-        
+        }
+
         /// <summary>
         /// PropertyBool.cpp 331
         /// </summary>

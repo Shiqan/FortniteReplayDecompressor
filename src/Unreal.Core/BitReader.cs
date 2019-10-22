@@ -89,7 +89,6 @@ namespace Unreal.Core
         /// </summary>
         /// <returns>The value of the bit at position index.</returns>
         /// <seealso cref="PeekBit"/>
-        /// <exception cref="IndexOutOfRangeException"></exception>
         public override bool ReadBit()
         {
             return Bits[Position++];
@@ -406,17 +405,17 @@ namespace Unreal.Core
 
             if (ReadBit()) // Pitch
             {
-                pitch = ReadInt16() * 360 / 65536;
+                pitch = ReadUInt16() * 360 / 65536;
             }
 
             if (ReadBit())
             {
-                yaw = ReadInt16() * 360 / 65536;
+                yaw = ReadUInt16() * 360 / 65536;
             }
 
             if (ReadBit())
             {
-                roll = ReadInt16() * 360 / 65536;
+                roll = ReadUInt16() * 360 / 65536;
             }
 
             return new FRotator(pitch, yaw, roll);

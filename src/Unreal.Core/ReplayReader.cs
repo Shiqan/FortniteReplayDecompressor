@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
@@ -1234,8 +1235,35 @@ namespace Unreal.Core
             }
             else
             {
-                _logger?.LogError("No archetype for reading - would be impossible to read that");
-                return false;
+                if (!ArchetypeToNetFieldGroup.ContainsKey(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value))
+                {
+                    var path = CoreRedirects.GetRedirect(RemovePathSuffix(NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]));
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        return false;
+                    }
+
+                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
+                    {
+                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                        if (groupPathFixed.Contains(path))
+                        {
+                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
+                            ArchetypeToNetFieldGroup.Add(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value, netFieldExportGroup);
+                            break;
+                        }
+                    }
+
+                    if (netFieldExportGroup == null)
+                    {
+                        _logger?.LogDebug("ehm... now what?");
+                        return false;
+                    }
+                }
+                else
+                {
+                    netFieldExportGroup = ArchetypeToNetFieldGroup[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value];
+                }
             }
 
             // Handle replayout properties
@@ -1393,8 +1421,24 @@ namespace Unreal.Core
                         case "StartTime":
                             var startTime = cmdReader.ReadInt32();
                             break;
+                        case "PlatformUniqueNetId":
+                            cmdReader.SerializePropertyNetId();
+                            break;
                         case "UniqueId":
                             cmdReader.SerializePropertyNetId();
+                            break;
+                        case "ColorId":
+                            cmdReader.ReadFString();
+                            break;
+                        case "IconId":
+                            cmdReader.ReadFString();
+                            break;
+                        case "StreamerModeName":
+                            var unknown = cmdReader.ReadByte();
+                            cmdReader.SkipBytes(8);
+                            var playerNameId = cmdReader.ReadFString();
+                            var skinName = cmdReader.ReadFString();
+                            Debug("playernames", $"[StreamerModeName] {unknown} {playerNameId} {skinName}");
                             break;
                         case "PlayerNamePrivate":
                             var playerNamePrivate = cmdReader.ReadFString();
@@ -1419,6 +1463,12 @@ namespace Unreal.Core
                             break;
                         case "SquadId":
                             var squadId = cmdReader.ReadByte();
+                            break;
+                        case "Level":
+                            cmdReader.ReadUInt32();
+                            break;
+                        case "bInAircraft":
+                            cmdReader.SerializePropertyBool();
                             break;
                     }
                 }
@@ -1505,6 +1555,11 @@ namespace Unreal.Core
                 path = path.Remove(index, ToRemove.Length);
             }
             return path;
+        }
+
+        private string RemovePathSuffix(string path)
+        {
+            return Regex.Replace(path, @"(_?[0-9]+)+$", "");
         }
 
         /// <summary>

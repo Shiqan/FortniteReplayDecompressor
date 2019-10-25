@@ -114,7 +114,7 @@ namespace Unreal.Core
                     result |= (byte)(1 << i);
                 }
             }
-            return (int) result;
+            return (int)result;
         }
 
         /// <summary>
@@ -391,7 +391,7 @@ namespace Unreal.Core
 
             return new FRotator(pitch, yaw, roll);
         }
-        
+
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
@@ -486,12 +486,12 @@ namespace Unreal.Core
 
         public override void SkipBytes(uint byteCount)
         {
-            throw new NotImplementedException();
+            SkipBytes((int)byteCount);
         }
 
         public override void SkipBytes(int byteCount)
         {
-            throw new NotImplementedException();
+            Seek(byteCount * 8, SeekOrigin.Current);
         }
 
         /// <summary>

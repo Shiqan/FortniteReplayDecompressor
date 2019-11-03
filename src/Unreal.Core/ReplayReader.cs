@@ -43,7 +43,7 @@ namespace Unreal.Core
         // const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; netconnection.cpp 84
         private Dictionary<uint, int> InReliable = new Dictionary<uint, int>(); // TODO: array in unreal
         private Dictionary<uint, UChannel> Channels = new Dictionary<uint, UChannel>();
-        private Dictionary<uint, uint> IgnoringChannels = new Dictionary<uint, uint>();
+        private Dictionary<uint, uint> ChannelNetGuids = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
         private Dictionary<uint, uint> OuterNetGuidCache = new Dictionary<uint, uint>();
         private Dictionary<uint, NetFieldExportGroup> ArchetypeToNetFieldGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -51,7 +51,9 @@ namespace Unreal.Core
         private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap = new Dictionary<string, NetFieldExportGroup>();
         private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup = new Dictionary<uint, NetFieldExportGroup>();
 
-        // DemoNetDriver -> SeenLevelStatuses TODO: dont think we need it...
+        private Dictionary<uint, AthenaPlayerState> ActorStates = new Dictionary<uint, AthenaPlayerState>();
+        private Dictionary<uint, List<AthenaPlayerPawn>> PlayerPawns = new Dictionary<uint, List<AthenaPlayerPawn>>();
+        //private List<string> UnknownFields = new List<string>();
 
         public virtual T ReadReplay(FArchive archive)
         {
@@ -1163,6 +1165,7 @@ namespace Unreal.Core
                 //RepFlags.bNetInitial = true;
 
                 ChannelActors.Add(bunch.ChIndex, true);
+                ChannelNetGuids.Add(bunch.ChIndex, inActor.ActorNetGUID.Value);
             }
 
             // RepFlags.bNetOwner = true; // ActorConnection == Connection is always true??
@@ -1301,7 +1304,7 @@ namespace Unreal.Core
                 //    _logger?.LogError("RepLayout->ReceiveProperties FAILED");
                 //    return false;
                 //}
-                ReceiveProperties(archive, netFieldExportGroup);
+                ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex);
             }
 
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
@@ -1365,9 +1368,30 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        public virtual void ReceiveProperties(FBitArchive archive, NetFieldExportGroup group)
+        public virtual void ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
         {
             Debug("types", $"\n{group.PathName}");
+
+            if (group.PathName == "/Script/FortniteGame.FortPlayerStateAthena")
+            {
+                if (!ActorStates.ContainsKey(channelIndex))
+                {
+                    ActorStates[channelIndex] = new AthenaPlayerState()
+                    {
+                        Id = Channels[channelIndex].Actor.ActorNetGUID.Value
+                    };
+                }
+            }
+
+            AthenaPlayerPawn playerPawn = new AthenaPlayerPawn(); ;
+            if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
+            {
+                if (!PlayerPawns.ContainsKey(channelIndex))
+                {
+                    PlayerPawns[channelIndex] = new List<AthenaPlayerPawn>();
+                }
+            }
+
             while (true)
             {
                 var handle = archive.ReadIntPacked();
@@ -1416,100 +1440,440 @@ namespace Unreal.Core
                     switch (export.Name)
                     {
                         case "PlayerID":
-                            var playerId = cmdReader.ReadInt32();
+                            ActorStates[channelIndex].PlayerId = cmdReader.ReadInt32();
                             break;
                         case "StartTime":
-                            var startTime = cmdReader.ReadInt32();
+                            ActorStates[channelIndex].StartTime = cmdReader.ReadInt32();
                             break;
                         case "PlatformUniqueNetId":
-                            cmdReader.SerializePropertyNetId();
+                            ActorStates[channelIndex].PlatformId = cmdReader.SerializePropertyNetId();
                             break;
                         case "UniqueId":
-                            cmdReader.SerializePropertyNetId();
+                            ActorStates[channelIndex].UniqueId = cmdReader.SerializePropertyNetId();
                             break;
                         case "ColorId":
-                            cmdReader.ReadFString();
+                            ActorStates[channelIndex].ColorId = cmdReader.ReadFString();
                             break;
                         case "IconId":
-                            cmdReader.ReadFString();
+                            ActorStates[channelIndex].IconId = cmdReader.ReadFString();
                             break;
                         case "StreamerModeName":
                             var unknown = cmdReader.ReadByte();
                             cmdReader.SkipBytes(8);
-                            var playerNameId = cmdReader.ReadFString();
-                            var skinName = cmdReader.ReadFString();
-                            Debug("playernames", $"[StreamerModeName] {unknown} {playerNameId} {skinName}");
+                            ActorStates[channelIndex].PlayerNameId = cmdReader.ReadFString();
+                            ActorStates[channelIndex].SkinName = cmdReader.ReadFString();
+                            Debug("playernames", $"[StreamerModeName] {unknown} {ActorStates[channelIndex].PlayerNameId} {ActorStates[channelIndex].SkinName}");
                             break;
                         case "PlayerNamePrivate":
-                            var playerNamePrivate = cmdReader.ReadFString();
-                            Debug("playernames", playerNamePrivate);
+                            ActorStates[channelIndex].PlayerNamePrivate = cmdReader.ReadFString();
+                            Debug("playernames", ActorStates[channelIndex].PlayerNamePrivate);
                             break;
                         case "PartyOwnerUniqueId":
-                            cmdReader.SerializePropertyNetId();
+                            ActorStates[channelIndex].PartyOwnerUniqueId = cmdReader.SerializePropertyNetId();
                             break;
                         case "WorldPlayerId":
-                            var worldPlayerId = cmdReader.ReadInt32();
+                            ActorStates[channelIndex].WorldPlayerId = cmdReader.ReadInt32();
                             break;
                         case "Platform":
-                            var platform = cmdReader.ReadFString();
+                            ActorStates[channelIndex].Platform = cmdReader.ReadFString();
                             break;
                         case "Team":
                         case "TeamIndex":
-                            var teamIndex = cmdReader.SerializePropertyByte(104);
-                            //var teamIndex = cmdReader.ReadByte(); // numbits = 7?
+                            ActorStates[channelIndex].TeamIndex = cmdReader.SerializePropertyEnum(104);
                             break;
                         case "SquadListUpdateValue":
-                            var squadListUpdateValue = cmdReader.ReadInt32();
+                            ActorStates[channelIndex].SquadListUpdateValue = cmdReader.ReadInt32();
                             break;
                         case "SquadId":
-                            var squadId = cmdReader.ReadByte();
+                            ActorStates[channelIndex].SquadId = cmdReader.ReadByte();
                             break;
                         case "Level":
-                            cmdReader.ReadUInt32();
+                            ActorStates[channelIndex].Level = cmdReader.ReadUInt32();
                             break;
                         case "bInAircraft":
+                            ActorStates[channelIndex].bInAircraft = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bHasFinishedLoading":
+                            ActorStates[channelIndex].bHasFinishedLoading = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bHasStartedPlaying":
+                            ActorStates[channelIndex].bHasStartedPlaying = cmdReader.SerializePropertyBool();
+                            break;
+                        case "HeroType":
+                            ActorStates[channelIndex].HeroType = cmdReader.SerializePropertyObject();
+                            break;
+                        case "CharacterGender":
+                            ActorStates[channelIndex].CharacterGender = cmdReader.SerializePropertyEnum(4);
+                            break;
+                        case "CharacterBodyType":
+                            ActorStates[channelIndex].CharacterBodyType = cmdReader.SerializePropertyEnum(8);
+                            break;
+                        case "WasReplicatedFlags":
+                            ActorStates[channelIndex].WasReplicatedFlags = cmdReader.SerializePropertyByte();
+                            break;
+                        case "MapIndicatorPos":
+                            ActorStates[channelIndex].MapIndicatorPos = cmdReader.SerializeVector2D();
+                            break;
+                        case "Owner":
+                            ActorStates[channelIndex].Owner = cmdReader.SerializePropertyUInt32();
+                            break;
+                        case "Parts":
+                            ActorStates[channelIndex].Parts = cmdReader.SerializePropertyObject();
+                            break;
+                        case "bUsingStreamerMode":
+                            ActorStates[channelIndex].bUsingStreamerMode = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bThankedBusDriver":
+                            ActorStates[channelIndex].bThankedBusDriver = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bOnlySpectator":
+                            ActorStates[channelIndex].bOnlySpectator = cmdReader.SerializePropertyBool();
+                            break;
+                        case "Ping":
+                            ActorStates[channelIndex].Ping = cmdReader.SerializePropertyUInt32();
+                            break;
+                        default:
+                            _logger.LogDebug($"unknown field {export.Name} in player state");
+                            break;
+                    }
+                }
+
+                else if (group.PathName == "/Script/FortniteGame.FortPickupAthena")
+                {
+                    switch (export.Name)
+                    {
+                        case "bReplicateMovement":
                             cmdReader.SerializePropertyBool();
                             break;
-                    }
-                }
-
-                else if (group.PathName == "/Game/Athena/Aircraft/AthenaAircraft.AthenaAircraft_C")
-                {
-                    switch (export.Name)
-                    {
-                        case "FlightStartLocation":
-                            var startLocation = cmdReader.SerializePropertyVector100();
-                            break;
-                        case "FlightStartRotation":
-                            var startRotation = cmdReader.SerializePropertyRotator();
-                            break;
-                        case "FlightSpeed":
-                            var speed = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillFlightEnd":
-                            var flightEnd = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillDropStart":
-                            var dropStart = cmdReader.ReadSingle();
-                            break;
-                        case "TimeTillDropEnd":
-                            var dropEnd = cmdReader.ReadSingle();
-                            break;
-                    }
-                }
-
-                else if (group.PathName == "/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C")
-                {
-                    switch (export.Name)
-                    {
                         case "ReplicatedMovement":
                             cmdReader.SerializeRepMovement();
                             break;
-                        case "bEditorPlaced":
+                        case "bRandomRotation":
                             cmdReader.SerializePropertyBool();
+                            break;
+                        case "ItemDefinition":
+                            cmdReader.SerializePropertyObject();
+                            break;
+                        case "Durability":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "Level":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "A":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "B":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "C":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "D":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "bIsDirty":
+                            cmdReader.SerializePropertyBool();
+                            break;
+                        case "StateValues":
+                            break;
+                        case "bTossedFromContainer":
+                            cmdReader.SerializePropertyBool();
+                            break;
+                        case "bServerStoppedSimulation":
+                            cmdReader.SerializePropertyBool();
+                            break;
+                        case "ServerImpactSoundFlash":
+                            cmdReader.SerializePropertyByte();
+                            break;
+                        case "PickupTarget":
+                            cmdReader.SerializePropertyObject();
+                            break;
+                        case "ItemOwner":
+                            cmdReader.SerializePropertyObject();
+                            break;
+                        case "FlyTime":
+                            cmdReader.SerializePropertyFloat();
+                            break;
+                        case "FinalTossRestLocation":
+                            cmdReader.SerializePropertyVector10();
+                            break;
+                        case "TossState":
+                            cmdReader.SerializePropertyEnum(16);
+                            break;
+                        case "bPickedUp":
+                            cmdReader.SerializePropertyBool();
+                            break;
+                        case "Count":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "LoadedAmmo":
+                            cmdReader.SerializePropertyInt();
+                            break;
+                        case "NameValue":
+                            break;
+                        case "PawnWhoDroppedPickup":
+                            break;
+                        case "StartDirection":
+                            cmdReader.SerializePropertyVectorNormal();
+                            break;
+                        case "LootInitialPosition":
+                            cmdReader.SerializePropertyVector10();
+                            break;
+                        case "LootFinalPosition":
+                            cmdReader.SerializePropertyVector10();
+                            break;
+                        case "IntValue":
+                            break;
+                        case "StateType":
+                            break;
+                        default:
+                            _logger.LogDebug($"unknown field {export.Name} in pickup");
                             break;
                     }
                 }
+
+                //else if (group.PathName == "/Game/Athena/Aircraft/AthenaAircraft.AthenaAircraft_C")
+                //{
+                //    switch (export.Name)
+                //    {
+                //        case "FlightStartLocation":
+                //            var startLocation = cmdReader.SerializePropertyVector100();
+                //            break;
+                //        case "FlightStartRotation":
+                //            var startRotation = cmdReader.SerializePropertyRotator();
+                //            break;
+                //        case "FlightSpeed":
+                //            var speed = cmdReader.ReadSingle();
+                //            break;
+                //        case "TimeTillFlightEnd":
+                //            var flightEnd = cmdReader.ReadSingle();
+                //            break;
+                //        case "TimeTillDropStart":
+                //            var dropStart = cmdReader.ReadSingle();
+                //            break;
+                //        case "TimeTillDropEnd":
+                //            var dropEnd = cmdReader.ReadSingle();
+                //            break;
+                //    }
+                //}
+
+                //else if (group.PathName == "/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C")
+                //{
+                //    switch (export.Name)
+                //    {
+                //        case "ReplicatedMovement":
+                //            cmdReader.SerializeRepMovement();
+                //            break;
+                //        case "bEditorPlaced":
+                //            cmdReader.SerializePropertyBool();
+                //            break;
+                //    }
+                //}
+
+                else if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
+                {
+                    switch (export.Name)
+                    {
+                        case "PawnUniqueID":
+                            playerPawn.PawnUniqueID = cmdReader.SerializePropertyInt();
+                            break;
+                        case "ReplicatedMovement":
+                            playerPawn.RepMovement = cmdReader.SerializeRepMovement();
+                            break;
+                        case "ReplicatedMovementMode":
+                            playerPawn.ReplicatedMovementMode = cmdReader.SerializePropertyByte();
+                            break;
+                        case "ReplayLastTransformUpdateTimeStamp":
+                            playerPawn.ReplayLastTransformUpdateTimeStamp = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "AccelerationPack":
+                            playerPawn.AccelerationPack = cmdReader.SerializePropertyUInt16();
+                            break;
+                        case "AccelerationZPack":
+                            playerPawn.AccelerationZPack = cmdReader.SerializePropertyByte();
+                            break;
+                        case "RemoteViewData32":
+                            playerPawn.RemoteViewData32 = cmdReader.SerializePropertyUInt32();
+                            break;
+                        case "bCanBeDamaged":
+                            playerPawn.bCanBeDamaged = cmdReader.SerializePropertyBool();
+                            break;
+                        case "Instigator":
+                            playerPawn.Instigator = cmdReader.SerializePropertyObject();
+                            break;
+                        case "PlayerState":
+                            playerPawn.PlayerState = cmdReader.SerializePropertyObject();
+                            break;
+                        case "VocalChords":
+                            break;
+                        case "CapsuleRadiusAthena":
+                            playerPawn.CapsuleRadiusAthena = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "CapsuleHalfHeightAthena":
+                            playerPawn.CapsuleHalfHeightAthena = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "WalkSpeed":
+                            playerPawn.WalkSpeed = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "RunSpeed":
+                            playerPawn.RunSpeed = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "SprintSpeed":
+                            playerPawn.SprintSpeed = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "CrouchedRunSpeed":
+                            playerPawn.CrouchedRunSpeed = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "CrouchedSprintSpeed":
+                            playerPawn.CrouchedSprintSpeed = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "BannerIconId":
+                            playerPawn.BannerIconId = cmdReader.SerializePropertyString();
+                            break;
+                        case "BannerColorId":
+                            playerPawn.BannerColorId = cmdReader.SerializePropertyString();
+                            break;
+                        case "SkyDiveContrail":
+                            playerPawn.SkyDiveContrail = cmdReader.SerializePropertyObject();
+                            break;
+                        case "Glider":
+                            playerPawn.Glider = cmdReader.SerializePropertyObject();
+                            break;
+                        case "Pickaxe":
+                            playerPawn.Pickaxe = cmdReader.SerializePropertyObject();
+                            break;
+                        case "Character":
+                            playerPawn.Character = cmdReader.SerializePropertyObject();
+                            break;
+                        case "Backpack":
+                            playerPawn.Backpack = cmdReader.SerializePropertyObject();
+                            break;
+                        case "LoadingScreen":
+                            playerPawn.LoadingScreen = cmdReader.SerializePropertyObject();
+                            break;
+                        case "MusicPack":
+                            playerPawn.MusicPack = cmdReader.SerializePropertyObject();
+                            break;
+                        case "EncryptedPawnReplayData":
+                            break;
+                        case "MovementBase":
+                            playerPawn.AnimMontage = cmdReader.SerializePropertyObject();
+                            break;
+                        case "bServerHasBaseComponent":
+                            playerPawn.bServerHasBaseComponent = cmdReader.SerializePropertyBool();
+                            break;
+                        case "CharacterVariantChannels":
+                            break;
+                        case "JumpFlashCount":
+                            playerPawn.JumpFlashCount = cmdReader.SerializePropertyByte();
+                            break;
+                        case "CurrentWeapon":
+                            playerPawn.CurrentWeapon = cmdReader.SerializePropertyObject();
+                            break;
+                        case "AnimMontage":
+                            playerPawn.AnimMontage = cmdReader.SerializePropertyObject();
+                            break;
+                        case "PlayRate":
+                            playerPawn.PlayRate = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "BlendTime":
+                            playerPawn.BlendTime = cmdReader.SerializePropertyFloat();
+                            break;
+                        case "ForcePlayBit":
+                            playerPawn.ForcePlayBit = cmdReader.SerializePropertyBool();
+                            break;
+                        case "IsStopped":
+                            playerPawn.ForcePlayBit = cmdReader.SerializePropertyBool();
+                            break;
+                        case "RepAnimMontageStartSection":
+                            playerPawn.RepAnimMontageStartSection = cmdReader.SerializePropertyInt();
+                            break;
+                        case "bIsProxySimulationTimedOut":
+                            playerPawn.bIsProxySimulationTimedOut = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bIsDefaultCharacter":
+                            playerPawn.bIsDefaultCharacter = cmdReader.SerializePropertyBool();
+                            break;
+                        case "PetState":
+                            playerPawn.PetState = cmdReader.SerializePropertyObject();
+                            break;
+                        case "PetSkin":
+                            playerPawn.PetSkin = cmdReader.SerializePropertyObject();
+                            break;
+                        case "bProxyIsJumpForceApplied":
+                            playerPawn.bProxyIsJumpForceApplied = cmdReader.SerializePropertyBool();
+                            break;
+                        case "BuildingState":
+                            playerPawn.BuildingState = cmdReader.SerializePropertyEnum(3);
+                            break;
+                        case "CurrentMovementStyle":
+                            playerPawn.CurrentMovementStyle = cmdReader.SerializePropertyEnum(5);
+                            break;
+                        case "bIsCrouched":
+                            playerPawn.bIsCrouched = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bWeaponHolstered":
+                            playerPawn.bWeaponHolstered = cmdReader.SerializePropertyBool();
+                            break;
+                        case "PawnMontage":
+                            playerPawn.PawnMontage = cmdReader.SerializePropertyObject();
+                            break;
+                        case "bPlayBit":
+                            playerPawn.bPlayBit = cmdReader.SerializePropertyBool();
+                            break;
+                        case "WeaponActivated":
+                            playerPawn.WeaponActivated = cmdReader.SerializePropertyBool();
+                            break;
+                        case "bIsTargeting":
+                            playerPawn.bIsTargeting = cmdReader.SerializePropertyBool();
+                            break;
+                        case "PackedReplicatedSlopeAngles":
+                            break;
+                        case "bIsSlopeSliding":
+                            playerPawn.bIsSlopeSliding = cmdReader.SerializePropertyBool();
+                            break;
+                        default:
+                            _logger.LogDebug($"unknown field {export.Name} in playerpawn");
+                            break;
+                    }
+                }
+
+                // ReplicatedMovement	FRepMovement	122
+                // ReplayLastTransformUpdateTimeStamp  float   32
+                //  uint16  16
+                //  uint32  32
+
+                // /Game/Weapons/FORT_Sniper/Blueprints/B_Prj_Bullet_Sniper_Heavy.B_Prj_Bullet_Sniper_Heavy_C
+                // /Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_Light_PDW_Athena.B_Pistol_Light_PDW_Athena_C
+                // /Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Auto_Athena.B_Assault_Auto_Athena_C
+                // /Game/Weapons/FORT_Shotguns/Blueprints/B_Shotgun_Standard_Athena.B_Shotgun_Standard_Athena_C
+
+
+                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_Floor.PBWA_W1_Floor_C
+                // /Game/Building/ActorBlueprints/Player/Stone/L1/PBWA_S1_Floor.PBWA_S1_Floor_C
+
+                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_Solid.PBWA_W1_Solid_C
+
+                // /Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_StairW.PBWA_W1_StairW_C
+                // /Game/Building/ActorBlueprints/Player/Metal/L1/PBWA_M1_StairW.PBWA_M1_StairW_C
+                //A int32   32
+                //B int32   32
+                //C int32   32
+                //D int32   32
+                //OwnerPersistentID int32   32
+                //bEditorPlaced uint8   1
+                //bPlayerPlaced uint8   1
+                //Team TEnumAsByte<EFortTeam::Type > 7
+                //BuildTime FQuantizedBuildingAttribute 16
+                //RepairTime FQuantizedBuildingAttribute 16
+                //Health int16   16
+                //MaxHealth int16   16
+
+
+
+                // /Game/Building/ActorBlueprints/Player/Metal/L1/PBWA_M1_DoorC.PBWA_M1_DoorC_C
+                // /Game/Athena/BuildingActors/Prop/Athena_Soccerball.Athena_Soccerball_C
 
                 else
                 {
@@ -1532,6 +1896,12 @@ namespace Unreal.Core
                 // const int32 CmdIndex = FindCompatibleProperty(CmdStart, CmdEnd, Checksum);
                 // const FRepLayoutCmd& Cmd = Cmds[CmdIndex];
             }
+
+            if (group.PathName == "/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")
+            {
+                PlayerPawns[channelIndex].Add(playerPawn);
+            }
+
         }
 
         // see UObjectBaseUtility
@@ -1547,12 +1917,12 @@ namespace Unreal.Core
             return path;
         }
 
-        private string RemovePathPrefix(string path, string ToRemove)
+        private string RemovePathPrefix(string path, string toRemove)
         {
-            if (path.Contains(ToRemove))
+            if (path.Contains(toRemove))
             {
-                var index = path.IndexOf(ToRemove);
-                path = path.Remove(index, ToRemove.Length);
+                var index = path.IndexOf(toRemove);
+                path = path.Remove(index, toRemove.Length);
             }
             return path;
         }
@@ -1560,6 +1930,11 @@ namespace Unreal.Core
         private string RemovePathSuffix(string path)
         {
             return Regex.Replace(path, @"(_?[0-9]+)+$", "");
+        }
+
+        private string RemovePathSuffix(string path, string toRemove)
+        {
+            return Regex.Replace(path, $@"{toRemove}$", "");
         }
 
         /// <summary>

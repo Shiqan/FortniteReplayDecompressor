@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     /// <summary>
     /// Maps objects and names to and from indices for network communication.

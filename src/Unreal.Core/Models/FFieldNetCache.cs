@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     /// <summary>
     /// Information about a field.

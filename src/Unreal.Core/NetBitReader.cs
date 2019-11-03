@@ -98,14 +98,19 @@ namespace Unreal.Core
             var arrayNum = ReadIntPacked();
         }
 
-        public void SerializePropertyInt()
+        public int SerializePropertyInt()
         {
-            ReadInt32();
+            return ReadInt32();
         }
 
-        public void SerializePropertyUInt32()
+        public uint SerializePropertyUInt32()
         {
-            ReadUInt32();
+            return ReadUInt32();
+        }
+        
+        public uint SerializePropertyUInt16()
+        {
+            return ReadUInt16();
         }
 
         public void SerializePropertyUInt64()
@@ -113,9 +118,9 @@ namespace Unreal.Core
 
         }
 
-        public void SerializePropertyFloat()
+        public float SerializePropertyFloat()
         {
-            ReadSingle();
+            return ReadSingle();
         }
 
         public void SerializePropertyName()
@@ -123,29 +128,32 @@ namespace Unreal.Core
             // TODO StaticSerialzeName
         }
 
-        public void SerializePropertyString()
+        public string SerializePropertyString()
         {
-            ReadFString();
+            return ReadFString();
         }
 
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
         /// </summary>
-        public void SerializeRepMovement()
+        public FRepMovement SerializeRepMovement()
         {
+            var repMovement = new FRepMovement();
             var flags = ReadBitsToInt(2);
-            var bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
-            var bRepPhysics = (flags & (1 << 1)) == 1;
+            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
+            repMovement.bRepPhysics = (flags & (1 << 1)) == 1;
 
-            var location = SerializeQuantizedVector(VectorQuantization.RoundTwoDecimals);
-            var rotation = ReadRotation();
-            var velocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+            repMovement.Location = SerializeQuantizedVector(VectorQuantization.RoundTwoDecimals);
+            repMovement.Rotation = ReadRotation();
+            repMovement.LinearVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
 
-            if (bRepPhysics)
+            if (repMovement.bRepPhysics)
             {
-                var angularVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
+                repMovement.AngularVelocity = SerializeQuantizedVector(VectorQuantization.RoundWholeNumber);
             }
+
+            return repMovement;
 
             //// pack bitfield with flags
             //uint8 Flags = (bSimulatedPhysicSleep << 0) | (bRepPhysics << 1);
@@ -185,7 +193,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Unrealmath.cpp 59
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57
         /// </summary>
         public void SerializePropertyVector()
         {
@@ -195,12 +203,13 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Unrealmath.cpp 65
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L65
         /// </summary>
-        public void SerializeVector2D()
+        public FVector2D SerializeVector2D()
         {
             var x = ReadSingle();
             var y = ReadSingle();
+            return new FVector2D(x, y);
         }
 
         /// <summary>
@@ -274,7 +283,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// PropertyByte.cpp 83
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyByte.cpp#L83
         /// </summary>
         public int SerializePropertyByte(int enumMaxValue)
         {
@@ -282,8 +291,13 @@ namespace Unreal.Core
             return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
         }
 
+        public int SerializePropertyByte()
+        {
+            return SerializePropertyByte(-1);
+        }
+
         /// <summary>
-        /// PropertyBool.cpp 331
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331
         /// </summary>
         public bool SerializePropertyBool()
         {
@@ -296,10 +310,11 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// PropertyBool.cpp 331
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331
         /// </summary>
-        public void SerializePropertyNativeBool()
+        public bool SerializePropertyNativeBool()
         {
+            return ReadBit();
             //uint8* ByteValue = (uint8*)Data + ByteOffset;
             //uint8 Value = ((*ByteValue & FieldMask) != 0);
             //Ar.SerializeBits(&Value, 1);
@@ -308,17 +323,18 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// EnumProperty.cpp 14
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/EnumProperty.cpp#L142
         /// </summary>
-        public void SerializePropertyEnum()
+        public int SerializePropertyEnum(int enumMaxValue)
         {
+            return ReadBitsToInt((int)CeilLogTwo64((ulong)enumMaxValue));
             // Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
         }
 
         /// <summary>
         /// PropertyBaseObject.cpp 84
         /// </summary>
-        public void SerializePropertyObject()
+        public uint SerializePropertyObject()
         {
             //InternalLoadObject(); // TODO make available in archive
 
@@ -326,6 +342,7 @@ namespace Unreal.Core
             {
                 Value = ReadIntPacked()
             };
+            return netGuid.Value;
 
             //if (!netGuid.IsValid())
             //{
@@ -380,12 +397,99 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// OnlineReplStruct.cpp 209
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/OnlineReplStructs.cpp#L209
         /// </summary>
-        public void SerializePropertyNetId()
+        public string SerializePropertyNetId()
         {
-            //EUniqueIdEncodingFlags EncodingFlags = EUniqueIdEncodingFlags::NotEncoded;
-            //Ar << EncodingFlags;
+            // Use highest value for type for other (out of engine) oss type 
+            const byte typeHashOther = 31;
+
+            var encodingFlags = ReadByteAsEnum<UniqueIdEncodingFlags>();
+            var encoded = false;
+            if ((encodingFlags & UniqueIdEncodingFlags.IsEncoded) == UniqueIdEncodingFlags.IsEncoded)
+            {
+                encoded = true;
+                if ((encodingFlags & UniqueIdEncodingFlags.IsEmpty) == UniqueIdEncodingFlags.IsEmpty)
+                {
+                    // empty cleared out unique id
+                    return "";
+                }
+            }
+
+            // Non empty and hex encoded
+            var typeHash = ((int)(encodingFlags & UniqueIdEncodingFlags.TypeMask)) >> 3;
+            if (typeHash == 0)
+            {
+                // If no type was encoded, assume default
+                //TypeHash = UOnlineEngineInterface::Get()->GetReplicationHashForSubsystem(UOnlineEngineInterface::Get()->GetDefaultOnlineSubsystemName());
+                return "NULL";
+            }
+
+            bool bValidTypeHash = typeHash != 0;
+            string typeString;
+            if (typeHash == typeHashOther)
+            {
+                typeString = ReadFString();
+                if (typeString == UnrealNames.None.ToString())
+                {
+                    bValidTypeHash = false;
+                }
+            }
+
+            if (bValidTypeHash)
+            {
+                if (encoded)
+                {
+                    var encodedSize = ReadByte();
+
+                    // https://github.com/dotnet/corefx/issues/10013
+                    return BitConverter.ToString(ReadBytes(encodedSize)).Replace("-", "");
+                }
+                else
+                {
+                    return ReadFString();
+                }
+            }
+
+            return "";
+        }
+
+
+        /// <summary>
+        /// Computes the base 2 logarithm for a 64-bit value that is greater than 0.
+        /// The result is rounded down to the nearest integer.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h#L332
+        /// </summary>
+        /// <param name="Value">The value to compute the log of</param>
+        /// <returns>Log2 of Value. 0 if Value is 0.</returns>
+        public static ulong FloorLog2_64(ulong Value)
+        {
+            ulong pos = 0;
+            if (Value >= 1ul << 32) { Value >>= 32; pos += 32; }
+            if (Value >= 1ul << 16) { Value >>= 16; pos += 16; }
+            if (Value >= 1ul << 8) { Value >>= 8; pos += 8; }
+            if (Value >= 1ul << 4) { Value >>= 4; pos += 4; }
+            if (Value >= 1ul << 2) { Value >>= 2; pos += 2; }
+            if (Value >= 1ul << 1) { pos += 1; }
+            return (Value == 0) ? 0 : pos;
+        }
+
+        /// <summary>
+        /// Counts the number of leading zeros in the bit representation of the 64-bit value.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h#L364
+        /// </summary>
+        /// <param name="Value">the value to determine the number of leading zeros for</param>
+        /// <returns>the number of zeros before the first "on" bit</returns>
+        public static ulong CountLeadingZeros64(ulong Value)
+        {
+            if (Value == 0) return 64;
+            return 63 - FloorLog2_64(Value);
+        }
+
+        public static ulong CeilLogTwo64(ulong Arg)
+        {
+            ulong Bitmask = ((ulong)(CountLeadingZeros64(Arg) << 57)) >> 63;
+            return (64 - CountLeadingZeros64(Arg - 1)) & (~Bitmask);
         }
     }
 }

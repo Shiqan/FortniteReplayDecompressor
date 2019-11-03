@@ -95,6 +95,19 @@ namespace Unreal.Core
             { "Factory_QuarterWall", "Factory_QuarterWall_C" },
             { "BridgeGirder_Lamp", "BridgeGirder_Lamp_C" },
             { "Prop_Rocks", "Prop_Rocks_04_C" },
+            { "BP_Athena_Water", "BP_Athena_Water_C" },
+            { "Prop_QuestInteractable_TimeTrials", "Prop_QuestInteractable_TimeTrials_C" },
+            { "Tiered_Chest_6_Parent", "Tiered_Chest_6_Parent_C" },
+            //{ "LCD_ToolBox", "" },
+            //{ "B_Athena_VendingMachine", "" },
+            { "LF_1x1_Foundation", "LF_1x1_Foundation_C"},
+            //{ "BuildingFoundation3x75", ""},
+            //{ "BuildingFoundation5x74", ""},
+            { "BP_CalendarProps", "BP_CalendarProps_C"},
+            { "Tiered_Short_Ammo_3_Parent", "Tiered_Short_Ammo_3_Parent_C"},
+            // SafeZoneIndicator
+            // FortHealthSet
+
         };
 
         public static string GetRedirect(string path)

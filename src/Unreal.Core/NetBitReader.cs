@@ -59,9 +59,9 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyFloat:
                     SerializePropertyFloat();
                     break;
-                case RepLayoutCmdType.DynamicArray:
-                    SerializeDynamicArray();
-                    break;
+                //case RepLayoutCmdType.DynamicArray:
+                //    SerializeDynamicArray();
+                //    break;
                 case RepLayoutCmdType.Property:
                     break;
                 case RepLayoutCmdType.PropertyInt:
@@ -88,14 +88,6 @@ namespace Unreal.Core
                 default:
                     throw new NotImplementedException();
             };
-        }
-
-        /// <summary>
-        /// replayout.cpp 3142
-        /// </summary>
-        public void SerializeDynamicArray()
-        {
-            var arrayNum = ReadIntPacked();
         }
 
         public int SerializePropertyInt()

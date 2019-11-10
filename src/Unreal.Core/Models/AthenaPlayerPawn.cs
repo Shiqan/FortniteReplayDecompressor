@@ -1,4 +1,6 @@
-﻿namespace Unreal.Core.Models
+﻿using System.Collections.Generic;
+
+namespace Unreal.Core.Models
 {
     public class AthenaPlayerPawn : ActorState
     {
@@ -50,16 +52,28 @@
         public uint PetState   { get; set; } // AFortPlayerPetRepState
         public uint PetSkin { get; set; } // UAthenaPetItemDefinition
         public uint[] CharacterVariantChannels { get; set; } // TArray
+        public uint VariantChannelTag { get; set; }
+        public uint ActiveVariantTag { get; set; }
+        public uint OwnedVariantTags { get; set; }
+        public uint ItemVariantIsUsedFor { get; set; }
+        public uint FeedbackAudioComponent { get; set; }
         public uint AnimMontage { get; set; } //UAnimMontage
         public uint PawnMontage { get; set; } //UAnimMontage
         public int RepAnimMontageStartSection { get; set; }
         public int EncryptedPawnReplayData { get; set; } // FAthenaPawnReplayData
         public int MovementBase { get; set; } // UPrimitiveComponent
-
-        //case "ReplicatedMovement":
-        //    cmdReader.SerializeRepMovement();
-        //    break;
-
-
+        public bool IsStopped { get; set; }
+        public bool bIsInsideSafeZone { get; set; }
+        public bool bCanQue { get; set; }
+        public bool bCanBeInterrupted { get; set; }
+        public bool bInterruptCurrentLine { get; set; }
+        public FRepMovement Location { get; set; }
+        public uint NextSectionId { get; set; }
+        public List<uint> Dances { get; set; }
+        public List<uint> ItemWraps { get; set; }
+        public bool SkipPositionCorrection { get; set; }
+        public bool FastReplicationMinimalReplicationTags { get; set; }
+        public byte Controller { get; set; }
+        public bool SimulatedProxyGameplayCues { get; set; }
     }
 }

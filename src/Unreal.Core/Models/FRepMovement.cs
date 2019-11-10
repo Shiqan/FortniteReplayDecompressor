@@ -8,31 +8,49 @@ namespace Unreal.Core.Models
     /// </summary>
     public struct FRepMovement
     {
-        /** Velocity of component in world space */
+        /// <summary>
+        /// Velocity of component in world space
+        /// </summary>
         public FVector LinearVelocity { get; set; }
 
-        /** Velocity of rotation for component */
+        /// <summary>
+        /// Velocity of rotation for component
+        /// </summary>
         public FVector AngularVelocity { get; set; }
 
-        /** Location in world space */
+        /// <summary>
+        /// Location in world space 
+        /// </summary>
         public FVector Location { get; set; }
 
-        /** Current rotation */
+        /// <summary>
+        /// Current rotation
+        /// </summary>
         public FRotator Rotation { get; set; }
 
-        /** If set, RootComponent should be sleeping. */
+        /// <summary>
+        /// If set, RootComponent should be sleeping.
+        /// </summary>
         public bool bSimulatedPhysicSleep { get; set; }
 
-        /** If set, additional physic data (angular velocity) will be replicated. */
+        /// <summary>
+        /// If set, additional physic data (angular velocity) will be replicated.
+        /// </summary>
         public bool bRepPhysics { get; set; }
 
-        /** Allows tuning the compression level for the replicated location vector. You should only need to change this from the default if you see visual artifacts. */
+        /// <summary>
+        /// Allows tuning the compression level for the replicated location vector. You should only need to change this from the default if you see visual artifacts.
+        /// </summary>
         public VectorQuantization LocationQuantizationLevel { get; set; }
 
-        /** Allows tuning the compression level for the replicated velocity vectors. You should only need to change this from the default if you see visual artifacts. */
+        /// <summary>
+        /// Allows tuning the compression level for the replicated velocity vectors. You should only need to change this from the default if you see visual artifacts.
+        /// </summary>
         public VectorQuantization VelocityQuantizationLevel { get; set; }
 
-        /** Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts. */
+        /// <summary>
+        /// Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts.
+        /// </summary>
         public RotatorQuantization RotationQuantizationLevel { get; set;}
     }
 }

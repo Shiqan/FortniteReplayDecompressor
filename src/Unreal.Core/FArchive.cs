@@ -18,7 +18,7 @@ namespace Unreal.Core
         public ReplayVersionHistory ReplayVersion { get; set; }
         public NetworkReplayVersion NetworkReplayVersion { get; set; }
         public abstract int Position { get; protected set; }
-        public bool IsError { get; set; } = false;
+        public bool IsError { get; protected set; } = false;
 
         /// <summary>
         /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
@@ -30,6 +30,13 @@ namespace Unreal.Core
         }
 
         public abstract bool AtEnd();
+
+        /// <summary>
+        /// Returns whether or not we can read <paramref name="count"/> bits or bytes.
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns>true if we can read, false otherwise</returns>
+        public abstract bool CanRead(int count);
         public abstract T ReadUInt32AsEnum<T>();
         public abstract T ReadByteAsEnum<T>();
         public abstract T[] ReadArray<T>(Func<T> func1);

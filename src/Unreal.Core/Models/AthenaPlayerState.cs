@@ -15,7 +15,9 @@
         public string PlayerNamePrivate { get; set; }
         public string PartyOwnerUniqueId { get; set; }
         public string Platform { get; set; }
+        public int Team { get; set; }
         public int TeamIndex { get; set; }
+        public int PlayerTeamPrivate { get; set; }
         public int SquadListUpdateValue { get; set; }
         public int SquadId { get; set; }
         public uint Level { get; set; }
@@ -33,5 +35,11 @@
         public bool bOnlySpectator { get; set; }
         public uint Ping { get; set; }
         public uint Owner { get; set; }
+        public bool bIsDisconnected { get; set; }
+        public uint FinisherOrDowner { get; set; }
+        public bool bInitialized { get; set; }
+        public bool bUsingAnonymousMode { get; set; }
+        public float ResurrectionExpirationTime { get; set; }
+        public uint DeathTags { get; set; } // FGameplayTagContainer
     }
 }

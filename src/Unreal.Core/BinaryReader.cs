@@ -28,9 +28,23 @@ namespace Unreal.Core
             return Reader.BaseStream.Position >= Reader.BaseStream.Length;
         }
 
+        public override bool CanRead(int count)
+        {
+            return Reader.BaseStream.Position + count < Reader.BaseStream.Length;
+        }
+
         public void Dispose()
         {
-            Reader.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Reader.Dispose();
+            }
         }
 
         /// <summary>

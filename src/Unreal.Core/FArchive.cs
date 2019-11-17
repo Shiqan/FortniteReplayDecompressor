@@ -19,6 +19,10 @@ namespace Unreal.Core
         public NetworkReplayVersion NetworkReplayVersion { get; set; }
         public abstract int Position { get; protected set; }
         public bool IsError { get; protected set; } = false;
+        public virtual void SetError()
+        {
+            IsError = true;
+        }
 
         /// <summary>
         /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
@@ -28,6 +32,7 @@ namespace Unreal.Core
         {
             return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
         }
+
 
         public abstract bool AtEnd();
 

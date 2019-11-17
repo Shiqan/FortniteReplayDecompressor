@@ -40,9 +40,6 @@
     <None Update="Replays\UnsavedReplay-2019.05.22-16.58.41.replay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Replays\UnsavedReplay-2019.06.14-19.49.16.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Replays\UnsavedReplay-2019.06.30-20.39.37.replay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

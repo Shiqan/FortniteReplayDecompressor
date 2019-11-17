@@ -22,6 +22,7 @@ namespace Unreal.Core.Models
         public float SprintSpeed { get; set; }
         public float CrouchedRunSpeed { get; set; }
         public float CrouchedSprintSpeed { get; set; }
+        public float FlySpeed { get; set; }
         public string BannerIconId { get; set; }
         public string BannerColorId { get; set; }
         public uint SkyDiveContrail { get; set; }
@@ -67,10 +68,13 @@ namespace Unreal.Core.Models
         public bool bCanQue { get; set; }
         public bool bCanBeInterrupted { get; set; }
         public bool bInterruptCurrentLine { get; set; }
+        public bool bIsPlayingEmote { get; set; }
+        public uint LastReplicatedEmoteExecuted { get; set; }
         public FRepMovement Location { get; set; }
+        public uint Position { get; set; }
         public uint NextSectionId { get; set; }
-        public List<uint> Dances { get; set; }
-        public List<uint> ItemWraps { get; set; }
+        public IEnumerable<uint> Dances { get; set; }
+        public IEnumerable<uint> ItemWraps { get; set; }
         public bool SkipPositionCorrection { get; set; }
         public bool FastReplicationMinimalReplicationTags { get; set; }
         public byte Controller { get; set; }

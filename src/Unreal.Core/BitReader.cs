@@ -139,6 +139,12 @@ namespace Unreal.Core
         /// <returns>bool[]</returns>
         public override bool[] ReadBits(int bitCount)
         {
+            if (!CanRead(bitCount))
+            {
+                IsError = true;
+                return Array.Empty<bool>();
+            }
+
             var result = new bool[bitCount];
             for (var i = 0; i < bitCount; i++)
             {
@@ -209,6 +215,12 @@ namespace Unreal.Core
 
         public override byte[] ReadBytes(int byteCount)
         {
+            if (!CanRead(byteCount))
+            {
+                IsError = true;
+                return Array.Empty<byte>();
+            }
+
             var result = new byte[byteCount];
             for (var i = 0; i < byteCount; i++)
             {
@@ -300,12 +312,14 @@ namespace Unreal.Core
 
         public override short ReadInt16()
         {
-            return BitConverter.ToInt16(ReadBytes(2));
+            var value = ReadBytes(2);
+            return IsError ? (short) 0 : BitConverter.ToInt16(value);
         }
 
         public override int ReadInt32()
         {
-            return BitConverter.ToInt32(ReadBytes(4));
+            var value = ReadBytes(4);
+            return IsError ? 0 : BitConverter.ToInt32(value);
         }
 
         public override bool ReadInt32AsBoolean()
@@ -315,7 +329,8 @@ namespace Unreal.Core
 
         public override long ReadInt64()
         {
-            return BitConverter.ToInt64(ReadBytes(8));
+            var value = ReadBytes(8);
+            return IsError ? 0 : BitConverter.ToInt64(value);
         }
 
         /// <summary>

@@ -168,5 +168,23 @@ namespace FortniteReplayReader.Test
 
             Assert.True(archive.AtEnd());
         }
+        
+        [Fact]
+        public void Season11update11Test()
+        {
+            var data = $"PlayerElims/season11.11.dump";
+            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var archive = new Unreal.Core.BinaryReader(stream)
+            {
+                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO
+            };
+            var reader = new ReplayReader()
+            {
+                Branch = "++Fortnite+Release-11.11"
+            };
+            var result = reader.ParseElimination(archive, null);
+
+            Assert.True(archive.AtEnd());
+        }
     }
 }

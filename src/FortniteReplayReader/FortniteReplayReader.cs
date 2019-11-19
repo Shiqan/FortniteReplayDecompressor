@@ -245,10 +245,15 @@ namespace FortniteReplayReader
         public virtual string ParsePlayer(FArchive archive)
         {
             // TODO player type enum
-            if (archive.ReadByte() == 0x03)
+            var botIndicator = archive.ReadByte();
+            if (botIndicator == 0x03)
             {
                 return "Bot";
+            } else if (botIndicator == 0x10)
+            {
+                return archive.ReadFString();
             }
+
             // 0x11
             var size = archive.ReadByte();
             return archive.ReadGUID(size);

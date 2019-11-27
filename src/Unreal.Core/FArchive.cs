@@ -33,7 +33,6 @@ namespace Unreal.Core
             return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
         }
 
-
         public abstract bool AtEnd();
 
         /// <summary>

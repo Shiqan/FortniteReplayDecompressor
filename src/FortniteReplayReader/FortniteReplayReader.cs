@@ -249,7 +249,8 @@ namespace FortniteReplayReader
             if (botIndicator == 0x03)
             {
                 return "Bot";
-            } else if (botIndicator == 0x10)
+            }
+            else if (botIndicator == 0x10)
             {
                 return archive.ReadFString();
             }

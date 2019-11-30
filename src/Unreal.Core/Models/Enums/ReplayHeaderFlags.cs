@@ -8,5 +8,6 @@
         None = 0,
         ClientRecorded = (1 << 0),
         HasStreamingFixes = (1 << 1),
+        DeltaCheckpoints = (1 << 2),
     }
 }

@@ -163,7 +163,7 @@ namespace Unreal.Core
                 {
                     Debug($"checkpoint-{checkpointIndex}-packet-{packetIndex}", "checkpoint-packets", packet.Data);
                     packetIndex++;
-                    ReceivedRawPacket(packet);
+                    //ReceivedRawPacket(packet);
                 }
             }
             checkpointIndex++;
@@ -247,7 +247,7 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            using var binaryArchive = Decompress(archive, (int) info.Length);
+            using var binaryArchive = Decompress(archive, (int)info.Length);
             Debug($"replaydata-{replayDataIndex}", "replaydata", binaryArchive.ReadBytes((int)binaryArchive.BaseStream.Length));
             binaryArchive.Seek(0);
             while (!binaryArchive.AtEnd())
@@ -707,6 +707,10 @@ namespace Unreal.Core
                 };
             }
 
+            foreach (var packet in playbackPackets.Where(p => p.State == PacketState.Success))
+            {
+                Debug("packetsizes", $"size: {packet.Data.Length}, time: {timeSeconds}");
+            }
             return playbackPackets;
         }
 
@@ -1031,9 +1035,12 @@ namespace Unreal.Core
             };
             // }
 
+            // We have fully received the bunch, so process it.
             if (bunch.bClose)
             {
-                // We have fully received the bunch, so process it.
+                //ConditionalCleanUp(false, Bunch.CloseReason);
+                // lots of stuff is happening here, but maybe this is enough... :)
+                ChannelActors[bunch.ChIndex] = false;
                 return true;
             }
 
@@ -1172,8 +1179,8 @@ namespace Unreal.Core
 
                 //RepFlags.bNetInitial = true;
 
-                ChannelActors.Add(bunch.ChIndex, true);
-                ChannelNetGuids.Add(bunch.ChIndex, inActor.ActorNetGUID.Value);
+                ChannelActors[bunch.ChIndex] = true;
+                ChannelNetGuids[bunch.ChIndex] = inActor.ActorNetGUID.Value;
             }
 
             // RepFlags.bNetOwner = true; // ActorConnection == Connection is always true??
@@ -2483,6 +2490,7 @@ namespace Unreal.Core
                 bunchIndex++;
 
                 // debugging
+                Debug("bunchsizes", $"packetIndex: {packetIndex}, bunchIndex: {bunchIndex - 1}, size: {bunchDataBits}");
                 bunch.Archive.Mark();
                 var bits = bunch.Archive.ReadBits(bunch.Archive.GetBitsLeft());
                 byte[] ret = new byte[(int)Math.Ceiling(bits.Length / 8.0)];

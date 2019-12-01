@@ -46,7 +46,7 @@ namespace Unreal.Core
         private Dictionary<uint, uint> ChannelNetGuids = new Dictionary<uint, uint>();
         private Dictionary<uint, string> NetGuidCache = new Dictionary<uint, string>();
         private Dictionary<uint, uint> OuterNetGuidCache = new Dictionary<uint, uint>();
-        private Dictionary<uint, NetFieldExportGroup> ArchetypeToNetFieldGroup = new Dictionary<uint, NetFieldExportGroup>();
+        private Dictionary<uint, string> ArchetypeToNetFieldGroup = new Dictionary<uint, string>();
         private Dictionary<uint, bool> ChannelActors = new Dictionary<uint, bool>();
         private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap = new Dictionary<string, NetFieldExportGroup>();
         private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -1223,6 +1223,8 @@ namespace Unreal.Core
         /// <param name="archive"></param>
         public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, bool bHasRepLayout)
         {
+            // TODO fix this shit
+
             // outer is used to get path name
             // coreredirects.cpp ...
             NetFieldExportGroup netFieldExportGroup = null;
@@ -1240,7 +1242,7 @@ namespace Unreal.Core
                         if (groupPathFixed.Contains(path))
                         {
                             netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(archetype, netFieldExportGroup);
+                            ArchetypeToNetFieldGroup.Add(archetype, groupPath);
                             break;
                         }
                     }
@@ -1253,7 +1255,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    netFieldExportGroup = ArchetypeToNetFieldGroup[archetype];
+                    netFieldExportGroup = NetFieldExportGroupMap[ArchetypeToNetFieldGroup[archetype]];
                 }
             }
             else
@@ -1273,7 +1275,7 @@ namespace Unreal.Core
                         if (groupPathFixed.Contains(path))
                         {
                             netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value, netFieldExportGroup);
+                            ArchetypeToNetFieldGroup.Add(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value, groupPath);
                             break;
                         }
                     }
@@ -1286,7 +1288,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    netFieldExportGroup = ArchetypeToNetFieldGroup[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value];
+                    netFieldExportGroup = NetFieldExportGroupMap[ArchetypeToNetFieldGroup[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]];
                 }
             }
 

@@ -33,6 +33,15 @@ namespace Unreal.Core
             return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
         }
 
+        /// <summary>
+        /// Returns whether or not this replay was recorded / is playing with Game Specific Frame Data.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/0218ad46444accdba786b9a82bee3f445d9fa938/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L928
+        /// </summary>
+        public virtual bool HasGameSpecificFrameData()
+        {
+            return ReplayHeaderFlags >= ReplayHeaderFlags.GameSpecificFrameData;
+        }
+
         public abstract bool AtEnd();
 
         /// <summary>

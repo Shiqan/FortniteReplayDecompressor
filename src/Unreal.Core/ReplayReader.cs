@@ -684,6 +684,17 @@ namespace Unreal.Core
 
             // if (!bForLevelFastForward)
             ReadExternalData(archive);
+
+            if (archive.HasGameSpecificFrameData())
+            {
+                var skipExternalOffset = archive.ReadUInt64();
+
+                if (skipExternalOffset > 0)
+                {
+                    // ignore it for now
+                    var bytes = archive.ReadBytes((int)skipExternalOffset);
+                }
+            }
             // else skip externalOffset
 
             var playbackPackets = new List<PlaybackPacket>();

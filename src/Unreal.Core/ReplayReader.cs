@@ -1183,10 +1183,11 @@ namespace Unreal.Core
                 //NotifyActorChannelOpen(Actor, Bunch);
                 // OnActorChannelOpen
                 // Attempt to match the player controller to a local viewport (client side)
-                if (bunch.ChIndex == 6)
-                {
-                    var netPlayerIndex = bunch.Archive.ReadByte();
-                }
+                // shootergame debugging
+                //if (bunch.ChIndex == 6)
+                //{
+                //    var netPlayerIndex = bunch.Archive.ReadByte();
+                //}
 
                 //RepFlags.bNetInitial = true;
 
@@ -1315,6 +1316,12 @@ namespace Unreal.Core
                 ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex);
             }
 
+            // moved from ReadFieldHeaderAndPayload to here to save a search for ClassNetCache if not needed
+            if (archive.AtEnd())
+            {
+                return true;
+            }
+
             //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
 
             //static FORCEINLINE FString GenerateClassNetCacheNetFieldExportGroupName( const UClass* ObjectClass )
@@ -1322,18 +1329,23 @@ namespace Unreal.Core
             //    return ObjectClass->GetName() + FString(TEXT("_ClassNetCache"));
             //}
             var classNetCachePath = $"{RemoveAllPathPrefixes(netFieldExportGroup.PathName)}_ClassNetCache";
-            NetFieldExportGroupMap.TryGetValue(classNetCachePath, out netFieldExportGroup);
+            NetFieldExportGroup classNetCache;
+            if (!NetFieldExportGroupMap.TryGetValue(classNetCachePath, out classNetCache))
+            {
+                _logger?.LogError($"Couldnt find ClassNetCache for {netFieldExportGroup.PathName}");
+                return false;
+            }
 
             // Read fields from stream
             NetFieldExport fieldCache; // TODO FFieldNetCache ?
 
             FBitArchive reader;
-            while (ReadFieldHeaderAndPayload(archive, netFieldExportGroup, out fieldCache, out reader))
+            while (ReadFieldHeaderAndPayload(archive, classNetCache, out fieldCache, out reader))
             {
-                _logger?.LogDebug($"RPCs to read for group {netFieldExportGroup.PathName} and numbits: {reader.GetBitsLeft()}");
+                _logger?.LogDebug($"RPCs to read for group {classNetCache.PathName}, field {fieldCache.Name} and numbits: {reader.GetBitsLeft()}");
                 if (fieldCache == null)
                 {
-                    _logger?.LogError($"ReceivedBunch: FieldCache == nullptr: {netFieldExportGroup.PathName}");
+                    _logger?.LogError($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
                     continue;
                 }
 
@@ -1343,6 +1355,27 @@ namespace Unreal.Core
                     _logger?.LogWarning($"ReceivedBunch: FieldCache->bIncompatible == true: {fieldCache.Name}");
                     continue;
                 }
+
+                reader.Mark();
+                var bits = reader.ReadBits(reader.GetBitsLeft());
+                byte[] ret = new byte[(int)Math.Ceiling(bits.Length / 8.0)];
+                for (int i = 0; i < bits.Length; i += 8)
+                {
+                    int value = 0;
+                    for (int j = 0; j < 8; j++)
+                    {
+                        if (i + j < bits.Length)
+                        {
+                            if (bits[i + j])
+                            {
+                                value += 1 << (7 - j);
+                            }
+                        }
+                    }
+                    ret[i / 8] = (byte)value;
+                }
+                Debug($"rpc-{fieldCache.Name}-{bits.Length}", "rpc", ret);
+                reader.Pop();
 
                 // Handle property
                 // TODO get this from fieldCache type property somehow...

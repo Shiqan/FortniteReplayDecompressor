@@ -1204,7 +1204,7 @@ namespace Unreal.Core
             while (!bunch.Archive.AtEnd())
             {
                 //FNetBitReader Reader(Bunch.PackageMap, 0 );
-                var reader = ReadContentBlockPayload(bunch, out var bHasRepLayout);
+                var repObject = ReadContentBlockPayload(bunch, out var bHasRepLayout, out var reader);
 
                 if (bunch.Archive.IsError)
                 {
@@ -1212,14 +1212,13 @@ namespace Unreal.Core
                     break;
                 }
 
-                if (reader == null || reader.AtEnd())
+                if (repObject == 0 || reader == null || reader.AtEnd())
                 {
                     // Nothing else in this block, continue on (should have been a delete or create block)
                     continue;
                 }
 
-                // if ( !Replicator->ReceivedBunch( Reader, RepFlags, bHasRepLayout, bHasUnmapped ) )
-                if (!ReceivedReplicatorBunch(bunch, reader, bHasRepLayout))
+                if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout))
                 {
                     // Don't consider this catastrophic in replays
                     _logger?.LogWarning("UActorChannel::ProcessBunch: Replicator.ReceivedBunch returned false");
@@ -1233,75 +1232,38 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
         /// </summary>
         /// <param name="archive"></param>
-        public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, bool bHasRepLayout)
+        public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint repObject, bool bHasRepLayout)
         {
             // TODO fix this shit
 
             // outer is used to get path name
             // coreredirects.cpp ...
             NetFieldExportGroup netFieldExportGroup = null;
-            if (Channels[bunch.ChIndex].Actor.Archetype != null)
+
+            if (!ArchetypeToNetFieldGroup.ContainsKey(repObject))
             {
-                var archetype = Channels[bunch.ChIndex].Actor.Archetype.Value;
-
-                if (!ArchetypeToNetFieldGroup.ContainsKey(archetype))
+                var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
+                path = RemoveAllPathPrefixes(path);
+                foreach (var groupPath in NetFieldExportGroupMap.Keys)
                 {
-                    var path = NetGuidCache[Channels[bunch.ChIndex].Actor.Archetype.Value];
-                    path = RemoveAllPathPrefixes(path);
-                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
+                    var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
+                    if (groupPathFixed.Contains(path))
                     {
-                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                        if (groupPathFixed.Contains(path))
-                        {
-                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(archetype, groupPath);
-                            break;
-                        }
-                    }
-
-                    if (netFieldExportGroup == null)
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[archetype]}");
-                        return false;
+                        netFieldExportGroup = NetFieldExportGroupMap[groupPath];
+                        ArchetypeToNetFieldGroup.Add(repObject, groupPath);
+                        break;
                     }
                 }
-                else
+
+                if (netFieldExportGroup == null)
                 {
-                    netFieldExportGroup = NetFieldExportGroupMap[ArchetypeToNetFieldGroup[archetype]];
+                    Debug("failedgroups", $"actor guid: {NetGuidCache[repObject]}");
+                    return false;
                 }
             }
             else
             {
-                if (!ArchetypeToNetFieldGroup.ContainsKey(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value))
-                {
-                    var path = CoreRedirects.GetRedirect(RemovePathSuffix(NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]));
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]}");
-                        return false;
-                    }
-
-                    foreach (var groupPath in NetFieldExportGroupMap.Keys)
-                    {
-                        var groupPathFixed = RemoveAllPathPrefixes(groupPath); // TODO, do this earlier so we dont have to work with strings when this loops because that's SLOW AF
-                        if (groupPathFixed.Contains(path))
-                        {
-                            netFieldExportGroup = NetFieldExportGroupMap[groupPath];
-                            ArchetypeToNetFieldGroup.Add(Channels[bunch.ChIndex].Actor.ActorNetGUID.Value, groupPath);
-                            break;
-                        }
-                    }
-
-                    if (netFieldExportGroup == null)
-                    {
-                        Debug("failedgroups", $"actor guid: {NetGuidCache[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    netFieldExportGroup = NetFieldExportGroupMap[ArchetypeToNetFieldGroup[Channels[bunch.ChIndex].Actor.ActorNetGUID.Value]];
-                }
+                netFieldExportGroup = NetFieldExportGroupMap[ArchetypeToNetFieldGroup[repObject]];
             }
 
             // Handle replayout properties
@@ -2363,48 +2325,43 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
         /// </summary>
-        public virtual FBitArchive ReadContentBlockPayload(DataBunch bunch, out bool bOutHasRepLayout)
+        public virtual uint ReadContentBlockPayload(DataBunch bunch, out bool bOutHasRepLayout, out FBitArchive reader)
         {
-            //bool bObjectDeleted = false;
-            //// Read the content block header and payload
-            //UObject* RepObj = ReadContentBlockHeader(Bunch, bObjectDeleted, bOutHasRepLayout);
-            // sets bObjectDeleted and bOutHasRepLayout
+            // Read the content block header and payload
+            var repObj = ReadContentBlockHeader(bunch, out bOutHasRepLayout, out bool bObjectDeleted);
 
-            bOutHasRepLayout = ReadContentBlockHeader(bunch);
-
-            //if (bObjectDeleted)
-            //{
-            //    OutPayload.SetData(Bunch, 0);
-
-            //    // Nothing else in this block, continue on
-            //    return nullptr;
-            //}
+            if (bObjectDeleted)
+            {
+                // Nothing else in this block, continue on
+                reader = null;
+                return 0;
+            }
 
             var numPayloadBits = bunch.Archive.ReadIntPacked();
             if (numPayloadBits == 0)
             {
                 _logger?.LogWarning($"ReadContentBlockPayload found payload of 0, bunch: {bunch.ChIndex}");
-                return null;
+                reader = null;
+                return 0;
             }
 
-            return new BitReader(bunch.Archive.ReadBits(numPayloadBits));
-            //OutPayload.SetData(Bunch, NumPayloadBits);
-            //return RepObj;
+            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits));
+            return repObj;
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
         /// </summary>
-        public virtual bool ReadContentBlockHeader(DataBunch bunch)
+        public virtual uint ReadContentBlockHeader(DataBunch bunch, out bool bOutHasRepLayout, out bool bObjectDeleted)
         {
-            //  bool& bObjectDeleted, bool& bOutHasRepLayout 
-            //var bObjectDeleted = false;
-            var bOutHasRepLayout = bunch.Archive.ReadBit();
+            bObjectDeleted = false;
+            bOutHasRepLayout = bunch.Archive.ReadBit();
             var bIsActor = bunch.Archive.ReadBit();
             if (bIsActor)
             {
                 // If this is for the actor on the channel, we don't need to read anything else
-                return bOutHasRepLayout;
+                // TODO fix this
+                return Channels[bunch.ChIndex].Actor.Archetype?.Value ?? Channels[bunch.ChIndex].Actor.ActorNetGUID.Value;
             }
 
             // We need to handle a sub-object
@@ -2415,7 +2372,7 @@ namespace Unreal.Core
             if (bStablyNamed)
             {
                 // If this is a stably named sub-object, we shouldn't need to create it. Don't raise a bunch error though because this may happen while a level is streaming out.
-                return bOutHasRepLayout;
+                return netGuid.Value;
             }
 
             // Serialize the class in case we have to spawn it.
@@ -2425,10 +2382,12 @@ namespace Unreal.Core
             {
                 // TODO not sure if we ever reach here...
                 _logger?.LogDebug("[!!!!] classnetguid not valid");
-                // bObjectDeleted = true;
+                bObjectDeleted = true;
+                return 0;
             }
 
-            return bOutHasRepLayout;
+            // TODO figure this out
+            return classNetGUID.Value;
         }
 
         /// <summary>

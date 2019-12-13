@@ -1,6 +1,6 @@
 # Theme settings
 doks:
-    baseurl:
+    baseurl: /FortniteReplayDecompressor
     color_theme: blue # Available themes: blue (default), green, purple, red and yellow
     header:
         logo:

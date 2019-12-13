@@ -1,0 +1,35 @@
+# Theme settings
+doks:
+    baseurl:
+    color_theme: blue # Available themes: blue (default), green, purple, red and yellow
+    header:
+        logo:
+            text: Fortnite Replay Reader
+            image:
+        nav:
+            - item_name: Getting Started
+              item_url: '/getting-started/'
+    footer:
+        content:
+            logo:
+                text: Fortnite Replay Reader
+                image:
+            copyright:
+        social_list:
+            - network_name: github
+              profile_url: 'https://github.com/Shiqan/FortniteReplayDecompressor'
+    google_analytics:
+        tracking_code: # Add your Google Analytics tracking code to activate Google Analytics
+    comments:
+        disqus_forum_shortname: # Add your disqus forum shortname to activate comments
+
+# SASS settings
+sass:
+    sass_dir: ./doks-theme/_sass
+    style: :compressed
+
+# Jekyll settings
+layouts_dir: ./doks-theme/_layouts
+includes_dir: ./doks-theme/_includes
+exclude: ['Gemfile', 'Gemfile.lock']
+permalink: /:title/

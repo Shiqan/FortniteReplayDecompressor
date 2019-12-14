@@ -19,9 +19,16 @@ namespace Unreal.Core
         public NetworkReplayVersion NetworkReplayVersion { get; set; }
         public abstract int Position { get; protected set; }
         public bool IsError { get; protected set; } = false;
+        
         public virtual void SetError()
         {
             IsError = true;
+        }
+
+        public void Reset()
+        {
+            IsError = false;
+            Position = 0;
         }
 
         /// <summary>
@@ -30,7 +37,7 @@ namespace Unreal.Core
         /// </summary>
         public virtual bool HasLevelStreamingFixes()
         {
-            return ReplayHeaderFlags >= ReplayHeaderFlags.HasStreamingFixes;
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.HasStreamingFixes);
         }
 
         /// <summary>
@@ -39,7 +46,12 @@ namespace Unreal.Core
         /// </summary>
         public virtual bool HasGameSpecificFrameData()
         {
-            return ReplayHeaderFlags >= ReplayHeaderFlags.GameSpecificFrameData;
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.GameSpecificFrameData);
+        }
+
+        public virtual bool HasDeltaCheckpoints()
+        {
+            return ReplayHeaderFlags.HasFlag(ReplayHeaderFlags.DeltaCheckpoints);
         }
 
         public abstract bool AtEnd();

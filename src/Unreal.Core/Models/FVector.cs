@@ -1,4 +1,6 @@
-﻿namespace Unreal.Core.Models
+﻿using System;
+
+namespace Unreal.Core.Models
 {
     public class FVector
     {
@@ -18,5 +20,27 @@
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
+
+        public override string ToString()
+        {
+            return $"X: {X}, Y: {Y}, Z: {Z}";
+        }
+
+        public float Size()
+        {
+            return (float)Math.Sqrt(X * X + Y * Y + Z * Z);
+        }
+
+        public void Serialize(NetBitReader reader)
+        {
+            X = reader.ReadSingle();
+            Y = reader.ReadSingle();
+            Z = reader.ReadSingle();
+        }
+
+        public static FVector operator -(FVector v1, FVector v2)
+        {
+            return new FVector(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z);
+        }
     }
 }

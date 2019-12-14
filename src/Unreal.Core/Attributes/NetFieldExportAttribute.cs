@@ -8,11 +8,15 @@ namespace Unreal.Core.Attributes
     {
         public string Name { get; set; }
         public RepLayoutCmdType Type { get; set; }
+        public int Handle { get; set; }
+        public UnknownFieldInfo Info { get; set; }
 
-        public NetFieldExportAttribute(string name, RepLayoutCmdType type)
+        public NetFieldExportAttribute(string name, RepLayoutCmdType type, int handle, string propertyNameUKInfo, string typeUKInfo, int bitCountUKInfo)
         {
             Name = name;
             Type = type;
+            Handle = handle;
+            Info = new UnknownFieldInfo(propertyNameUKInfo, typeUKInfo, bitCountUKInfo, (uint)handle);
         }
     }
 }

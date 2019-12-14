@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using Unreal.Core;
+using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -20,17 +21,17 @@ namespace FortniteReplayReader
             _logger = logger;
         }
 
-        public FortniteReplay ReadReplay(string fileName)
+        public FortniteReplay ReadReplay(string fileName, ParseMode mode = ParseMode.Minimal)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive);
+            return ReadReplay(archive, mode);
         }
 
-        public FortniteReplay ReadReplay(Stream stream)
+        public FortniteReplay ReadReplay(Stream stream, ParseMode mode = ParseMode.Minimal)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive);
+            return ReadReplay(archive, mode);
         }
 
         private string _branch;
@@ -38,7 +39,7 @@ namespace FortniteReplayReader
         public int Minor { get; set; }
         public string Branch
         {
-            get { return _branch; }
+            get => _branch;
             set
             {
                 var regex = new Regex(@"\+\+Fortnite\+Release\-(?<major>\d+)\.(?<minor>\d*)");
@@ -50,6 +51,11 @@ namespace FortniteReplayReader
                 }
                 _branch = value;
             }
+        }
+
+        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        {
+            _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
         }
 
         public override void ReadReplayHeader(FArchive archive)

@@ -18,6 +18,8 @@ namespace Unreal.Core
         public abstract FVector ReadPackedVector(int scaleFactor, int maxBits);
         public abstract FRotator ReadRotation();
         public abstract FRotator ReadRotationShort();
+        public abstract void SkipBits(int bitCount);
+        public abstract void SkipBits(uint bitCount);
         public abstract void Mark();
         public abstract void Pop();
         public abstract int GetBitsLeft();

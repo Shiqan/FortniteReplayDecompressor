@@ -40,7 +40,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
 
             var reader = new ReplayReader(logger);
-            var replay = reader.ReadReplay(replayFile);
+            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Normal);
 
             Console.WriteLine("---- done ----");
             Console.ReadLine();

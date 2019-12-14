@@ -29,5 +29,12 @@
         PropertyString = 19,
         PropertyUInt64 = 20,
         PropertyNativeBool = 21,
+        PropertySoftObject = 22,
+        PropertyWeakObject = 23,
+
+        PropertyUInt16 = 97,
+        Pointer = 98,
+        Enum = 99,
+        Ignore = 100
     }
 }

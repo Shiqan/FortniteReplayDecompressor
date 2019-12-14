@@ -14,5 +14,10 @@
         public float Pitch { get; set; }
         public float Yaw { get; set; }
         public float Roll { get; set; }
+
+        public override string ToString()
+        {
+            return $"Pitch: {Pitch}, Yaw: {Yaw}, Roll: {Roll}";
+        }
     }
 }

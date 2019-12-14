@@ -559,6 +559,16 @@ namespace Unreal.Core
             Seek(byteCount * 8, SeekOrigin.Current);
         }
 
+        public override void SkipBits(int numbits)
+        {
+            Seek(numbits, SeekOrigin.Current);
+        }
+        
+        public override void SkipBits(uint numbits)
+        {
+            SkipBits((int)numbits);
+        }
+
         /// <summary>
         /// Save Position to <see cref="MarkPosition"/> so we can reset back to this point.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228

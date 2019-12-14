@@ -83,8 +83,6 @@ namespace Unreal.Core
             { "Pickup_Health", "Pickup_Health_C" },
 
             // debugging fortnite
-            { "Tiered_Athena_FloorLoot", "FortInventory" },
-            { "Tiered_Athena_FloorLoot_Warmup", "FortInventory" },
             { "BP_RaceTrack", "BP_RaceTrack" },
             { "CubeAppearEffects", "ActiveGameplayEffect" },
             { "DO_NOT_DELETE_FortWorldManager", "FortWorldManager" },
@@ -98,15 +96,37 @@ namespace Unreal.Core
             { "BP_Athena_Water", "BP_Athena_Water_C" },
             { "Prop_QuestInteractable_TimeTrials", "Prop_QuestInteractable_TimeTrials_C" },
             { "Tiered_Chest_6_Parent", "Tiered_Chest_6_Parent_C" },
-            //{ "LCD_ToolBox", "" },
-            //{ "B_Athena_VendingMachine", "" },
             { "LF_1x1_Foundation", "LF_1x1_Foundation_C"},
-            //{ "BuildingFoundation3x75", ""},
-            //{ "BuildingFoundation5x74", ""},
             { "BP_CalendarProps", "BP_CalendarProps_C"},
             { "Tiered_Short_Ammo_3_Parent", "Tiered_Short_Ammo_3_Parent_C"},
-            // SafeZoneIndicator
-            // FortHealthSet
+
+            //These are mainly props
+            /*
+            { "BP_IslandScripting", "BP_IslandScripting_C"},
+            { "LF_Athena_POI",  "LF_Athena_POI_15x15_C" },
+            { "LF_Athena_StreamingTest",  "LF_Athena_POI_15x15_C" },
+            { "SM_Athena_DudeBro_RuneGround",  "BP_Athena_RuneSeal_C" },
+            { "LCD_RubblePile",  "Athena_Prop_RubblePile_02_C" },
+            { "Fence_Chainlink_A01_BarbedWire",  "Fence_Chainlink_A01_BarbedWire_C" },
+            { "Prop_TirePile",  "Prop_TirePile_04_C" },
+            { "Athena_Prop_ShippingContainer_01_Closed",  "Athena_Prop_ShippingContainer_01_Closed_C" },
+            { "Factory_Wall",  "Factory_Wall_3_C" },
+            { "Athena_Tree_Large",  "Athena_Tree_Large_1_C" },
+            { "SM_Farm_Wall",  "SM_Farm_Wall_2_C" },
+            { "Athena_Tree_Medium_03",  "Athena_Tree_Medium_03__C" },
+            { "Utility_TrashCanDowntown_01",  "B_DowntownTrashCan_BasketballMinigame_C" },
+            { "Car_KCar",  "Car_Stocker_C" },
+            { "Street_Light",  "Street_Light__2_C" },
+            { "Athena_Tree_Medium_01",  "Athena_Tree_Medium_01__C" },
+            { "BuildingFoundation3x",  "BuildingFoundation3x3" },
+            { "B_Athena_VendingMachine",  "FortBuildingActorSet" },
+            { "SM_Athena_Island_Vortex",  "BGA_DudeBro_Area_Effect_C" },
+            { "BuildingFoundation5x",  "BuildingFoundation5x5" },
+            { "Athena_SoccerGame",  "Athena_SoccerGame_C" },
+            { "Factory_1b_Whole",  "Factory_4c_ThreeQuarter_C" },
+            { "Athena_Prop_Storage_Crate01a_side",  "Athena_Prop_Storage_Crate01a_side_C" },
+            { "Storage_Metal_Crate",  "Athena_SoccerGame_C" },
+            */
 
         };
 

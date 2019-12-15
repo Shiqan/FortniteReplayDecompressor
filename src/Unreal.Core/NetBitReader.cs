@@ -24,7 +24,7 @@ namespace Unreal.Core
         {
             return ReadUInt32();
         }
-        
+
         public uint SerializePropertyUInt16()
         {
             return ReadUInt16();
@@ -40,9 +40,28 @@ namespace Unreal.Core
             return ReadSingle();
         }
 
-        public void SerializePropertyName()
+        public string SerializePropertyName()
         {
-            // TODO StaticSerialzeName
+            var isHardcoded = ReadBit();
+            if (isHardcoded)
+            {
+                uint nameIndex;
+                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    nameIndex = ReadUInt32();
+                }
+                else
+                {
+                    nameIndex = ReadIntPacked();
+                }
+
+                return ((UnrealNames)nameIndex).ToString();
+            }
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+
+            return inString;
         }
 
         public string SerializePropertyString()
@@ -123,24 +142,24 @@ namespace Unreal.Core
         /// </summary>
         public float ReadFixedCompressedFloat(int maxValue, int numBits)
         {
-            int maxBitValue = (1 << (numBits - 1)) - 1;
-            int bias = (1 << (numBits - 1));
-            int serIntMax = (1 << (numBits - 0));
+            var maxBitValue = (1 << (numBits - 1)) - 1;
+            var bias = (1 << (numBits - 1));
+            var serIntMax = (1 << (numBits - 0));
             //int maxDelta = (1 << (numBits - 0)) -1;
 
-            uint delta = ReadSerializedInt(serIntMax);
+            var delta = ReadSerializedInt(serIntMax);
             float unscaledValue = unchecked((int)delta) - bias;
 
             if (maxValue > maxBitValue)
             {
-                float invScale = maxValue / (float)maxBitValue;
+                var invScale = maxValue / (float)maxBitValue;
 
                 return unscaledValue * invScale;
             }
             else
             {
-                float scale = maxBitValue / (float)maxValue;
-                float invScale = 1f / scale;
+                var scale = maxBitValue / (float)maxValue;
+                var invScale = 1f / scale;
 
                 return unscaledValue * invScale;
             }
@@ -192,7 +211,7 @@ namespace Unreal.Core
             return ReadBitsToInt(GetBitsLeft());
             // Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
         }
-        
+
         public int SerializePropertyEnum(int enumMaxValue)
         {
             return ReadBitsToInt((int)CeilLogTwo64((ulong)enumMaxValue));
@@ -294,7 +313,7 @@ namespace Unreal.Core
                 return "NULL";
             }
 
-            bool bValidTypeHash = typeHash != 0;
+            var bValidTypeHash = typeHash != 0;
             string typeString;
             if (typeHash == typeHashOther)
             {
@@ -351,13 +370,17 @@ namespace Unreal.Core
         /// <returns>the number of zeros before the first "on" bit</returns>
         public static ulong CountLeadingZeros64(ulong Value)
         {
-            if (Value == 0) return 64;
+            if (Value == 0)
+            {
+                return 64;
+            }
+
             return 63 - FloorLog2_64(Value);
         }
 
         public static ulong CeilLogTwo64(ulong Arg)
         {
-            ulong Bitmask = ((ulong)(CountLeadingZeros64(Arg) << 57)) >> 63;
+            var Bitmask = CountLeadingZeros64(Arg) << 57 >> 63;
             return (64 - CountLeadingZeros64(Arg - 1)) & (~Bitmask);
         }
     }

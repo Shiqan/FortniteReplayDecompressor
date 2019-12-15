@@ -215,7 +215,7 @@ namespace Unreal.Core
 
         public override byte[] ReadBytes(int byteCount)
         {
-            if (!CanRead(byteCount))
+            if (!CanRead(byteCount) || byteCount < 0)
             {
                 IsError = true;
                 return Array.Empty<byte>();

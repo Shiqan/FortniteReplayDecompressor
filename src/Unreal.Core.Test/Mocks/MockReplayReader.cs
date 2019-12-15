@@ -1,4 +1,6 @@
-﻿namespace Unreal.Core.Test.Mocks
+﻿using Unreal.Core.Contracts;
+
+namespace Unreal.Core.Test.Mocks
 {
     public class MockReplayReader : ReplayReader<MockReplay>
     {
@@ -10,6 +12,11 @@
         public MockReplay GetReplay()
         {
             return Replay;
+        }
+
+        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        {
+            // pass
         }
     }
 }

@@ -48,8 +48,10 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
-            _reader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()));
-            _reader.EngineNetworkVersion = reader.EngineNetworkVersion;
+            _reader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
+            {
+                EngineNetworkVersion = reader.EngineNetworkVersion
+            };
 
             TotalBits = _reader.GetBitsLeft();
         }
@@ -72,7 +74,7 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            string netId = _reader.SerializePropertyNetId();
+            var netId = _reader.SerializePropertyNetId();
 
             if (_reader.IsError || !_reader.AtEnd())
             {
@@ -141,7 +143,7 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            FRepMovement repMovement = _reader.SerializeRepMovement();
+            var repMovement = _reader.SerializeRepMovement();
 
             if (_reader.IsError || !_reader.AtEnd())
             {
@@ -192,13 +194,13 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            uint totalElements = _reader.ReadIntPacked();
+            var totalElements = _reader.ReadIntPacked();
 
-            object[] data = new object[totalElements];
+            var data = new object[totalElements];
 
             while (true)
             {
-                uint index = _reader.ReadIntPacked();
+                var index = _reader.ReadIntPacked();
 
                 if (index == 0)
                 {
@@ -206,7 +208,7 @@ namespace Unreal.Core.Models
                     {
                         if (_reader.GetBitsLeft() == 8)
                         {
-                            uint terminator = _reader.ReadIntPacked();
+                            var terminator = _reader.ReadIntPacked();
 
                             if (terminator != 0x00)
                             {
@@ -231,14 +233,14 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
-                List<DebuggingHandle> handles = new List<DebuggingHandle>();
-                bool isExportHandles = false;
+                var handles = new List<DebuggingHandle>();
+                var isExportHandles = false;
 
                 while (true)
                 {
-                    DebuggingHandle debuggingHandle = new DebuggingHandle();
+                    var debuggingHandle = new DebuggingHandle();
 
-                    uint handle = _reader.ReadIntPacked();
+                    var handle = _reader.ReadIntPacked();
 
                     debuggingHandle.Handle = handle;
 
@@ -249,14 +251,16 @@ namespace Unreal.Core.Models
 
                     --handle;
 
-                    uint numBits = _reader.ReadIntPacked();
+                    var numBits = _reader.ReadIntPacked();
 
                     debuggingHandle.NumBits = numBits;
 
-                    DebuggingObject obj = new DebuggingObject();
+                    var obj = new DebuggingObject();
 
-                    NetBitReader tempReader = new NetBitReader(_reader.ReadBits(numBits));
-                    tempReader.EngineNetworkVersion = _reader.EngineNetworkVersion;
+                    var tempReader = new NetBitReader(_reader.ReadBits(numBits))
+                    {
+                        EngineNetworkVersion = _reader.EngineNetworkVersion
+                    };
 
                     obj.Serialize(tempReader);
 
@@ -295,7 +299,7 @@ namespace Unreal.Core.Models
 
                 var numBits = _reader.ReadIntPacked();
 
-                DebuggingHandle debuggingHandle = new DebuggingHandle
+                var debuggingHandle = new DebuggingHandle
                 {
                     Handle = handle,
                     NumBits = numBits
@@ -319,9 +323,9 @@ namespace Unreal.Core.Models
 
         private List<IProperty> AsPotentialPropeties()
         {
-            List<IProperty> possibleProperties = new List<IProperty>();
+            var possibleProperties = new List<IProperty>();
 
-            foreach (Type type in _propertyTypes)
+            foreach (var type in _propertyTypes)
             {
                 if (type == typeof(DebuggingObject))
                 {
@@ -330,7 +334,7 @@ namespace Unreal.Core.Models
 
                 _reader.Reset();
 
-                IProperty iProperty = (IProperty)Activator.CreateInstance(type);
+                var iProperty = (IProperty)Activator.CreateInstance(type);
 
                 iProperty.Serialize(_reader);
 

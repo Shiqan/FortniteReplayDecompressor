@@ -532,12 +532,12 @@ namespace Unreal.Core
         /// <param name="offset">The offset relative to the <paramref name="seekOrigin"/>.</param>
         /// <param name="seekOrigin">A value of type <see cref="SeekOrigin"/> indicating the reference point used to obtain the new position.</param>
         /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
             if (offset < 0 || offset > Bits.Length || (seekOrigin == SeekOrigin.Current && offset + Position > Bits.Length))
             {
-                throw new ArgumentOutOfRangeException("Specified offset doesnt fit within the BitArray buffer");
+                IsError = true;
+                return;
             }
 
             _ = (seekOrigin switch

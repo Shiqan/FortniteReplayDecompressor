@@ -8,7 +8,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Game/Athena/Athena_GameState.Athena_GameState_C")]
     public class GameState : INetFieldExportGroup
     {
-        #region Ignored
 
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
@@ -87,8 +86,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Ignore, 174, "DefaultBattleBus", "UAthenaBattleBusItemDefinition*", 16)]
         public uint? DefaultBattleBus { get; set; } //Type: UAthenaBattleBusItemDefinition* Bits: 16
-
-        #endregion
 
         [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.PropertyBool, 17, "bReplicatedHasBegunPlay", "bool", 1)]
         public bool? bReplicatedHasBegunPlay { get; set; } //Type: bool Bits: 1

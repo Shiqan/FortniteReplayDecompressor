@@ -32,7 +32,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyUInt32, 11, "AttachComponent", "", 16)]
         public uint? AttachComponent { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("Owner", RepLayoutCmdType.Pointer, 12, "Owner", "AActor*", 0)]
+        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 0)]
         public uint? Owner { get; set; } //Type: AActor* Bits: 0
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
@@ -44,7 +44,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Count", RepLayoutCmdType.PropertyInt, 16, "Count", "int32", 32)]
         public int? Count { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ItemDefinition", RepLayoutCmdType.Pointer, 17, "ItemDefinition", "UFortItemDefinition*", 16)]
+        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject, 17, "ItemDefinition", "UFortItemDefinition*", 16)]
         public uint? ItemDefinition { get; set; } //Type: UFortItemDefinition* Bits: 16
 
         [NetFieldExport("Durability", RepLayoutCmdType.PropertyFloat, 18, "Durability", "float", 32)]
@@ -75,16 +75,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool? bIsDirty { get; set; } //Type: bool Bits: 1
 
         [NetFieldExport("StateValues", RepLayoutCmdType.DynamicArray, 34, "StateValues", "TArray", 343)]
-        public FortPickup[] StateValues { get; set; } //Type: TArray Bits: 343
-
-        [NetFieldExport("StateType", RepLayoutCmdType.Ignore, 34, "StateType", "", 0)]
-        public DebuggingObject StateType { get; set; } //Type:  Bits: 0
-
-        [NetFieldExport("IntValue", RepLayoutCmdType.PropertyInt, 35, "IntValue", "int32", 0)]
-        public int? IntValue { get; set; } //Type: int32 Bits: 0
-
-        [NetFieldExport("NameValue", RepLayoutCmdType.Property, 36, "NameValue", "FName", 0)]
-        public FName NameValue { get; set; } //Type: FName Bits: 0
+        public FortItemEntryStateValue[] StateValues { get; set; } //Type: TArray Bits: 343
 
         [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray, 41, "GenericAttributeValues", "", 80)]
         public float[] GenericAttributeValues { get; set; } //Type:  Bits: 80
@@ -92,10 +83,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyUInt32, 73, "CombineTarget", "", 16)]
         public uint? CombineTarget { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("PickupTarget", RepLayoutCmdType.Pointer, 80, "PickupTarget", "AFortPawn*", 16)]
+        [NetFieldExport("PickupTarget", RepLayoutCmdType.PropertyObject, 80, "PickupTarget", "AFortPawn*", 16)]
         public uint? PickupTarget { get; set; } //Type: AFortPawn* Bits: 16
 
-        [NetFieldExport("ItemOwner", RepLayoutCmdType.Pointer, 82, "ItemOwner", "AFortPawn*", 8)]
+        [NetFieldExport("ItemOwner", RepLayoutCmdType.PropertyObject, 82, "ItemOwner", "AFortPawn*", 8)]
         public uint? ItemOwner { get; set; } //Type: AFortPawn* Bits: 8
 
         [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10, 83, "LootInitialPosition", "FVector_NetQuantize10", 71)]
@@ -134,7 +125,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ServerImpactSoundFlash", RepLayoutCmdType.PropertyByte, 95, "ServerImpactSoundFlash", "uint8", 8)]
         public byte? ServerImpactSoundFlash { get; set; } //Type: uint8 Bits: 8
 
-        [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.Pointer, 96, "PawnWhoDroppedPickup", "AFortPawn*", 8)]
+        [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.PropertyObject, 96, "PawnWhoDroppedPickup", "AFortPawn*", 8)]
         public uint? PawnWhoDroppedPickup { get; set; } //Type: AFortPawn* Bits: 8
     }
 }

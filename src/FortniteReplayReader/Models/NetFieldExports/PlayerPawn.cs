@@ -26,7 +26,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement, 5, "ReplicatedMovement", "FRepMovement", 127)]
         public FRepMovement ReplicatedMovement { get; set; } //Type: FRepMovement Bits: 127
 
-        [NetFieldExport("AttachParent", RepLayoutCmdType.Pointer, 6, "AttachParent", "AActor*", 16)]
+        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject, 6, "AttachParent", "AActor*", 16)]
         public uint? AttachParent { get; set; } //Type: AActor* Bits: 16
 
         [NetFieldExport("LocationOffset", RepLayoutCmdType.PropertyVector100, 7, "LocationOffset", "FVector_NetQuantize100", 20)]
@@ -41,25 +41,25 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AttachSocket", RepLayoutCmdType.Property, 10, "AttachSocket", "FName", 121)]
         public FName AttachSocket { get; set; } //Type: FName Bits: 121
 
-        [NetFieldExport("AttachComponent", RepLayoutCmdType.Pointer, 11, "AttachComponent", "USceneComponent*", 16)]
+        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject, 11, "AttachComponent", "USceneComponent*", 16)]
         public uint? AttachComponent { get; set; } //Type: USceneComponent* Bits: 16
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "Enum", 2)]
         public object Role { get; set; } //Type: Enum Bits: 2
 
-        [NetFieldExport("Instigator", RepLayoutCmdType.Pointer, 14, "Instigator", "APawn*", 8)]
+        [NetFieldExport("Instigator", RepLayoutCmdType.PropertyObject, 14, "Instigator", "APawn*", 8)]
         public uint? Instigator { get; set; } //Type: APawn* Bits: 8
 
         [NetFieldExport("RemoteViewPitch", RepLayoutCmdType.PropertyByte, 15, "RemoteViewPitch", "uint8", 8)]
         public byte? RemoteViewPitch { get; set; } //Type: uint8 Bits: 8
 
-        [NetFieldExport("PlayerState", RepLayoutCmdType.Pointer, 16, "PlayerState", "APlayerState*", 8)]
+        [NetFieldExport("PlayerState", RepLayoutCmdType.PropertyObject, 16, "PlayerState", "APlayerState*", 8)]
         public uint? PlayerState { get; set; } //Type: APlayerState* Bits: 8
 
-        [NetFieldExport("Controller", RepLayoutCmdType.Pointer, 17, "Controller", "AController*", 8)]
+        [NetFieldExport("Controller", RepLayoutCmdType.PropertyObject, 17, "Controller", "AController*", 8)]
         public uint? Controller { get; set; } //Type: AController* Bits: 8
 
-        [NetFieldExport("MovementBase", RepLayoutCmdType.Pointer, 18, "MovementBase", "UPrimitiveComponent*", 16)]
+        [NetFieldExport("MovementBase", RepLayoutCmdType.PropertyObject, 18, "MovementBase", "UPrimitiveComponent*", 16)]
         public uint? MovementBase { get; set; } //Type: UPrimitiveComponent* Bits: 16
 
         [NetFieldExport("BoneName", RepLayoutCmdType.Property, 19, "BoneName", "FName", 113)]
@@ -119,7 +119,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsDying", RepLayoutCmdType.PropertyBool, 49, "bIsDying", "bool", 1)]
         public bool? bIsDying { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("CurrentWeapon", RepLayoutCmdType.Pointer, 49, "CurrentWeapon", "AFortWeapon*", 16)]
+        [NetFieldExport("CurrentWeapon", RepLayoutCmdType.PropertyObject, 49, "CurrentWeapon", "AFortWeapon*", 16)]
         public uint? CurrentWeapon { get; set; } //Type: AFortWeapon* Bits: 16
 
         [NetFieldExport("bIsInvulnerable", RepLayoutCmdType.PropertyBool, 50, "bIsInvulnerable", "", 1)]
@@ -143,7 +143,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bWeaponHolstered", RepLayoutCmdType.PropertyBool, 62, "bWeaponHolstered", "bool", 1)]
         public bool? bWeaponHolstered { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("FeedbackAudioComponent", RepLayoutCmdType.Pointer, 64, "FeedbackAudioComponent", "UAudioComponent*", 0)]
+        [NetFieldExport("FeedbackAudioComponent", RepLayoutCmdType.PropertyObject, 64, "FeedbackAudioComponent", "UAudioComponent*", 0)]
         public uint? FeedbackAudioComponent { get; set; } //Type: UAudioComponent* Bits: 0
 
         [NetFieldExport("VocalChords", RepLayoutCmdType.DynamicArray, 64, "VocalChords", "TArray", 115)]
@@ -161,7 +161,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bInterruptCurrentLine", RepLayoutCmdType.PropertyBool, 71, "bInterruptCurrentLine", "bool", 33)]
         public bool? bInterruptCurrentLine { get; set; } //Type: bool Bits: 33
 
-        [NetFieldExport("LastReplicatedEmoteExecuted", RepLayoutCmdType.Pointer, 71, "LastReplicatedEmoteExecuted", "*", 16)]
+        [NetFieldExport("LastReplicatedEmoteExecuted", RepLayoutCmdType.PropertyObject, 71, "LastReplicatedEmoteExecuted", "*", 16)]
         public uint? LastReplicatedEmoteExecuted { get; set; } //Type: * Bits: 16
 
         [NetFieldExport("bCanBeInterrupted", RepLayoutCmdType.PropertyBool, 72, "bCanBeInterrupted", "bool", 95)]
@@ -200,7 +200,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsSprinting", RepLayoutCmdType.PropertyBool, 98, "bIsSprinting", "uint8", 1)]
         public bool? bIsSprinting { get; set; } //Type: uint8 Bits: 1
 
-        [NetFieldExport("Vehicle", RepLayoutCmdType.Pointer, 103, "Vehicle", "AFortAthenaVehicle*", 16)]
+        [NetFieldExport("Vehicle", RepLayoutCmdType.PropertyObject, 103, "Vehicle", "AFortAthenaVehicle*", 16)]
         public uint? Vehicle { get; set; } //Type: AFortAthenaVehicle* Bits: 16
 
         [NetFieldExport("VehicleApexZ", RepLayoutCmdType.PropertyFloat, 104, "VehicleApexZ", "float", 32)]
@@ -227,7 +227,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsTargeting", RepLayoutCmdType.PropertyBool, 116, "bIsTargeting", "bool", 1)]
         public bool? bIsTargeting { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("PawnMontage", RepLayoutCmdType.Pointer, 127, "PawnMontage", "UAnimMontage*", 16)]
+        [NetFieldExport("PawnMontage", RepLayoutCmdType.PropertyObject, 127, "PawnMontage", "UAnimMontage*", 16)]
         public uint? PawnMontage { get; set; } //Type: UAnimMontage* Bits: 16
 
         [NetFieldExport("bPlayBit", RepLayoutCmdType.PropertyBool, 128, "bPlayBit", "bool", 1)]
@@ -236,7 +236,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsPlayingEmote", RepLayoutCmdType.PropertyBool, 128, "bIsPlayingEmote", "", 1)]
         public bool? bIsPlayingEmote { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("FootstepBankOverride", RepLayoutCmdType.Pointer, 129, "FootstepBankOverride", "UFortFootstepAudioBank*", 16)]
+        [NetFieldExport("FootstepBankOverride", RepLayoutCmdType.PropertyObject, 129, "FootstepBankOverride", "UFortFootstepAudioBank*", 16)]
         public uint? FootstepBankOverride { get; set; } //Type: UFortFootstepAudioBank* Bits: 16
 
         [NetFieldExport("PackedReplicatedSlopeAngles", RepLayoutCmdType.PropertyUInt16, 130, "PackedReplicatedSlopeAngles", "uint16", 16)]
@@ -290,7 +290,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Zipline", RepLayoutCmdType.PropertyUInt32, 149, "Zipline", "", 16)]
         public uint? Zipline { get; set; } //Type:  Bits: 16
 
-        [NetFieldExport("PetState", RepLayoutCmdType.Pointer, 149, "PetState", "AFortPlayerPetRepState*", 8)]
+        [NetFieldExport("PetState", RepLayoutCmdType.PropertyObject, 149, "PetState", "AFortPlayerPetRepState*", 8)]
         public uint? PetState { get; set; } //Type: AFortPlayerPetRepState* Bits: 8
 
         [NetFieldExport("bIsZiplining", RepLayoutCmdType.PropertyBool, 150, "bIsZiplining", "", 1)]
@@ -299,7 +299,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bJumped", RepLayoutCmdType.PropertyBool, 151, "bJumped", "", 1)]
         public bool? bJumped { get; set; } //Type:  Bits: 1
 
-        [NetFieldExport("ParachuteAttachment", RepLayoutCmdType.Pointer, 151, "ParachuteAttachment", "AFortPlayerParachute*", 16)]
+        [NetFieldExport("ParachuteAttachment", RepLayoutCmdType.PropertyObject, 151, "ParachuteAttachment", "AFortPlayerParachute*", 16)]
         public uint? ParachuteAttachment { get; set; } //Type: AFortPlayerParachute* Bits: 16
 
         [NetFieldExport("AuthoritativeValue", RepLayoutCmdType.PropertyUInt32, 152, "AuthoritativeValue", "", 32)]
@@ -338,7 +338,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("CrouchedSprintSpeed", RepLayoutCmdType.PropertyFloat, 168, "CrouchedSprintSpeed", "float", 32)]
         public float? CrouchedSprintSpeed { get; set; } //Type: float Bits: 32
 
-        [NetFieldExport("AnimMontage", RepLayoutCmdType.Pointer, 169, "AnimMontage", "UAnimMontage*", 16)]
+        [NetFieldExport("AnimMontage", RepLayoutCmdType.PropertyObject, 169, "AnimMontage", "UAnimMontage*", 16)]
         public uint? AnimMontage { get; set; } //Type: UAnimMontage* Bits: 16
 
         [NetFieldExport("PlayRate", RepLayoutCmdType.PropertyFloat, 170, "PlayRate", "float", 32)]
@@ -377,19 +377,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("BannerColorId", RepLayoutCmdType.PropertyString, 199, "BannerColorId", "FString", 152)]
         public string BannerColorId { get; set; } //Type: FString Bits: 152
 
-        [NetFieldExport("SkyDiveContrail", RepLayoutCmdType.Pointer, 200, "SkyDiveContrail", "UAthenaSkyDiveContrailItemDefinition*", 16)]
+        [NetFieldExport("SkyDiveContrail", RepLayoutCmdType.PropertyObject, 200, "SkyDiveContrail", "UAthenaSkyDiveContrailItemDefinition*", 16)]
         public uint? SkyDiveContrail { get; set; } //Type: UAthenaSkyDiveContrailItemDefinition* Bits: 16
 
-        [NetFieldExport("Glider", RepLayoutCmdType.Pointer, 201, "Glider", "UAthenaGliderItemDefinition*", 16)]
+        [NetFieldExport("Glider", RepLayoutCmdType.PropertyObject, 201, "Glider", "UAthenaGliderItemDefinition*", 16)]
         public uint? Glider { get; set; } //Type: UAthenaGliderItemDefinition* Bits: 16
 
-        [NetFieldExport("Pickaxe", RepLayoutCmdType.Pointer, 202, "Pickaxe", "UAthenaPickaxeItemDefinition*", 16)]
+        [NetFieldExport("Pickaxe", RepLayoutCmdType.PropertyObject, 202, "Pickaxe", "UAthenaPickaxeItemDefinition*", 16)]
         public uint? Pickaxe { get; set; } //Type: UAthenaPickaxeItemDefinition* Bits: 16
 
         [NetFieldExport("bIsDefaultCharacter", RepLayoutCmdType.PropertyBool, 202, "bIsDefaultCharacter", "bool", 1)]
         public bool? bIsDefaultCharacter { get; set; } //Type: bool Bits: 1
 
-        [NetFieldExport("Character", RepLayoutCmdType.Pointer, 204, "Character", "UAthenaCharacterItemDefinition*", 16)]
+        [NetFieldExport("Character", RepLayoutCmdType.PropertyObject, 204, "Character", "UAthenaCharacterItemDefinition*", 16)]
         public uint? Character { get; set; } //Type: UAthenaCharacterItemDefinition* Bits: 16
 
         [NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.DynamicArray, 205, "CharacterVariantChannels", "TArray", 280)]
@@ -401,19 +401,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore, 212, "DBNOCarryEvent", "", 2)]
         public object DBNOCarryEvent { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("Backpack", RepLayoutCmdType.Pointer, 212, "Backpack", "UAthenaBackpackItemDefinition*", 16)]
+        [NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject, 212, "Backpack", "UAthenaBackpackItemDefinition*", 16)]
         public uint? Backpack { get; set; } //Type: UAthenaBackpackItemDefinition* Bits: 16
 
-        [NetFieldExport("LoadingScreen", RepLayoutCmdType.Pointer, 213, "LoadingScreen", "UAthenaLoadingScreenItemDefinition*", 16)]
+        [NetFieldExport("LoadingScreen", RepLayoutCmdType.PropertyObject, 213, "LoadingScreen", "UAthenaLoadingScreenItemDefinition*", 16)]
         public uint? LoadingScreen { get; set; } //Type: UAthenaLoadingScreenItemDefinition* Bits: 16
 
         [NetFieldExport("Dances", RepLayoutCmdType.DynamicArray, 218, "Dances", "TArray", 352)]
-        public object[] Dances { get; set; } //Type: TArray Bits: 352
+        public uint[] Dances { get; set; } //Type: TArray Bits: 352
 
-        [NetFieldExport("MusicPack", RepLayoutCmdType.Pointer, 222, "MusicPack", "UAthenaMusicPackItemDefinition*", 16)]
+        [NetFieldExport("MusicPack", RepLayoutCmdType.PropertyObject, 222, "MusicPack", "UAthenaMusicPackItemDefinition*", 16)]
         public uint? MusicPack { get; set; } //Type: UAthenaMusicPackItemDefinition* Bits: 16
 
-        [NetFieldExport("PetSkin", RepLayoutCmdType.Pointer, 223, "PetSkin", "UAthenaPetItemDefinition*", 16)]
+        [NetFieldExport("PetSkin", RepLayoutCmdType.PropertyObject, 223, "PetSkin", "UAthenaPetItemDefinition*", 16)]
         public uint? PetSkin { get; set; } //Type: UAthenaPetItemDefinition* Bits: 16
 
         [NetFieldExport("EncryptedPawnReplayData", RepLayoutCmdType.Property, 225, "EncryptedPawnReplayData", "FAthenaPawnReplayData", 160)]

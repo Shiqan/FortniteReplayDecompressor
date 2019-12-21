@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("Owner", RepLayoutCmdType.Pointer, 12, "Owner", "AActor*", 8)]
+        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 8)]
         public uint? Owner { get; set; } //Type: AActor* Bits: 8
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]

@@ -204,26 +204,24 @@ namespace Unreal.Core.Models
 
                 if (index == 0)
                 {
-                    if (index == 0)
+                    if (_reader.GetBitsLeft() == 8)
                     {
-                        if (_reader.GetBitsLeft() == 8)
-                        {
-                            var terminator = _reader.ReadIntPacked();
+                        var terminator = _reader.ReadIntPacked();
 
-                            if (terminator != 0x00)
-                            {
-                                //Log error
-                                return null;
-                            }
-                        }
-
-                        if (_reader.IsError || !_reader.AtEnd())
+                        if (terminator != 0x00)
                         {
+                            //Log error
                             return null;
                         }
-
-                        return data;
                     }
+
+                    if (_reader.IsError || !_reader.AtEnd())
+                    {
+                        return null;
+                    }
+
+                    return data;
+
                 }
 
                 --index;

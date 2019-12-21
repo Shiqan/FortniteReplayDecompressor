@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
 
 namespace ConsoleReader
 {
@@ -29,20 +30,23 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
-            //var replayFile = "Replays/season11.11.replay";
+            var replayFile = "Replays/season11.11.replay";
             //var replayFile = "Replays/season11.replay";
             //var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
-            var replayFile = "Replays/UnsavedReplay-2019.04.05-20.22.58.replay";
+            //var replayFile = "Replays/UnsavedReplay-2019.04.05-20.22.58.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.05.03-21.24.46.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.05.22-16.58.41.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.06.30-20.39.37.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.09.12-21.39.37.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
 
+            var sw = new Stopwatch();
+            sw.Start();
             var reader = new ReplayReader(logger);
-            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Debug);
+            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Normal);
+            sw.Stop();
 
-            Console.WriteLine("---- done ----");
+            Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
             Console.ReadLine();
         }
     }

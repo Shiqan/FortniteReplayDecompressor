@@ -31,7 +31,8 @@ namespace Unreal.Core.Test
         public void ReadBitThrowsExceptionTest()
         {
             reader.Seek(24);
-            Assert.Throws<ArgumentOutOfRangeException>(() => reader.ReadBit());
+            reader.ReadBit();
+            Assert.True(reader.IsError);
         }
 
         [Fact]
@@ -51,12 +52,21 @@ namespace Unreal.Core.Test
         [Fact]
         public void SeekThrowsExceptionTest()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => reader.Seek(25));
-            Assert.Throws<ArgumentOutOfRangeException>(() => reader.Seek(-1));
-            Assert.Throws<ArgumentOutOfRangeException>(() => reader.Seek(25, System.IO.SeekOrigin.End));
+            reader.Seek(25);
+            Assert.True(reader.IsError);
+            reader.Reset();
+
+            reader.Seek(-1);
+            Assert.True(reader.IsError);
+            reader.Reset();
+
+            reader.Seek(25, System.IO.SeekOrigin.End);
+            Assert.True(reader.IsError);
+            reader.Reset();
 
             reader.Seek(20);
-            Assert.Throws<ArgumentOutOfRangeException>(() => reader.Seek(10, System.IO.SeekOrigin.Current));
+            reader.Seek(10, System.IO.SeekOrigin.Current);
+            Assert.True(reader.IsError);
         }
 
         [Fact]

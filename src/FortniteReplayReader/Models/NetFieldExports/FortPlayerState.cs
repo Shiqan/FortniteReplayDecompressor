@@ -11,7 +11,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("Owner", RepLayoutCmdType.Pointer, 12, "Owner", "AActor*", 16)]
+        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 16)]
         public uint? Owner { get; set; } //Type: AActor* Bits: 16
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
@@ -62,7 +62,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt, 37, "WorldPlayerId", "int32", 32)]
         public int? WorldPlayerId { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("HeroType", RepLayoutCmdType.Pointer, 39, "HeroType", "UFortHeroType*", 16)]
+        [NetFieldExport("HeroType", RepLayoutCmdType.PropertyObject, 39, "HeroType", "UFortHeroType*", 16)]
         public uint? HeroType { get; set; } //Type: UFortHeroType* Bits: 16
 
         [NetFieldExport("Platform", RepLayoutCmdType.PropertyString, 55, "Platform", "FString", 64)]
@@ -77,7 +77,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.PropertyByte, 58, "WasReplicatedFlags", "uint8", 8)]
         public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
 
-        [NetFieldExport("Parts", RepLayoutCmdType.Pointer, 59, "Parts", "UCustomCharacterPart*", 16)]
+        [NetFieldExport("Parts", RepLayoutCmdType.PropertyObject, 59, "Parts", "UCustomCharacterPart*", 16)]
         public uint? Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
 
         [NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.PropertyUInt32, 59, "WasPartReplicatedFlags", "", 8)]
@@ -89,7 +89,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray, 71, "VariantRequiredCharacterParts", "", 160)]
         public int[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
 
-        [NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.Pointer, 75, "PlayerTeamPrivate", "AFortTeamPrivateInfo*", 8)]
+        [NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.PropertyObject, 75, "PlayerTeamPrivate", "AFortTeamPrivateInfo*", 8)]
         public uint? PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
 
         [NetFieldExport("PlatformUniqueNetId", RepLayoutCmdType.PropertyNetId, 215, "PlatformUniqueNetId", "FUniqueNetIdRepl", 96)]
@@ -152,7 +152,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("KillScore", RepLayoutCmdType.PropertyUInt32, 263, "KillScore", "int32", 32)]
         public uint? KillScore { get; set; } //Type:  Bits: 32
 
-        [NetFieldExport("FinisherOrDowner", RepLayoutCmdType.Pointer, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
+        [NetFieldExport("FinisherOrDowner", RepLayoutCmdType.PropertyObject, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
         public uint? FinisherOrDowner { get; set; } //Type: AFortPlayerStateAthena* Bits: 16
 
         [NetFieldExport("SeasonLevelUIDisplay", RepLayoutCmdType.PropertyUInt32, 264, "SeasonLevelUIDisplay", "", 32)]

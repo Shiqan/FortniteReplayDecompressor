@@ -109,40 +109,11 @@ namespace FortniteReplayReader
                 return;
             }
 
-            else if (info.Metadata == ReplayEventTypes.CHARACTER_SAMPLE)
+            _logger?.LogInformation($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+            if (IsDebugMode)
             {
-                ParseCharacterSample(archive, info);
-                return;
+                throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
             }
-
-            else if (info.Group == ReplayEventTypes.ZONE_UPDATE)
-            {
-                ParseZoneUpdateEvent(archive, info);
-                return;
-            }
-
-            else if (info.Group == ReplayEventTypes.BATTLE_BUS)
-            {
-                ParseBattleBusFlightEvent(archive, info);
-                return;
-            }
-
-            else if (info.Group == "fortBenchEvent")
-            {
-                return;
-            }
-
-            _logger?.LogWarning($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
-            // optionally throw?
-            throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
-        }
-
-        public virtual CharacterSample ParseCharacterSample(FArchive archive, EventInfo info)
-        {
-            return new CharacterSample()
-            {
-                Info = info,
-            };
         }
 
         public virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)
@@ -151,24 +122,6 @@ namespace FortniteReplayReader
             {
                 Info = info,
                 Key = archive.ReadBytesToString(32)
-            };
-        }
-
-        public virtual ZoneUpdate ParseZoneUpdateEvent(FArchive archive, EventInfo info)
-        {
-            // 21 bytes in 9, 20 in 9.10...
-            return new ZoneUpdate()
-            {
-                Info = info,
-            };
-        }
-
-        public virtual BattleBusFlight ParseBattleBusFlightEvent(FArchive archive, EventInfo info)
-        {
-            // Added in 9 and removed again in 9.10?
-            return new BattleBusFlight()
-            {
-                Info = info,
             };
         }
 

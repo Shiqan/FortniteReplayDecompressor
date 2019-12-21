@@ -13,5 +13,7 @@ namespace Unreal.Core.Models
         public ChannelType ChannelType { get; set; }
 
         public Actor Actor { get; set; }
+        public uint? ArchetypeId => Actor?.Archetype?.Value;
+        public uint? ActorId => Actor?.ActorNetGUID.Value;
     }
 }

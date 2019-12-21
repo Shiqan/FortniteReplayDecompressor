@@ -33,7 +33,6 @@
         PropertyWeakObject = 23,
 
         PropertyUInt16 = 97,
-        Pointer = 98,
         Enum = 99,
         Ignore = 100
     }

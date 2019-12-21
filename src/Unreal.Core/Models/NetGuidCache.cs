@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace Unreal.Core.Models
 {
@@ -16,7 +15,9 @@ namespace Unreal.Core.Models
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
+
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
+        private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
 
         public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
         {
@@ -144,10 +145,17 @@ namespace Unreal.Core.Models
 
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
         {
-            //NetFieldExportGroupMap.Keys
-            //$"_ClassNetCache";
+            if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
+            {
+                classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                _cleanedClassNetCache[group] = classNetCachePath;
+            }
 
-            return default;
+            if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
+            {
+                return default;
+            }
+            return NetFieldExportGroupMap[classNetCachePath];
         }
 
         /// <summary>
@@ -157,8 +165,6 @@ namespace Unreal.Core.Models
         /// <returns></returns>
         public string RemoveAllPathPrefixes(string path)
         {
-            path = RemovePathPrefix(path, "Default__");
-
             for (var i = path.Length - 1; i >= 0; i--)
             {
                 switch (path[i])
@@ -170,6 +176,7 @@ namespace Unreal.Core.Models
                 }
             }
 
+            path = RemovePathPrefix(path, "Default__");
             return path;
         }
 

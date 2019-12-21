@@ -17,7 +17,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
         public object RemoteRole { get; set; } //Type:  Bits: 2
 
-        [NetFieldExport("AttachParent", RepLayoutCmdType.Pointer, 6, "AttachParent", "AActor*", 16)]
+        [NetFieldExport("AttachParent", RepLayoutCmdType.PropertyObject, 6, "AttachParent", "AActor*", 16)]
         public uint? AttachParent { get; set; } //Type: AActor* Bits: 16
 
         [NetFieldExport("LocationOffset", RepLayoutCmdType.Ignore, 7, "LocationOffset", "", 41)]
@@ -26,7 +26,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RelativeScale3D", RepLayoutCmdType.PropertyVector100, 8, "RelativeScale3D", "FVector_NetQuantize100", 29)]
         public FVector RelativeScale3D { get; set; } //Type: FVector_NetQuantize100 Bits: 29
 
-        [NetFieldExport("AttachComponent", RepLayoutCmdType.Pointer, 11, "AttachComponent", "USceneComponent*", 16)]
+        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject, 11, "AttachComponent", "USceneComponent*", 16)]
         public uint? AttachComponent { get; set; } //Type: USceneComponent* Bits: 16
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
@@ -44,10 +44,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("D", RepLayoutCmdType.PropertyInt, 18, "D", "int32", 32)]
         public int? D { get; set; } //Type: int32 Bits: 32
 
-        [NetFieldExport("ReplicatedBuildingAttributeSet", RepLayoutCmdType.Pointer, 21, "ReplicatedBuildingAttributeSet", "UFortBuildingActorSet*", 16)]
+        [NetFieldExport("ReplicatedBuildingAttributeSet", RepLayoutCmdType.PropertyObject, 21, "ReplicatedBuildingAttributeSet", "UFortBuildingActorSet*", 16)]
         public uint? ReplicatedBuildingAttributeSet { get; set; } //Type: UFortBuildingActorSet* Bits: 16
 
-        [NetFieldExport("ReplicatedAbilitySystemComponent", RepLayoutCmdType.Pointer, 22, "ReplicatedAbilitySystemComponent", "UFortAbilitySystemComponent*", 16)]
+        [NetFieldExport("ReplicatedAbilitySystemComponent", RepLayoutCmdType.PropertyObject, 22, "ReplicatedAbilitySystemComponent", "UFortAbilitySystemComponent*", 16)]
         public uint? ReplicatedAbilitySystemComponent { get; set; } //Type: UFortAbilitySystemComponent* Bits: 16
 
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool, 25, "bDestroyed", "uint8", 1)]

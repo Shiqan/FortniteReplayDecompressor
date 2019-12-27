@@ -8,203 +8,202 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Script/FortniteGame.FortPlayerStateAthena")]
     public class FortPlayerState : INetFieldExportGroup
     {
-        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
-        public object RemoteRole { get; set; } //Type:  Bits: 2
+        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
+        public object RemoteRole { get; set; }
 
-        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject, 12, "Owner", "AActor*", 16)]
-        public uint? Owner { get; set; } //Type: AActor* Bits: 16
+        [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]
+        public uint? Owner { get; set; }
 
-        [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
-        public object Role { get; set; } //Type:  Bits: 2
+        [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
+        public object Role { get; set; }
 
-        [NetFieldExport("Instigator", RepLayoutCmdType.PropertyUInt32, 14, "Instigator", "", 8)]
-        public uint? Instigator { get; set; } //Type:  Bits: 8
+        [NetFieldExport("Instigator", RepLayoutCmdType.PropertyObject)]
+        public uint? Instigator { get; set; }
 
-        [NetFieldExport("Score", RepLayoutCmdType.PropertyUInt32, 15, "Score", "", 32)]
-        public uint? Score { get; set; } //Type:  Bits: 32
+        [NetFieldExport("Score", RepLayoutCmdType.PropertyUInt32)]
+        public uint? Score { get; set; }
 
-        [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt, 16, "PlayerID", "int32", 32)]
-        public int? PlayerID { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt)]
+        public int? PlayerID { get; set; }
 
-        [NetFieldExport("Ping", RepLayoutCmdType.PropertyByte, 17, "Ping", "uint8", 8)]
-        public byte? Ping { get; set; } //Type: uint8 Bits: 8
+        [NetFieldExport("Ping", RepLayoutCmdType.PropertyByte)]
+        public byte? Ping { get; set; }
 
-        [NetFieldExport("bIsABot", RepLayoutCmdType.PropertyBool, 19, "bIsABot", "", 1)]
-        public bool? bIsABot { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bIsABot", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsABot { get; set; }
 
-        [NetFieldExport("bOnlySpectator", RepLayoutCmdType.PropertyBool, 22, "bOnlySpectator", "uint8", 1)]
-        public bool? bOnlySpectator { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bOnlySpectator", RepLayoutCmdType.PropertyBool)]
+        public bool? bOnlySpectator { get; set; }
 
-        [NetFieldExport("StartTime", RepLayoutCmdType.PropertyInt, 23, "StartTime", "int32", 32)]
-        public int? StartTime { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("StartTime", RepLayoutCmdType.PropertyInt)]
+        public int? StartTime { get; set; }
 
-        [NetFieldExport("UniqueId", RepLayoutCmdType.PropertyNetId, 24, "UniqueId", "FUniqueNetIdRepl", 144)]
-        public string UniqueId { get; set; } //Type: FUniqueNetIdRepl Bits: 144
+        [NetFieldExport("UniqueId", RepLayoutCmdType.PropertyNetId)]
+        public string UniqueId { get; set; }
 
-        [NetFieldExport("PlayerNamePrivate", RepLayoutCmdType.PropertyString, 25, "PlayerNamePrivate", "FString", 128)]
-        public string PlayerNamePrivate { get; set; } //Type: FString Bits: 128
+        [NetFieldExport("PlayerNamePrivate", RepLayoutCmdType.PropertyString)]
+        public string PlayerNamePrivate { get; set; }
 
-        [NetFieldExport("bIsGameSessionOwner", RepLayoutCmdType.PropertyBool, 26, "bIsGameSessionOwner", "", 1)]
-        public bool? bIsGameSessionOwner { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bIsGameSessionOwner", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsGameSessionOwner { get; set; }
 
-        [NetFieldExport("bHasFinishedLoading", RepLayoutCmdType.PropertyBool, 28, "bHasFinishedLoading", "uint8", 1)]
-        public bool? bHasFinishedLoading { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bHasFinishedLoading", RepLayoutCmdType.PropertyBool)]
+        public bool? bHasFinishedLoading { get; set; }
 
-        [NetFieldExport("bHasStartedPlaying", RepLayoutCmdType.PropertyBool, 29, "bHasStartedPlaying", "uint8", 1)]
-        public bool? bHasStartedPlaying { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bHasStartedPlaying", RepLayoutCmdType.PropertyBool)]
+        public bool? bHasStartedPlaying { get; set; }
 
-        [NetFieldExport("PlayerRole", RepLayoutCmdType.Enum, 35, "PlayerRole", "EFortPlayerRole", 0)]
-        public int? PlayerRole { get; set; } //Type: EFortPlayerRole Bits: 0
+        [NetFieldExport("PlayerRole", RepLayoutCmdType.Enum)]
+        public int? PlayerRole { get; set; }
 
-        [NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId, 36, "PartyOwnerUniqueId", "FUniqueNetIdRepl", 144)]
-        public string PartyOwnerUniqueId { get; set; } //Type: FUniqueNetIdRepl Bits: 144
+        [NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId)]
+        public string PartyOwnerUniqueId { get; set; }
 
-        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt, 37, "WorldPlayerId", "int32", 32)]
-        public int? WorldPlayerId { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt)]
+        public int? WorldPlayerId { get; set; }
 
-        [NetFieldExport("HeroType", RepLayoutCmdType.PropertyObject, 39, "HeroType", "UFortHeroType*", 16)]
-        public uint? HeroType { get; set; } //Type: UFortHeroType* Bits: 16
+        [NetFieldExport("HeroType", RepLayoutCmdType.PropertyObject)]
+        public uint? HeroType { get; set; }
 
-        [NetFieldExport("Platform", RepLayoutCmdType.PropertyString, 55, "Platform", "FString", 64)]
-        public string Platform { get; set; } //Type: FString Bits: 64
+        [NetFieldExport("Platform", RepLayoutCmdType.PropertyString)]
+        public string Platform { get; set; }
 
-        [NetFieldExport("CharacterGender", RepLayoutCmdType.Enum, 56, "CharacterGender", "TEnumAsByte<EFortCustomGender::Type>", 2)]
-        public int? CharacterGender { get; set; } //Type: TEnumAsByte<EFortCustomGender::Type> Bits: 2
+        [NetFieldExport("CharacterGender", RepLayoutCmdType.Enum)]
+        public int? CharacterGender { get; set; }
 
-        [NetFieldExport("CharacterBodyType", RepLayoutCmdType.Enum, 57, "CharacterBodyType", "TEnumAsByte<EFortCustomBodyType::Type>", 4)]
-        public int? CharacterBodyType { get; set; } //Type: TEnumAsByte<EFortCustomBodyType::Type> Bits: 4
+        [NetFieldExport("CharacterBodyType", RepLayoutCmdType.Enum)]
+        public int? CharacterBodyType { get; set; }
 
-        [NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.PropertyByte, 58, "WasReplicatedFlags", "uint8", 8)]
-        public byte? WasReplicatedFlags { get; set; } //Type: uint8 Bits: 8
+        [NetFieldExport("WasReplicatedFlags", RepLayoutCmdType.Ignore)]
+        public byte? WasReplicatedFlags { get; set; }
 
-        [NetFieldExport("Parts", RepLayoutCmdType.PropertyObject, 59, "Parts", "UCustomCharacterPart*", 16)]
-        public uint? Parts { get; set; } //Type: UCustomCharacterPart* Bits: 16
+        [NetFieldExport("Parts", RepLayoutCmdType.PropertyObject)]
+        public uint? Parts { get; set; }
 
-        [NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.PropertyUInt32, 59, "WasPartReplicatedFlags", "", 8)]
-        public uint? WasPartReplicatedFlags { get; set; } //Type:  Bits: 8
+        [NetFieldExport("WasPartReplicatedFlags", RepLayoutCmdType.Ignore)]
+        public uint? WasPartReplicatedFlags { get; set; }
 
-        [NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.PropertyUInt32, 60, "RequiredVariantPartFlags", "", 32)]
-        public uint? RequiredVariantPartFlags { get; set; } //Type:  Bits: 32
+        [NetFieldExport("RequiredVariantPartFlags", RepLayoutCmdType.PropertyUInt32)]
+        public uint? RequiredVariantPartFlags { get; set; }
 
-        [NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray, 71, "VariantRequiredCharacterParts", "", 160)]
-        public int[] VariantRequiredCharacterParts { get; set; } //Type:  Bits: 160
+        [NetFieldExport("VariantRequiredCharacterParts", RepLayoutCmdType.DynamicArray)]
+        public int[] VariantRequiredCharacterParts { get; set; }
 
-        [NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.PropertyObject, 75, "PlayerTeamPrivate", "AFortTeamPrivateInfo*", 8)]
-        public uint? PlayerTeamPrivate { get; set; } //Type: AFortTeamPrivateInfo* Bits: 8
+        [NetFieldExport("PlayerTeamPrivate", RepLayoutCmdType.PropertyObject)]
+        public uint? PlayerTeamPrivate { get; set; }
 
-        [NetFieldExport("PlatformUniqueNetId", RepLayoutCmdType.PropertyNetId, 215, "PlatformUniqueNetId", "FUniqueNetIdRepl", 96)]
-        public string PlatformUniqueNetId { get; set; } //Type: FUniqueNetIdRepl Bits: 96
+        [NetFieldExport("PlatformUniqueNetId", RepLayoutCmdType.PropertyNetId)]
+        public string PlatformUniqueNetId { get; set; }
 
-        [NetFieldExport("TeamIndex", RepLayoutCmdType.Enum, 237, "TeamIndex", "TEnumAsByte<EFortTeam::Type>", 7)]
-        public int? TeamIndex { get; set; } //Type: TEnumAsByte<EFortTeam::Type> Bits: 7
+        [NetFieldExport("TeamIndex", RepLayoutCmdType.Enum)]
+        public int? TeamIndex { get; set; }
 
-        [NetFieldExport("Place", RepLayoutCmdType.PropertyInt, 240, "Place", "int32", 32)]
-        public int? Place { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("Place", RepLayoutCmdType.PropertyInt)]
+        public int? Place { get; set; }
 
-        [NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Enum, 244, "ReplicatedTeamMemberState", "EReplicatedTeamMemberState", 4)]
-        public int? ReplicatedTeamMemberState { get; set; } //Type:  Bits: 4
+        [NetFieldExport("ReplicatedTeamMemberState", RepLayoutCmdType.Enum)]
+        public int? ReplicatedTeamMemberState { get; set; }
 
-        [NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.PropertyBool, 249, "bHasEverSkydivedFromBus", "", 1)]
-        public bool? bHasEverSkydivedFromBus { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bHasEverSkydivedFromBus", RepLayoutCmdType.PropertyBool)]
+        public bool? bHasEverSkydivedFromBus { get; set; }
 
-        [NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.PropertyBool, 250, "bHasEverSkydivedFromBusAndLanded", "", 1)]
-        public bool? bHasEverSkydivedFromBusAndLanded { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bHasEverSkydivedFromBusAndLanded", RepLayoutCmdType.PropertyBool)]
+        public bool? bHasEverSkydivedFromBusAndLanded { get; set; }
 
-        [NetFieldExport("SquadListUpdateValue", RepLayoutCmdType.PropertyInt, 253, "SquadListUpdateValue", "int32", 32)]
-        public int? SquadListUpdateValue { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("SquadListUpdateValue", RepLayoutCmdType.PropertyInt)]
+        public int? SquadListUpdateValue { get; set; }
 
-        [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte, 254, "SquadId", "uint8", 8)]
-        public byte? SquadId { get; set; } //Type: uint8 Bits: 8
+        [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte)]
+        public byte? SquadId { get; set; }
 
-        [NetFieldExport("bInAircraft", RepLayoutCmdType.PropertyBool, 255, "bInAircraft", "uint8", 1)]
-        public bool? bInAircraft { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bInAircraft", RepLayoutCmdType.PropertyBool)]
+        public bool? bInAircraft { get; set; }
 
-        [NetFieldExport("bThankedBusDriver", RepLayoutCmdType.PropertyBool, 256, "bThankedBusDriver", "uint8", 1)]
-        public bool? bThankedBusDriver { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bThankedBusDriver", RepLayoutCmdType.PropertyBool)]
+        public bool? bThankedBusDriver { get; set; }
 
-        [NetFieldExport("TeamKillScore", RepLayoutCmdType.PropertyUInt32, 257, "TeamKillScore", "", 32)]
-        public uint? TeamKillScore { get; set; } //Type:  Bits: 32
+        [NetFieldExport("TeamKillScore", RepLayoutCmdType.PropertyUInt32)]
+        public uint? TeamKillScore { get; set; }
 
-        [NetFieldExport("bUsingStreamerMode", RepLayoutCmdType.PropertyBool, 257, "bUsingStreamerMode", "uint8", 1)]
-        public bool? bUsingStreamerMode { get; set; } //Type: uint8 Bits: 1
+        [NetFieldExport("bUsingStreamerMode", RepLayoutCmdType.PropertyBool)]
+        public bool? bUsingStreamerMode { get; set; }
 
-        [NetFieldExport("StreamerModeName", RepLayoutCmdType.Property, 258, "StreamerModeName", "FText", 448)]
-        public FText StreamerModeName { get; set; } //Type: FText Bits: 448
+        [NetFieldExport("StreamerModeName", RepLayoutCmdType.Property)]
+        public FText StreamerModeName { get; set; }
 
-        [NetFieldExport("TeamScorePlacement", RepLayoutCmdType.PropertyUInt32, 259, "TeamScorePlacement", "", 32)]
-        public uint? TeamScorePlacement { get; set; } //Type:  Bits: 32
+        [NetFieldExport("TeamScorePlacement", RepLayoutCmdType.PropertyUInt32)]
+        public uint? TeamScorePlacement { get; set; }
 
-        [NetFieldExport("IconId", RepLayoutCmdType.PropertyString, 259, "IconId", "FString", 144)]
-        public string IconId { get; set; } //Type: FString Bits: 144
+        [NetFieldExport("IconId", RepLayoutCmdType.PropertyString)]
+        public string IconId { get; set; }
 
-        [NetFieldExport("TeamScore", RepLayoutCmdType.PropertyUInt32, 260, "TeamScore", "", 32)]
-        public uint? TeamScore { get; set; } //Type:  Bits: 32
+        [NetFieldExport("TeamScore", RepLayoutCmdType.PropertyUInt32)]
+        public uint? TeamScore { get; set; }
 
-        [NetFieldExport("ColorId", RepLayoutCmdType.PropertyString, 260, "ColorId", "FString", 152)]
-        public string ColorId { get; set; } //Type: FString Bits: 152
+        [NetFieldExport("ColorId", RepLayoutCmdType.PropertyString)]
+        public string ColorId { get; set; }
 
-        [NetFieldExport("Level", RepLayoutCmdType.PropertyInt, 261, "Level", "int32", 32)]
-        public int? Level { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("Level", RepLayoutCmdType.PropertyInt)]
+        public int? Level { get; set; }
 
-        [NetFieldExport("MapIndicatorPos", RepLayoutCmdType.Property, 262, "MapIndicatorPos", "FVector2D", 64)]
-        public FVector2D MapIndicatorPos { get; set; } //Type: FVector2D Bits: 64
+        [NetFieldExport("MapIndicatorPos", RepLayoutCmdType.PropertyVector2D)]
+        public FVector2D MapIndicatorPos { get; set; }
 
-        [NetFieldExport("KillScore", RepLayoutCmdType.PropertyUInt32, 263, "KillScore", "int32", 32)]
-        public uint? KillScore { get; set; } //Type:  Bits: 32
+        [NetFieldExport("KillScore", RepLayoutCmdType.PropertyUInt32)]
+        public uint? KillScore { get; set; }
 
-        [NetFieldExport("FinisherOrDowner", RepLayoutCmdType.PropertyObject, 263, "FinisherOrDowner", "AFortPlayerStateAthena*", 16)]
-        public uint? FinisherOrDowner { get; set; } //Type: AFortPlayerStateAthena* Bits: 16
+        [NetFieldExport("FinisherOrDowner", RepLayoutCmdType.PropertyObject)]
+        public uint? FinisherOrDowner { get; set; }
 
-        [NetFieldExport("SeasonLevelUIDisplay", RepLayoutCmdType.PropertyUInt32, 264, "SeasonLevelUIDisplay", "", 32)]
-        public uint? SeasonLevelUIDisplay { get; set; } //Type:  Bits: 32
+        [NetFieldExport("SeasonLevelUIDisplay", RepLayoutCmdType.PropertyUInt32)]
+        public uint? SeasonLevelUIDisplay { get; set; }
 
-        [NetFieldExport("bInitialized", RepLayoutCmdType.PropertyBool, 267, "bInitialized", "bool", 1)]
-        public bool? bInitialized { get; set; } //Type: bool Bits: 1
+        [NetFieldExport("bInitialized", RepLayoutCmdType.PropertyBool)]
+        public bool? bInitialized { get; set; }
 
-        [NetFieldExport("DeathCircumstance", RepLayoutCmdType.PropertyInt, 268, "DeathCircumstance", "int32", 32)]
-        public int? DeathCircumstance { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("DeathCircumstance", RepLayoutCmdType.PropertyInt)]
+        public int? DeathCircumstance { get; set; }
 
-        [NetFieldExport("bUsingAnonymousMode", RepLayoutCmdType.PropertyBool, 283, "bUsingAnonymousMode", "", 1)]
-        public bool? bUsingAnonymousMode { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bUsingAnonymousMode", RepLayoutCmdType.PropertyBool)]
+        public bool? bUsingAnonymousMode { get; set; }
 
-        [NetFieldExport("bIsDisconnected", RepLayoutCmdType.PropertyBool, 285, "bIsDisconnected", "", 1)]
-        public bool? bIsDisconnected { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bIsDisconnected", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsDisconnected { get; set; }
 
-        [NetFieldExport("bDBNO", RepLayoutCmdType.PropertyBool, 287, "bDBNO", "", 1)]
-        public bool? bDBNO { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bDBNO", RepLayoutCmdType.PropertyBool)]
+        public bool? bDBNO { get; set; }
 
-        [NetFieldExport("DeathCause", RepLayoutCmdType.Enum, 288, "DeathCause", "EDeathCause", 6)]
-        public int? DeathCause { get; set; } //Type:  Bits: 6
+        [NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
+        public int? DeathCause { get; set; }
 
-        [NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat, 289, "Distance", "float", 32)]
-        public float? Distance { get; set; } //Type:  Bits: 32
+        [NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
+        public float? Distance { get; set; }
 
-        [NetFieldExport("DeathTags", RepLayoutCmdType.Ignore, 291, "DeathTags", "", 40)]
-        public DebuggingObject DeathTags { get; set; } //Type:  Bits: 40
+        [NetFieldExport("DeathTags", RepLayoutCmdType.Ignore)]
+        public DebuggingObject DeathTags { get; set; }
 
-        [NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool, 294, "bResurrectionChipAvailable", "", 1)]
-        public bool? bResurrectionChipAvailable { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool)]
+        public bool? bResurrectionChipAvailable { get; set; }
 
-        [NetFieldExport("ResurrectionExpirationTime", RepLayoutCmdType.PropertyFloat, 295, "ResurrectionExpirationTime", "float", 32)]
-        public float? ResurrectionExpirationTime { get; set; } //Type:  Bits: 32
+        [NetFieldExport("ResurrectionExpirationTime", RepLayoutCmdType.PropertyFloat)]
+        public float? ResurrectionExpirationTime { get; set; }
 
-        [NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyUInt32, 296, "ResurrectionExpirationLength", "", 32)]
-        public uint? ResurrectionExpirationLength { get; set; } //Type:  Bits: 32
+        [NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyUInt32)]
+        public uint? ResurrectionExpirationLength { get; set; }
 
-        [NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore, 297, "WorldLocation", "", 96)]
-        public DebuggingObject WorldLocation { get; set; } //Type:  Bits: 96
+        [NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore)]
+        public DebuggingObject WorldLocation { get; set; }
 
-        [NetFieldExport("bResurrectingNow", RepLayoutCmdType.PropertyBool, 298, "bResurrectingNow", "", 1)]
-        public bool? bResurrectingNow { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bResurrectingNow", RepLayoutCmdType.PropertyBool)]
+        public bool? bResurrectingNow { get; set; }
 
-        [NetFieldExport("RebootCounter", RepLayoutCmdType.PropertyUInt32, 299, "RebootCounter", "", 32)]
-        public uint? RebootCounter { get; set; } //Type:  Bits: 32
+        [NetFieldExport("RebootCounter", RepLayoutCmdType.PropertyUInt32)]
+        public uint? RebootCounter { get; set; }
 
-        [NetFieldExport("bHoldsRebootVanLock", RepLayoutCmdType.PropertyBool, 300, "bHoldsRebootVanLock", "", 1)]
-        public bool? bHoldsRebootVanLock { get; set; } //Type:  Bits: 1
+        [NetFieldExport("bHoldsRebootVanLock", RepLayoutCmdType.PropertyBool)]
+        public bool? bHoldsRebootVanLock { get; set; }
 
-        [NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId, 300, "BotUniqueId", "FUniqueNetIdRepl", 128)]
-        public string BotUniqueId { get; set; } //Type:  Bits: 128
-
+        [NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId)]
+        public string BotUniqueId { get; set; }
     }
 }

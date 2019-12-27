@@ -51,7 +51,8 @@ namespace Unreal.Core
         /// <summary>
         /// 
         /// </summary>
-        private int?[] InReliable = new int?[DefaultMaxChannelSize];
+        private int InReliable = 0;
+        //private int?[] InReliable = new int?[DefaultMaxChannelSize];
 
         /// <summary>
         /// 
@@ -82,21 +83,9 @@ namespace Unreal.Core
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
-            Cleanup();
+            GuidCache.Cleanup();
 
             return Replay;
-        }
-
-        private void Cleanup()
-        {
-            //InReliable.Clear();
-            //Channels.Clear();
-            GuidCache.NetFieldExportGroupIndexToGroup.Clear();
-            GuidCache.NetFieldExportGroupMap.Clear();
-            GuidCache.NetGuidToPathName.Clear();
-            GuidCache.ObjectLookup.Clear();
-            GuidCache.NetFieldExportGroupMapPathFixed.Clear();
-
         }
 
         public virtual void Debug(string filename, string directory, byte[] data)
@@ -194,8 +183,6 @@ namespace Unreal.Core
                 var group = ReadNetFieldExportGroupMap(binaryArchive);
 
                 // Add the export group to the map
-                //GuidCache.NetFieldExportGroupPathToIndex[group.PathName] = group.PathNameIndex;
-                GuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group;
                 GuidCache.AddToExportGroupMap(group.PathName, group);
             }
 
@@ -246,7 +233,8 @@ namespace Unreal.Core
 
                 if (chunkType == ReplayChunkType.Checkpoint)
                 {
-                    //Failing to read checkpoints properly
+                    // Checkpoints are used for fast forwarding,
+                    // we dont need it unless we want to process small parts of replay files.
                     //ReadCheckpoint(archive);
                 }
 
@@ -676,17 +664,15 @@ namespace Unreal.Core
                             NetFieldExportsLength = numExports
                         };
 
-                        // TODO determine performance vs memory hit for using an array here
                         group.NetFieldExports = new NetFieldExport[numExports];
                         GuidCache.AddToExportGroupMap(pathName, group);
                     }
                     //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
                     //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
-                    GuidCache.NetFieldExportGroupIndexToGroup[pathNameIndex] = group;
                 }
                 else
                 {
-                    GuidCache.NetFieldExportGroupIndexToGroup.TryGetValue(pathNameIndex, out group);
+                    group = GuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
                 var netField = ReadNetFieldExport(archive);
@@ -821,17 +807,14 @@ namespace Unreal.Core
                         group.NetFieldExports = new NetFieldExport[numExports];
                         GuidCache.AddToExportGroupMap(pathName, group);
                     }
-
-                    //GuidCache.NetFieldExportGroupPathToIndex.Add(pathName, pathNameIndex);
-                    GuidCache.NetFieldExportGroupIndexToGroup.Add(pathNameIndex, group);
                 }
                 else
                 {
-                    group = GuidCache.NetFieldExportGroupIndexToGroup[pathNameIndex];
+                    group = GuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
                 var netField = ReadNetFieldExport(bitArchive);
-                if (group.IsValidIndex(netField.Handle))
+                if (group != null && group.IsValidIndex(netField.Handle))
                 {
                     //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
                     group.NetFieldExports[(int)netField.Handle] = netField;
@@ -958,7 +941,7 @@ namespace Unreal.Core
             {
                 // Reliables should be ordered properly at this point
                 //check(Bunch.ChSequence == Connection->InReliable[Bunch.ChIndex] + 1);
-                InReliable[bunch.ChIndex] = bunch.ChSequence;
+                InReliable = bunch.ChSequence;
             }
 
             // merge
@@ -1107,15 +1090,7 @@ namespace Unreal.Core
         public virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
             // if ( !Closing ) {
-            switch (bunch.ChName)
-            {
-                case "Control":
-                    ReceivedControlBunch(bunch);
-                    break;
-                default:
-                    ReceivedActorBunch(bunch);
-                    break;
-            };
+            ReceivedActorBunch(bunch);
             // }
 
             // We have fully received the bunch, so process it.
@@ -1128,20 +1103,6 @@ namespace Unreal.Core
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L1346
-        /// </summary>
-        /// <param name="bitReader"></param>
-        /// <param name="bunch"></param>
-        public virtual void ReceivedControlBunch(DataBunch bunch)
-        {
-            // control channel
-            while (!bunch.Archive.AtEnd())
-            {
-                var messageType = bunch.Archive.ReadByte();
-            }
         }
 
         /// <summary>
@@ -1179,6 +1140,24 @@ namespace Unreal.Core
             //}
 
             ProcessBunch(bunch);
+        }
+
+        /// <summary>
+        /// https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L490
+        /// </summary>
+        /// <param name="archive"></param>
+        /// <param name="defaultVector"></param>
+        /// <returns><see cref="FVector"/></returns>
+        public virtual FVector ConditionallySerializeQuantizedVector(FBitArchive archive, FVector defaultVector)
+        {
+            var bWasSerialized = archive.ReadBit();
+            if (bWasSerialized)
+            {
+                var bShouldQuantize = (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO) ? true : archive.ReadBit();
+                return bShouldQuantize ? archive.ReadPackedVector(10, 24) : archive.ReadVector();
+            }
+
+            return defaultVector;
         }
 
         /// <summary>
@@ -1223,13 +1202,8 @@ namespace Unreal.Core
                         inActor.Level = InternalLoadObject(bunch.Archive, false);
                     }
 
-                    // bSerializeLocation
-                    if (bunch.Archive.ReadBit())
-                    {
-                        inActor.Location = bunch.Archive.ReadPackedVector(10, 24);
-                    }
+                    inActor.Location = ConditionallySerializeQuantizedVector(bunch.Archive, new FVector(0, 0, 0));
 
-                    // bSerializeRotation
                     if (bunch.Archive.ReadBit())
                     {
                         inActor.Rotation = bunch.Archive.ReadRotationShort();
@@ -1239,17 +1213,8 @@ namespace Unreal.Core
                         inActor.Rotation = new FRotator(0, 0, 0);
                     }
 
-                    // bSerializeScale
-                    if (bunch.Archive.ReadBit())
-                    {
-                        inActor.Scale = bunch.Archive.ReadPackedVector(10, 24);
-                    }
-
-                    // bSerializeVelocity
-                    if (bunch.Archive.ReadBit())
-                    {
-                        inActor.Velocity = bunch.Archive.ReadPackedVector(10, 24);
-                    }
+                    inActor.Scale = ConditionallySerializeQuantizedVector(bunch.Archive, new FVector(1, 1, 1));
+                    inActor.Velocity = ConditionallySerializeQuantizedVector(bunch.Archive, new FVector(0, 0, 0));
                 }
 
                 channel.Actor = inActor;
@@ -1309,11 +1274,11 @@ namespace Unreal.Core
         {
             var netFieldExportGroup = GuidCache.GetNetFieldExportGroup(Channels[bunch.ChIndex].Actor);
 
-            if (netFieldExportGroup == null)
-            {
-                _logger?.LogWarning($"Group is null for {repObject} at bunch {bunch.ChIndex}");
-                return false;
-            }
+            //if (netFieldExportGroup == null)
+            //{
+            //    _logger?.LogWarning($"Group is null for {repObject} at bunch {bunchIndex}");
+            //    return false;
+            //}
 
             // Handle replayout properties
             if (bHasRepLayout)
@@ -1331,16 +1296,14 @@ namespace Unreal.Core
                 return true;
             }
 
-            //FNetFieldExportGroup* NetFieldExportGroup = OwningChannel->GetNetFieldExportGroupForClassNetCache(ObjectClass);
-
             //static FORCEINLINE FString GenerateClassNetCacheNetFieldExportGroupName( const UClass* ObjectClass )
             //{
             //    return ObjectClass->GetName() + FString(TEXT("_ClassNetCache"));
             //}
-            var classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup.PathName);
+            var classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup?.PathName);
             if (classNetCache == null)
             {
-                _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup.PathName}");
+                _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
                 return false;
             }
 
@@ -1365,6 +1328,13 @@ namespace Unreal.Core
                 if (reader == null || reader.IsError)
                 {
                     _logger?.LogInformation($"ReceivedBunch: reader == nullptr or IsError: {classNetCache.PathName}");
+                    continue;
+                }
+
+                // skip RPC while we dont know exactly whats going on...
+                if (_parseMode != ParseMode.Debug)
+                {
+                    reader.SkipBits(reader.GetBitsLeft());
                     continue;
                 }
 
@@ -1421,7 +1391,8 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// DataReplication.cpp 1158
+        /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
@@ -1444,6 +1415,11 @@ namespace Unreal.Core
             return true;
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3744
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader)
         {
             if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
@@ -1454,6 +1430,7 @@ namespace Unreal.Core
 
             // Receive array index (static sized array, i.e. MemberVariable[4])
             //if (Property->ArrayDim != 1)
+            // var staticArrayIndex = reader.ReadIntPacked();
 
             // We should only be receiving custom delta properties (since RepLayout handles the rest)
             //if (!EnumHasAnyFlags(Parent.Flags, ERepParentFlags::IsCustomDelta))
@@ -1478,9 +1455,54 @@ namespace Unreal.Core
             return false;
         }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1064
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         public virtual bool NetDeltaSerialize(FBitArchive reader)
         {
-            throw new NotImplementedException();
+            // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
+            // DeltaSerializeFastArrayProperty
+
+
+            //---------------
+            // Read header
+            //---------------
+
+            /** The current ArrayReplicationKey. */
+            var ArrayReplicationKey = reader.ReadInt32();
+
+            /** The previous ArrayReplicationKey. */
+            var BaseReplicationKey = reader.ReadInt32();
+
+            //int32 NumDeletes;
+            var NumDeletes = reader.ReadInt32();
+
+            /** The number of changed elements (adds or removes). */
+            var NumChanged = reader.ReadInt32();
+
+            //---------------
+            // Read deleted elements
+            //---------------
+            if (NumDeletes > 0)
+            {
+                for (var i = 0; i < NumDeletes; ++i)
+                {
+                    var ElementID = reader.ReadInt32();
+                    //ReceiveProperties();
+                }
+            }
+
+            //---------------
+            // Read Changed/New elements
+            //---------------
+            for (var i = 0; i < NumChanged; ++i)
+            {
+                var ElementID = reader.ReadInt32();
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -1493,21 +1515,16 @@ namespace Unreal.Core
         {
             TotalGroupsRead++;
 
-            if (!NetFieldParser.WillReadType(group.PathName))
-            {
-                return true;
-            }
-
             // if ENABLE_PROPERTY_CHECKSUMS
             var doChecksum = archive.ReadBit();
 
 #if DEBUG
-            Debug("types", $"\n{group.PathName}");
+            Debug("types", $"\n{group?.PathName}");
 #endif
 
-            _logger?.LogDebug($"ReceiveProperties: group {group.PathName}");
+            _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
 
-            var exportGroup = NetFieldParser.CreateType(group.PathName);
+            var exportGroup = NetFieldParser.CreateType(group?.PathName);
             var hasData = false;
 
             while (true)
@@ -1523,13 +1540,13 @@ namespace Unreal.Core
                 // We purposely add 1 on save, so we can reserve 0 for "done"
                 handle--;
 
-                if (group.NetFieldExports.Length <= handle)
+                if (group?.NetFieldExportsLength <= handle)
                 {
-                    _logger?.LogWarning($"NetFieldExport length ({group.NetFieldExports.Length}) < handle ({handle})");
+                    _logger?.LogWarning($"NetFieldExports length ({group?.NetFieldExports.Length}) < handle ({handle})");
                     return false;
                 }
 
-                var export = group.NetFieldExports[handle];
+                var export = group?.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
 
                 if (numBits == 0)
@@ -1543,7 +1560,7 @@ namespace Unreal.Core
 
                     _logger?.LogDebug($"Couldnt find handle {handle}, numbits is {numBits}");
 #if DEBUG
-                    Debug("missinghandles", $"\n{group.PathName}\t{handle}\t{numBits}");
+                    Debug("missinghandles", $"\n{group?.PathName}\t{handle}\t{numBits}");
 #endif
                     archive.SkipBits(numBits);
                     continue;
@@ -1561,6 +1578,13 @@ namespace Unreal.Core
                     continue;
                 }
 
+                if (!NetFieldParser.WillReadType(group.PathName))
+                {
+                    _logger?.LogInformation($"Not reading type {group.PathName}");
+                    archive.SkipBits(numBits);
+                    continue;
+                }
+
 #if DEBUG
                 archive.Mark();
                 Debug($"cmd-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
@@ -1575,7 +1599,7 @@ namespace Unreal.Core
                         NetworkVersion = Replay.Header.NetworkVersion
                     };
 
-                    NetFieldParser.ReadField(exportGroup, export, group, handle, cmdReader);
+                    NetFieldParser.ReadField(exportGroup, export, group, cmdReader);
 
                     if (cmdReader.IsError)
                     {
@@ -1588,7 +1612,7 @@ namespace Unreal.Core
                     if (!cmdReader.AtEnd())
                     {
                         FailedToRead++;
-                        _logger?.LogWarning($"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {cmdReader.GetBitsLeft()} out of {numBits}");
+                        _logger?.LogWarning($"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
 
                         continue;
                     }
@@ -1623,9 +1647,9 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        public virtual bool ReadFieldHeaderAndPayload(FBitArchive bunch, NetFieldExportGroup group, out NetFieldExport outField, out FBitArchive reader)
+        public virtual bool ReadFieldHeaderAndPayload(FBitArchive archive, NetFieldExportGroup group, out NetFieldExport outField, out FBitArchive reader)
         {
-            if (bunch.AtEnd())
+            if (archive.AtEnd())
             {
                 reader = null;
                 outField = null;
@@ -1633,8 +1657,8 @@ namespace Unreal.Core
             }
 
             // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-            var netFieldExportHandle = bunch.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
-            if (bunch.IsError)
+            var netFieldExportHandle = archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
+            if (archive.IsError)
             {
                 reader = null;
                 outField = null;
@@ -1645,8 +1669,8 @@ namespace Unreal.Core
             // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
             outField = group.NetFieldExports[(int)netFieldExportHandle];
 
-            var numPayloadBits = bunch.ReadIntPacked();
-            if (bunch.IsError)
+            var numPayloadBits = archive.ReadIntPacked();
+            if (archive.IsError)
             {
                 reader = null;
                 outField = null;
@@ -1654,8 +1678,18 @@ namespace Unreal.Core
                 return false;
             }
 
-            reader = new BitReader(bunch.ReadBits(numPayloadBits));
-            if (bunch.IsError)
+            if (!archive.CanRead((int) numPayloadBits))
+            {
+                reader = null;
+                return false;
+            }
+
+            reader = new BitReader(archive.ReadBits(numPayloadBits))
+            {
+                EngineNetworkVersion = archive.EngineNetworkVersion,
+                NetworkVersion = archive.NetworkVersion
+            };
+            if (archive.IsError)
             {
                 _logger?.LogWarning($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");
                 return false;
@@ -1688,7 +1722,11 @@ namespace Unreal.Core
                 return 0;
             }
 
-            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits));
+            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits))
+            {
+                EngineNetworkVersion = bunch.Archive.EngineNetworkVersion,
+                NetworkVersion = bunch.Archive.NetworkVersion
+            };
             return repObj;
         }
 
@@ -1838,11 +1876,7 @@ namespace Unreal.Core
                 if (bunch.bReliable)
                 {
                     // We can derive the sequence for 100% reliable connections
-                    if (InReliable[bunch.ChIndex] == null)
-                    {
-                        InReliable[bunch.ChIndex] = 0;
-                    }
-                    bunch.ChSequence = (InReliable[bunch.ChIndex] + 1).Value;
+                    bunch.ChSequence = InReliable + 1;
                 }
                 else if (bunch.bPartial)
                 {
@@ -2003,7 +2037,7 @@ namespace Unreal.Core
                 }
 
                 // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <= InReliable[bunch.ChIndex])
+                if (bunch.bReliable && bunch.ChSequence <= InReliable)
                 {
                     continue;
                 }
@@ -2050,7 +2084,8 @@ namespace Unreal.Core
                 // Channel->ReceivedRawBunch( Bunch, bLocalSkipAck ); //warning: May destroy channel.
                 try
                 {
-                    ReceivedRawBunch(bunch);
+                    //ReceivedRawBunch(bunch);
+                    ReceivedSequencedBunch(bunch);
                 }
                 catch (Exception ex)
                 {

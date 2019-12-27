@@ -8,50 +8,49 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Game/Athena/Aircraft/AthenaAircraft.AthenaAircraft_C")]
     public class Aircraft : INetFieldExportGroup
     {
-        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore, 4, "RemoteRole", "", 2)]
-        public object RemoteRole { get; set; } //Type:  Bits: 2
+        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
+        public object RemoteRole { get; set; }
 
-        [NetFieldExport("Role", RepLayoutCmdType.Ignore, 13, "Role", "", 2)]
-        public object Role { get; set; } //Type:  Bits: 2
+        [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
+        public object Role { get; set; }
 
-        [NetFieldExport("JumpFlashCount", RepLayoutCmdType.PropertyInt, 15, "JumpFlashCount", "int32", 32)]
-        public int? JumpFlashCount { get; set; } //Type: int32 Bits: 32
+        [NetFieldExport("JumpFlashCount", RepLayoutCmdType.PropertyInt)]
+        public int? JumpFlashCount { get; set; }
 
-        [NetFieldExport("FlightStartLocation", RepLayoutCmdType.PropertyVector100, 16, "FlightStartLocation", "FVector_NetQuantize100", 80)]
-        public FVector FlightStartLocation { get; set; } //Type: FVector_NetQuantize100 Bits: 80
+        [NetFieldExport("FlightStartLocation", RepLayoutCmdType.PropertyVector100)]
+        public FVector FlightStartLocation { get; set; }
 
-        [NetFieldExport("FlightStartRotation", RepLayoutCmdType.PropertyRotator, 17, "FlightStartRotation", "FRotator", 19)]
-        public FRotator FlightStartRotation { get; set; } //Type: FRotator Bits: 19
+        [NetFieldExport("FlightStartRotation", RepLayoutCmdType.PropertyRotator)]
+        public FRotator FlightStartRotation { get; set; }
 
-        [NetFieldExport("FlightSpeed", RepLayoutCmdType.PropertyFloat, 18, "FlightSpeed", "float", 32)]
-        public float? FlightSpeed { get; set; } //Type: float Bits: 32
+        [NetFieldExport("FlightSpeed", RepLayoutCmdType.PropertyFloat)]
+        public float? FlightSpeed { get; set; }
 
-        [NetFieldExport("TimeTillFlightEnd", RepLayoutCmdType.PropertyFloat, 19, "TimeTillFlightEnd", "float", 32)]
-        public float? TimeTillFlightEnd { get; set; } //Type: float Bits: 32
+        [NetFieldExport("TimeTillFlightEnd", RepLayoutCmdType.PropertyFloat)]
+        public float? TimeTillFlightEnd { get; set; }
 
-        [NetFieldExport("TimeTillDropStart", RepLayoutCmdType.PropertyFloat, 20, "TimeTillDropStart", "float", 32)]
-        public float? TimeTillDropStart { get; set; } //Type: float Bits: 32
+        [NetFieldExport("TimeTillDropStart", RepLayoutCmdType.PropertyFloat)]
+        public float? TimeTillDropStart { get; set; }
 
-        [NetFieldExport("TimeTillDropEnd", RepLayoutCmdType.PropertyFloat, 21, "TimeTillDropEnd", "float", 32)]
-        public float? TimeTillDropEnd { get; set; } //Type: float Bits: 32
+        [NetFieldExport("TimeTillDropEnd", RepLayoutCmdType.PropertyFloat)]
+        public float? TimeTillDropEnd { get; set; }
 
-        [NetFieldExport("FlightStartTime", RepLayoutCmdType.PropertyFloat, 22, "FlightStartTime", "float", 32)]
-        public float? FlightStartTime { get; set; } //Type: float Bits: 32
+        [NetFieldExport("FlightStartTime", RepLayoutCmdType.PropertyFloat)]
+        public float? FlightStartTime { get; set; }
 
-        [NetFieldExport("FlightEndTime", RepLayoutCmdType.PropertyFloat, 23, "FlightEndTime", "float", 32)]
-        public float? FlightEndTime { get; set; } //Type: float Bits: 32
+        [NetFieldExport("FlightEndTime", RepLayoutCmdType.PropertyFloat)]
+        public float? FlightEndTime { get; set; }
 
-        [NetFieldExport("DropStartTime", RepLayoutCmdType.PropertyFloat, 24, "DropStartTime", "float", 32)]
-        public float? DropStartTime { get; set; } //Type: float Bits: 32
+        [NetFieldExport("DropStartTime", RepLayoutCmdType.PropertyFloat)]
+        public float? DropStartTime { get; set; }
 
-        [NetFieldExport("DropEndTime", RepLayoutCmdType.PropertyFloat, 25, "DropEndTime", "float", 32)]
-        public float? DropEndTime { get; set; } //Type: float Bits: 32
+        [NetFieldExport("DropEndTime", RepLayoutCmdType.PropertyFloat)]
+        public float? DropEndTime { get; set; }
 
-        [NetFieldExport("ReplicatedFlightTimestamp", RepLayoutCmdType.PropertyFloat, 26, "ReplicatedFlightTimestamp", "float", 32)]
-        public float? ReplicatedFlightTimestamp { get; set; } //Type: float Bits: 32
+        [NetFieldExport("ReplicatedFlightTimestamp", RepLayoutCmdType.PropertyFloat)]
+        public float? ReplicatedFlightTimestamp { get; set; }
 
-        [NetFieldExport("AircraftIndex", RepLayoutCmdType.PropertyUInt32, 27, "AircraftIndex", "", 32)]
-        public uint? AircraftIndex { get; set; } //Type:  Bits: 32
-
+        [NetFieldExport("AircraftIndex", RepLayoutCmdType.PropertyUInt32)]
+        public uint? AircraftIndex { get; set; }
     }
 }

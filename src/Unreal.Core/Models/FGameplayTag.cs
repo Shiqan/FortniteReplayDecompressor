@@ -8,7 +8,9 @@ namespace Unreal.Core.Models
 
         public void Serialize(NetBitReader reader)
         {
-            TagName = reader.ReadFString();
+            //TagName = reader.ReadFString();
+            var netIndex = reader.ReadIntPacked();
+            TagName = netIndex.ToString();
         }
     }
 }

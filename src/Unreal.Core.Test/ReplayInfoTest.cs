@@ -17,6 +17,7 @@ namespace Unreal.Core.Test
                 var reader = new MockReplayReader();
                 reader.ReadReplayInfo(archive);
                 Assert.True(archive.AtEnd());
+                Assert.False(archive.IsError);
             }
         }
     }

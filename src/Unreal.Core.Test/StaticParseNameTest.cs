@@ -20,6 +20,7 @@ namespace Unreal.Core.Test
                 var reader = new MockReplayReader();
                 reader.StaticParseName(archive);
                 Assert.True(archive.AtEnd());
+                Assert.False(archive.IsError);
             }
         }
 
@@ -38,6 +39,7 @@ namespace Unreal.Core.Test
             var name = reader.StaticParseName(archive);
             Assert.Equal(9, archive.Position);
             Assert.Equal("Actor", name);
+            Assert.False(archive.IsError);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Unreal.Core.Models
     {
         public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
-        public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
+        public Dictionary<uint, string> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, string>();
         //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
@@ -73,13 +73,33 @@ namespace Unreal.Core.Models
                 }
             }
 
-
             return null;
         }
 
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
             NetFieldExportGroupMap[group] = exportGroup;
+            NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = group;
+        }
+
+        public NetFieldExportGroup GetNetFieldExportGroupFromIndex(uint index)
+        {
+            if (!NetFieldExportGroupIndexToGroup.TryGetValue(index, out var group))
+            {
+                return null;
+            }
+            return NetFieldExportGroupMap[group];
+        }
+
+        public void Cleanup()
+        {
+            //InReliable.Clear();
+            //Channels.Clear();
+            NetFieldExportGroupIndexToGroup.Clear();
+            NetFieldExportGroupMap.Clear();
+            NetGuidToPathName.Clear();
+            ObjectLookup.Clear();
+            NetFieldExportGroupMapPathFixed.Clear();
         }
 
         public NetFieldExportGroup GetNetFieldExportGroup(Actor actor)
@@ -137,7 +157,7 @@ namespace Unreal.Core.Models
                     }
                 }
 
-                return default;
+                return null;
             }
 
             return _archTypeToExportGroup[guid.Value];
@@ -145,17 +165,23 @@ namespace Unreal.Core.Models
 
         public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
         {
+            if (group == null)
+            {
+                return null;
+            }
+
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
             {
                 classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 
-            if (!NetFieldExportGroupMap.ContainsKey(classNetCachePath))
+            if (!NetFieldExportGroupMap.TryGetValue(classNetCachePath, out var netFieldExportGroup))
             {
-                return default;
+                return null;
             }
-            return NetFieldExportGroupMap[classNetCachePath];
+
+            return netFieldExportGroup;
         }
 
         /// <summary>

@@ -22,6 +22,7 @@ namespace Unreal.Core.Test
             hitResult.Serialize(reader);
 
             Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
             Assert.Equal("HEAD", hitResult.BoneName);
         }
         
@@ -42,6 +43,7 @@ namespace Unreal.Core.Test
             hitResult.Serialize(reader);
 
             Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
             Assert.Equal("HEAD", hitResult.BoneName);
         }
         
@@ -62,6 +64,7 @@ namespace Unreal.Core.Test
             hitResult.Serialize(reader);
 
             Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
             Assert.Equal("b_LeftForeArm", hitResult.BoneName);
         }
     }

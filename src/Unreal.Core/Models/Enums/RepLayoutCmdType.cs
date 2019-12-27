@@ -32,6 +32,7 @@
         PropertySoftObject = 22,
         PropertyWeakObject = 23,
 
+        PropertyVector2D = 96,
         PropertyUInt16 = 97,
         Enum = 99,
         Ignore = 100

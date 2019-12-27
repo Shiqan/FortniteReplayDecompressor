@@ -385,6 +385,14 @@ namespace Unreal.Core
             return value;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override FVector ReadVector()
+        {
+            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+        }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210

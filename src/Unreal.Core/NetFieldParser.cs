@@ -1,10 +1,8 @@
 ﻿using FastMember;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
@@ -22,10 +20,6 @@ namespace Unreal.Core
 
         private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        public static Dictionary<string, HashSet<UnknownFieldInfo>> UnknownNetFields { get; private set; } = new Dictionary<string, HashSet<UnknownFieldInfo>>();
-
-        public static bool HasNewNetFields => UnknownNetFields.Count > 0;
-
         private static CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         static NetFieldParser()
@@ -60,6 +54,7 @@ namespace Unreal.Core
                 }
             }
 
+            // Allows deserializing type arrays
             var netSubFields = types.Where(c => c.GetCustomAttribute<NetFieldExportSubGroupAttribute>() != null);
             foreach (var type in netSubFields)
             {
@@ -95,7 +90,7 @@ namespace Unreal.Core
 
             var iPropertyTypes = types.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
 
-            //Allows deserializing IProperty type arrays
+            // Allows deserializing type arrays
             foreach (var iPropertyType in iPropertyTypes)
             {
                 _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
@@ -109,40 +104,22 @@ namespace Unreal.Core
             return _netFieldGroups.ContainsKey(group);
         }
 
-        public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, uint handle, NetBitReader netBitReader)
+        public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             var group = exportGroup.PathName;
-
             var fixedExportName = FixInvalidNames(export.Name);
 
             if (!_netFieldGroups.TryGetValue(group, out var netGroupInfo))
             {
-                if (IsDebugMode)
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
-
                 return;
             }
 
-            if (!netGroupInfo.Properties.ContainsKey(fixedExportName))
+            if (!netGroupInfo.Properties.TryGetValue(fixedExportName, out var netFieldInfo))
             {
-                if (IsDebugMode)
-                {
-                    AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-                }
                 return;
             }
 
-            var netFieldInfo = netGroupInfo.Properties[fixedExportName];
-
-            // Update if it finds an actual type
-            if (IsDebugMode && !string.IsNullOrEmpty(export.Type) && string.IsNullOrEmpty(netFieldInfo.Attribute.Info.Type))
-            {
-                AddUnknownField(fixedExportName, export?.Type, group, handle, netBitReader);
-            }
-
-            SetType(obj, exportGroup, netGroupInfo, netFieldInfo, netBitReader);
+            SetType(obj, exportGroup, netFieldInfo, netBitReader);
         }
 
         private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
@@ -199,11 +176,11 @@ namespace Unreal.Core
                 case RepLayoutCmdType.Enum:
                     data = netBitReader.SerializePropertyEnum();
                     break;
-                //Auto generation fix to handle 1-8 bits
+                // TODO Auto generation fix to handle 1-8 bits
                 case RepLayoutCmdType.PropertyByte:
                     data = (byte)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
                     break;
-                //Auto generation fix to handle 1-32 bits. 
+                // TODO Auto generation fix to handle 1-32 bits.
                 case RepLayoutCmdType.PropertyInt:
                     data = netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
                     break;
@@ -211,7 +188,7 @@ namespace Unreal.Core
                     data = netBitReader.ReadUInt64();
                     break;
                 case RepLayoutCmdType.PropertyUInt16:
-                    data = (ushort)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadUInt16();
                     break;
                 case RepLayoutCmdType.PropertyUInt32:
                     data = netBitReader.ReadUInt32();
@@ -219,19 +196,22 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyVector:
                     data = netBitReader.SerializePropertyVector();
                     break;
+                case RepLayoutCmdType.PropertyVector2D:
+                    data = netBitReader.SerializePropertyVector2D();
+                    break;
                 case RepLayoutCmdType.Ignore:
-                    netBitReader.Seek(netBitReader.Position + netBitReader.GetBitsLeft());
+                    netBitReader.Seek(netBitReader.GetBitsLeft(), System.IO.SeekOrigin.Current);
                     break;
             }
 
             return data;
         }
 
-        private static void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldGroupInfo groupInfo, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
+        private static void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
         {
             var data = netFieldInfo.Attribute.Type switch
             {
-                RepLayoutCmdType.DynamicArray => ReadArrayField(exportGroup, groupInfo, netFieldInfo, netBitReader),
+                RepLayoutCmdType.DynamicArray => ReadArrayField(exportGroup, netFieldInfo, netBitReader),
                 _ => ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType),
             };
 
@@ -245,7 +225,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3141
         /// </summary>
-        private static Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldGroupInfo groupInfo, NetFieldInfo fieldInfo, NetBitReader netBitReader)
+        private static Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetBitReader netBitReader)
         {
             var arrayIndexes = netBitReader.ReadIntPacked();
 
@@ -266,8 +246,8 @@ namespace Unreal.Core
                 if (index == 0)
                 {
                     // At this point, the 0 either signifies:
-                    //	An array terminator, at which point we're done.
-                    //	An array element terminator, which could happen if the array had tailing elements removed.
+                    // An array terminator, at which point we're done.
+                    // An array element terminator, which could happen if the array had tailing elements removed.
                     if (netBitReader.GetBitsLeft() == 8)
                     {
                         // We have bits left over, so see if its the Array Terminator.
@@ -336,10 +316,10 @@ namespace Unreal.Core
                         EngineNetworkVersion = netBitReader.EngineNetworkVersion,
                         NetworkVersion = netBitReader.NetworkVersion
                     };
-                    
+
                     if (!isPrimitveType)
                     {
-                        ReadField(data, export, netfieldExportGroup, handle, cmdReader);
+                        ReadField(data, export, netfieldExportGroup, cmdReader);
                     }
                     else
                     {
@@ -353,7 +333,7 @@ namespace Unreal.Core
 
         public static INetFieldExportGroup CreateType(string group)
         {
-            if (!_netFieldGroups.ContainsKey(group))
+            if (group == null || !_netFieldGroups.ContainsKey(group))
             {
                 return null;
             }
@@ -390,19 +370,6 @@ namespace Unreal.Core
             return new string(newChars, 0, (int)(currentChar - newChars));
         }
 
-        private static void AddUnknownField(string exportName, string exportType, string group, uint handle, NetBitReader netBitReader)
-        {
-            var fields = new HashSet<UnknownFieldInfo>();
-
-            if (!UnknownNetFields.TryAdd(group, fields))
-            {
-                UnknownNetFields.TryGetValue(group, out fields);
-            }
-
-            fields.Add(new UnknownFieldInfo(exportName, exportType, netBitReader.GetBitsLeft(), handle));
-
-        }
-
         private class NetFieldGroupInfo
         {
             public Type Type { get; set; }
@@ -413,39 +380,6 @@ namespace Unreal.Core
         {
             public NetFieldExportAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
-        }
-    }
-
-    public class UnknownFieldInfo
-    {
-        public string PropertyName { get; set; }
-        public string Type { get; set; }
-        public int BitCount { get; set; }
-        public uint Handle { get; set; }
-
-        public UnknownFieldInfo(string propertyname, string type, int bitCount, uint handle)
-        {
-            PropertyName = propertyname;
-            Type = type;
-            BitCount = bitCount;
-            Handle = handle;
-        }
-
-        public override bool Equals(object obj)
-        {
-            var fieldInfo = obj as UnknownFieldInfo;
-
-            if (fieldInfo == null)
-            {
-                return base.Equals(obj);
-            }
-
-            return fieldInfo.PropertyName == PropertyName;
-        }
-
-        public override int GetHashCode()
-        {
-            return PropertyName.GetHashCode();
         }
     }
 }

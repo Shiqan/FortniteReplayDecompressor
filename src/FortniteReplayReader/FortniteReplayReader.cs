@@ -56,6 +56,7 @@ namespace FortniteReplayReader
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
+            Debug("events", exportGroup.GetType().Name);
         }
 
         public override void ReadReplayHeader(FArchive archive)

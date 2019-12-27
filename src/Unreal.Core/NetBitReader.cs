@@ -97,13 +97,13 @@ namespace Unreal.Core
         /// </summary>
         public FVector SerializePropertyVector()
         {
-            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            return ReadVector();
         }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L65
         /// </summary>
-        public FVector2D SerializeVector2D()
+        public FVector2D SerializePropertyVector2D()
         {
             return new FVector2D(ReadSingle(), ReadSingle());
         }

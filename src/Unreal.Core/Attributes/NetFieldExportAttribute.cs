@@ -3,6 +3,10 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Attributes
 {
+    /// <summary>
+    /// Attribute to map a property to the name used in the property replication.
+    /// <see cref="RepLayoutCmdType"/> is used to specify the parsing method.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public sealed class NetFieldExportAttribute : Attribute
     {

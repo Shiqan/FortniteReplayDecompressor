@@ -3,20 +3,33 @@ using Unreal.Core.Contracts;
 
 namespace Unreal.Core.Models
 {
+    /// <summary>
+    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L325
+    /// </summary>
     public class FText : IProperty
     {
-        public string Key { get; set; }
+        public string Namespace { get; set; }
         public string Text { get; set; }
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/Text.cpp#L794
+        /// </summary>
+        /// <param name="reader"></param>
         public void Serialize(NetBitReader reader)
         {
-            reader.SkipBits(72);
+            //var flags = reader.ReadInt32();
+            //var historyType = reader.ReadByteAsEnum<ETextHistoryType>();
+            // 4 bytes ?
+            reader.SkipBytes(9);
 
-            Key = reader.ReadFString();
+            Namespace = reader.ReadFString();
             Text = reader.ReadFString();
         }
     }
 
+    /// <summary>
+    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L35
+    /// </summary>
     [Flags]
     public enum FTextType
     {
@@ -27,6 +40,9 @@ namespace Unreal.Core.Models
         InitializedFromString = (1 << 4),  // this ftext was initialized using FromString
     };
 
+    /// <summary>
+    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/TextHistory.h#L16
+    /// </summary>
     public enum ETextHistoryType
     {
         None = -1,

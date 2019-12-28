@@ -130,6 +130,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("StreamerModeName", RepLayoutCmdType.Property)]
         public FText StreamerModeName { get; set; }
+        
+        [NetFieldExport("PlayerNameCustomOverride", RepLayoutCmdType.Property)]
+        public FText PlayerNameCustomOverride { get; set; }
 
         [NetFieldExport("TeamScorePlacement", RepLayoutCmdType.PropertyUInt32)]
         public uint? TeamScorePlacement { get; set; }

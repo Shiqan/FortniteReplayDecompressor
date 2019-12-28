@@ -11,16 +11,17 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core
 {
     /// <summary>
-    /// 
+    /// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
+    /// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
     /// </summary>
     public static class NetFieldParser
     {
         public static ParseMode Mode { get; set; }
         public static bool IsDebugMode => Mode == ParseMode.Debug;
 
-        private static Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        private static Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private static CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private static readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
+        private static readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
+        private static readonly CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         static NetFieldParser()
         {
@@ -36,22 +37,7 @@ namespace Unreal.Core
                 };
 
                 _netFieldGroups[attribute.Path] = info;
-
-                foreach (var property in type.GetProperties())
-                {
-                    var netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
-
-                    if (netFieldExportAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
-                    {
-                        Attribute = netFieldExportAttribute,
-                        PropertyInfo = property
-                    };
-                }
+                AddNetFieldInfo(type, info);
             }
 
             // Allows deserializing type arrays
@@ -59,23 +45,22 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                foreach (var property in type.GetProperties())
+                var info = _netFieldGroups[attribute.Path];
+                AddNetFieldInfo(type, info);
+            }
+
+            // RPC functions
+            var rpcFields = types.Where(c => c.GetCustomAttribute<NetFieldExportRPCAttribute>() != null);
+            foreach (var type in rpcFields)
+            {
+                var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+                var info = new NetFieldGroupInfo
                 {
-                    var netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
+                    Type = type
+                };
 
-                    if (netFieldExportAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    var info = _netFieldGroups[attribute.Path];
-
-                    info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
-                    {
-                        Attribute = netFieldExportAttribute,
-                        PropertyInfo = property
-                    };
-                }
+                _netFieldGroups[attribute.Path] = info;
+                AddNetFieldInfo(type, info);
             }
 
             //Type layout for dynamic arrays
@@ -88,15 +73,34 @@ namespace Unreal.Core
             _primitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
             _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
 
-            var iPropertyTypes = types.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
-
             // Allows deserializing type arrays
+            var iPropertyTypes = types.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
             foreach (var iPropertyType in iPropertyTypes)
             {
                 _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
             }
 
             _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
+
+        }
+
+        private static void AddNetFieldInfo(Type type, NetFieldGroupInfo info)
+        {
+            foreach (var property in type.GetProperties())
+            {
+                var netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
+
+                if (netFieldExportAttribute == null)
+                {
+                    continue;
+                }
+
+                info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                {
+                    Attribute = netFieldExportAttribute,
+                    PropertyInfo = property
+                };
+            }
         }
 
         public static bool WillReadType(string group)
@@ -333,12 +337,12 @@ namespace Unreal.Core
 
         public static INetFieldExportGroup CreateType(string group)
         {
-            if (group == null || !_netFieldGroups.ContainsKey(group))
+            if (group == null || !_netFieldGroups.TryGetValue(group, out var netfieldGroup))
             {
                 return null;
             }
 
-            return (INetFieldExportGroup)_linqCache.CreateObject(_netFieldGroups[group].Type);
+            return (INetFieldExportGroup)_linqCache.CreateObject(netfieldGroup.Type);
         }
 
         /// <summary>

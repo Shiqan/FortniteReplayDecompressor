@@ -1274,18 +1274,12 @@ namespace Unreal.Core
         {
             var netFieldExportGroup = GuidCache.GetNetFieldExportGroup(Channels[bunch.ChIndex].Actor);
 
-            //if (netFieldExportGroup == null)
-            //{
-            //    _logger?.LogWarning($"Group is null for {repObject} at bunch {bunchIndex}");
-            //    return false;
-            //}
-
             // Handle replayout properties
             if (bHasRepLayout)
             {
                 if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
                 {
-                    _logger?.LogWarning("RepLayout->ReceiveProperties FAILED");
+                    _logger?.LogWarning($"RepLayout->ReceiveProperties FAILED for channel {bunch.ChIndex} and bunch {bunchIndex}");
                     return false;
                 }
             }
@@ -1296,10 +1290,6 @@ namespace Unreal.Core
                 return true;
             }
 
-            //static FORCEINLINE FString GenerateClassNetCacheNetFieldExportGroupName( const UClass* ObjectClass )
-            //{
-            //    return ObjectClass->GetName() + FString(TEXT("_ClassNetCache"));
-            //}
             var classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup?.PathName);
             if (classNetCache == null)
             {
@@ -1332,7 +1322,7 @@ namespace Unreal.Core
                 }
 
                 // skip RPC while we dont know exactly whats going on...
-                if (_parseMode != ParseMode.Debug)
+                if (!IsDebugMode)
                 {
                     reader.SkipBits(reader.GetBitsLeft());
                     continue;
@@ -1402,13 +1392,13 @@ namespace Unreal.Core
 
             if (reader.IsError)
             {
-                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true");
+                _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true (bunch: {bunchIndex})");
                 return false;
             }
 
             if (!reader.AtEnd())
             {
-                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read.");
+                _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
                 return false;
             }
 
@@ -1678,7 +1668,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!archive.CanRead((int) numPayloadBits))
+            if (!archive.CanRead((int)numPayloadBits))
             {
                 reader = null;
                 return false;

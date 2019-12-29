@@ -1,4 +1,5 @@
 ﻿using System;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Attributes
 {
@@ -10,10 +11,12 @@ namespace Unreal.Core.Attributes
     public sealed class NetFieldExportSubGroupAttribute : Attribute
     {
         public string Path { get; private set; }
+        public ParseMode MinimalParseMode { get; private set; }
 
-        public NetFieldExportSubGroupAttribute(string path)
+        public NetFieldExportSubGroupAttribute(string path, ParseMode minimalParseMode = ParseMode.Normal)
         {
             Path = path;
+            MinimalParseMode = minimalParseMode;
         }
     }
 }

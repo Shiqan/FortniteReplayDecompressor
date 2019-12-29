@@ -79,6 +79,7 @@ namespace Unreal.Core
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
             _parseMode = mode;
+            NetFieldParser.Mode = mode;
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
@@ -1350,30 +1351,32 @@ namespace Unreal.Core
                 Debug($"rpc-{fieldCache.Name}-{bits.Length}", "rpc", ret);
                 reader.Pop();
 #endif
-                // Handle property
-                // TODO get this from fieldCache type property somehow...
-                var property = false;
-                var function = true;
-                if (property)
+
+                var isRpcFunction = NetFieldParser.TryGetNetFieldGroupRPC(fieldCache.Name, out var groupPath);
+                if (!isRpcFunction)
                 {
-                    if (!ReceiveCustomDeltaProperty(reader))
+                    // Handle property
+                    var path = GuidCache.NetFieldExportGroupMap.Keys.FirstOrDefault(i => i.Contains(fieldCache.Name));
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        continue;
+                    }
+
+                    var group = GuidCache.GetNetFieldExportGroup(path);
+                    if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex))
                     {
                         //FieldCache->bIncompatible = true;
                         continue;
                     }
-                    // Successfully received it.
-                }
-                else if (function)
-                {
-                    if (!ReceivedRPC(reader, netFieldExportGroup, bunch.ChIndex))
-                    {
-                        return false;
-                    }
                 }
                 else
                 {
-                    _logger?.LogWarning($"ReceivedBunch: Invalid replicated field {fieldCache.Name}. BunchIndex: {bunchIndex}, packetId: {bunch.PacketId}");
-                    return false;
+                    // Handle function call
+                    var functionGroup = GuidCache.GetNetFieldExportGroup(groupPath);
+                    if (!ReceivedRPC(reader, functionGroup, bunch.ChIndex))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -1410,7 +1413,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader)
+        public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex)
         {
             if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
             {
@@ -1420,12 +1423,13 @@ namespace Unreal.Core
 
             // Receive array index (static sized array, i.e. MemberVariable[4])
             //if (Property->ArrayDim != 1)
-            // var staticArrayIndex = reader.ReadIntPacked();
+            // TODO when to read this
+            //var staticArrayIndex = reader.ReadIntPacked();
 
             // We should only be receiving custom delta properties (since RepLayout handles the rest)
             //if (!EnumHasAnyFlags(Parent.Flags, ERepParentFlags::IsCustomDelta))
 
-            if (NetDeltaSerialize(reader))
+            if (NetDeltaSerialize(reader, group, channelIndex))
             {
                 //if (UNLIKELY(Params.Reader->IsError()))
                 //{
@@ -1450,12 +1454,13 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public virtual bool NetDeltaSerialize(FBitArchive reader)
+        public virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
             // DeltaSerializeFastArrayProperty
 
 
+            // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L895
             //---------------
             // Read header
             //---------------
@@ -1479,8 +1484,7 @@ namespace Unreal.Core
             {
                 for (var i = 0; i < NumDeletes; ++i)
                 {
-                    var ElementID = reader.ReadInt32();
-                    //ReceiveProperties();
+                    var elementID = reader.ReadInt32();
                 }
             }
 
@@ -1489,7 +1493,10 @@ namespace Unreal.Core
             //---------------
             for (var i = 0; i < NumChanged; ++i)
             {
-                var ElementID = reader.ReadInt32();
+                var elementID = reader.ReadInt32();
+
+                // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
+                ReceiveProperties(reader, group, channelIndex);
             }
 
             return true;

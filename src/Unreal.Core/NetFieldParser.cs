@@ -21,6 +21,7 @@ namespace Unreal.Core
 
         private static readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
+        private static readonly Dictionary<string, string> _functionToNetFieldGroup = new Dictionary<string, string>();
         private static readonly CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         static NetFieldParser()
@@ -36,8 +37,11 @@ namespace Unreal.Core
                     Type = type
                 };
 
-                _netFieldGroups[attribute.Path] = info;
-                AddNetFieldInfo(type, info);
+                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
+                {
+                    _netFieldGroups[attribute.Path] = info;
+                    AddNetFieldInfo(type, info);
+                }
             }
 
             // Allows deserializing type arrays
@@ -45,22 +49,29 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                var info = _netFieldGroups[attribute.Path];
-                AddNetFieldInfo(type, info);
+                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
+                {
+                    var info = _netFieldGroups[attribute.Path];
+                    AddNetFieldInfo(type, info);
+                }
             }
 
             // RPC functions
             var rpcFields = types.Where(c => c.GetCustomAttribute<NetFieldExportRPCAttribute>() != null);
             foreach (var type in rpcFields)
             {
-                var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+                var attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
                 var info = new NetFieldGroupInfo
                 {
                     Type = type
                 };
 
-                _netFieldGroups[attribute.Path] = info;
-                AddNetFieldInfo(type, info);
+                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
+                {
+                    _netFieldGroups[attribute.Path] = info;
+                    AddNetFieldInfo(type, info);
+                    _functionToNetFieldGroup[attribute.FunctionName] = attribute.Path;
+                }
             }
 
             //Type layout for dynamic arrays
@@ -106,6 +117,11 @@ namespace Unreal.Core
         public static bool WillReadType(string group)
         {
             return _netFieldGroups.ContainsKey(group);
+        }
+
+        public static bool TryGetNetFieldGroupRPC(string name, out string path)
+        {
+            return _functionToNetFieldGroup.TryGetValue(name, out path);
         }
 
         public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)

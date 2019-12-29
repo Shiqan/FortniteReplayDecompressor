@@ -1,4 +1,5 @@
 ﻿using System;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Attributes
 {
@@ -9,10 +10,14 @@ namespace Unreal.Core.Attributes
     public sealed class NetFieldExportRPCAttribute : Attribute
     {
         public string Path { get; private set; }
+        public string FunctionName { get; private set; }
+        public ParseMode MinimalParseMode { get; private set; }
 
-        public NetFieldExportRPCAttribute(string path)
+        public NetFieldExportRPCAttribute(string path, string functionName, ParseMode minimalParseMode = ParseMode.Normal)
         {
             Path = path;
+            FunctionName = functionName;
+            MinimalParseMode = minimalParseMode;
         }
     }
 }

@@ -12,8 +12,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\RPC\" />
-  </ItemGroup>
   
 </Project>

@@ -90,6 +90,15 @@ namespace Unreal.Core.Models
             }
             return NetFieldExportGroupMap[group];
         }
+        
+        public NetFieldExportGroup GetNetFieldExportGroup(string path)
+        {
+            if (!NetFieldExportGroupMap.TryGetValue(path, out var group))
+            {
+                return null;
+            }
+            return group;
+        }
 
         public void Cleanup()
         {

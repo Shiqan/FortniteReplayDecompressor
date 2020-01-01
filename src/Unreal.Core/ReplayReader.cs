@@ -79,7 +79,6 @@ namespace Unreal.Core
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
             _parseMode = mode;
-            NetFieldParser.Mode = mode;
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
@@ -1322,12 +1321,16 @@ namespace Unreal.Core
                     continue;
                 }
 
-                // skip RPC while we dont know exactly whats going on...
-                if (!IsDebugMode)
+                if (!NetFieldParser.WillReadClassNetCache(classNetCache.PathName))
                 {
-                    reader.SkipBits(reader.GetBitsLeft());
                     continue;
                 }
+
+                // skip RPC while we dont know exactly whats going on...
+                //if (!IsDebugMode)
+                //{
+                //    continue;
+                //}
 
 #if DEBUG
                 reader.Mark();
@@ -1352,21 +1355,22 @@ namespace Unreal.Core
                 reader.Pop();
 #endif
 
-                var isRpcFunction = NetFieldParser.TryGetNetFieldGroupRPC(fieldCache.Name, out var groupPath);
+                var isRpcFunction = NetFieldParser.TryGetFunctionGroup(fieldCache.Name, out var groupPath);
                 if (!isRpcFunction)
                 {
                     // Handle property
-                    var path = GuidCache.NetFieldExportGroupMap.Keys.FirstOrDefault(i => i.Contains(fieldCache.Name));
-                    if (string.IsNullOrEmpty(path))
+                    if (NetFieldParser.TryGetClassNetCache(fieldCache.Name, classNetCache.PathName, out var groupInfo))
                     {
-                        continue;
+                        var group = GuidCache.GetNetFieldExportGroup(groupInfo.PathName);
+                        if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex, groupInfo.EnablePropertyChecksum))
+                        {
+                            //FieldCache->bIncompatible = true;
+                            continue;
+                        }
                     }
-
-                    var group = GuidCache.GetNetFieldExportGroup(path);
-                    if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex))
+                    else
                     {
-                        //FieldCache->bIncompatible = true;
-                        continue;
+                        _logger.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
                     }
                 }
                 else
@@ -1413,7 +1417,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex)
+        public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
         {
             if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
             {
@@ -1429,7 +1433,7 @@ namespace Unreal.Core
             // We should only be receiving custom delta properties (since RepLayout handles the rest)
             //if (!EnumHasAnyFlags(Parent.Flags, ERepParentFlags::IsCustomDelta))
 
-            if (NetDeltaSerialize(reader, group, channelIndex))
+            if (NetDeltaSerialize(reader, group, channelIndex, enablePropertyChecksum))
             {
                 //if (UNLIKELY(Params.Reader->IsError()))
                 //{
@@ -1454,7 +1458,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex)
+        public virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
             // DeltaSerializeFastArrayProperty
@@ -1477,6 +1481,11 @@ namespace Unreal.Core
             /** The number of changed elements (adds or removes). */
             var NumChanged = reader.ReadInt32();
 
+            if (reader.IsError)
+            {
+                return false;
+            }
+
             //---------------
             // Read deleted elements
             //---------------
@@ -1488,6 +1497,11 @@ namespace Unreal.Core
                 }
             }
 
+            if (reader.IsError)
+            {
+                return false;
+            }
+
             //---------------
             // Read Changed/New elements
             //---------------
@@ -1496,7 +1510,7 @@ namespace Unreal.Core
                 var elementID = reader.ReadInt32();
 
                 // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
-                ReceiveProperties(reader, group, channelIndex);
+                ReceiveProperties(reader, group, channelIndex, enablePropertyChecksum);
             }
 
             return true;
@@ -1508,12 +1522,14 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex)
+        public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum = true)
         {
             TotalGroupsRead++;
 
-            // if ENABLE_PROPERTY_CHECKSUMS
-            var doChecksum = archive.ReadBit();
+            if (enablePropertyChecksum)
+            {
+                var doChecksum = archive.ReadBit();
+            }
 
 #if DEBUG
             Debug("types", $"\n{group?.PathName}");
@@ -1564,7 +1580,7 @@ namespace Unreal.Core
                 }
 
 #if DEBUG
-                Debug("types", $"{ export.Name}\t{export.Type}\t{numBits}");
+                Debug("types", $"{export.Name}\t{export.Type}\t{numBits}");
 #endif
 
                 if (export.Incompatible)

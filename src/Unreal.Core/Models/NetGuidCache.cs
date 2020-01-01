@@ -9,15 +9,49 @@ namespace Unreal.Core.Models
     public class NetGuidCache
     {
         public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
+
+        /// <summary>
+        /// Maps net field export group name to the respective FNetFieldExportGroup
+        /// </summary>
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
+
+        /// <summary>
+        /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
+        /// </summary>
         public Dictionary<uint, string> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, string>();
-        //public Dictionary<uint, NetGuidCacheObject> ImportedNetGuids { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
+
+        /// <summary>
+        /// Maps netguid to the respective FNetFieldExportGroup name.
+        /// </summary>
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
+
+        /// <summary>
+        /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
+        /// </summary>
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
 
+        /// <summary>
+        /// Holds data about the tag dictionary
+        /// </summary>
+        public NetFieldExportGroup NetworkGameplayTagNodeIndex // TODO make this a UGameplayTagsManager
+        {
+            get
+            {
+                if (_networkGameplayTagNodeIndex == null)
+                {
+                    if (NetFieldExportGroupMap.TryGetValue("NetworkGameplayTagNodeIndex", out var nodeIndex))
+                    {
+                        _networkGameplayTagNodeIndex = nodeIndex;
+                    }
+                }
+                return _networkGameplayTagNodeIndex;
+            }
+        }
+
+        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
+        private NetFieldExportGroup _networkGameplayTagNodeIndex { get; set; }
 
         public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
         {
@@ -90,10 +124,10 @@ namespace Unreal.Core.Models
             }
             return NetFieldExportGroupMap[group];
         }
-        
+
         public NetFieldExportGroup GetNetFieldExportGroup(string path)
         {
-            if (!NetFieldExportGroupMap.TryGetValue(path, out var group))
+            if (path == null || !NetFieldExportGroupMap.TryGetValue(path, out var group))
             {
                 return null;
             }
@@ -153,7 +187,6 @@ namespace Unreal.Core.Models
                     if (!_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
                     {
                         groupPathFixed = RemoveAllPathPrefixes(groupPath);
-
                         _cleanedPaths[groupPathKvp.Value.PathNameIndex] = groupPathFixed;
                     }
 
@@ -191,6 +224,20 @@ namespace Unreal.Core.Models
             }
 
             return netFieldExportGroup;
+        }
+
+        public bool TryGetTagName(uint tagIndex, out string tagName)
+        {
+            tagName = "";
+            if (tagIndex < NetworkGameplayTagNodeIndex.NetFieldExportsLength)
+            {
+                if (NetworkGameplayTagNodeIndex.NetFieldExports[tagIndex] != null)
+                {
+                    tagName = NetworkGameplayTagNodeIndex.NetFieldExports[tagIndex]?.Name;
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

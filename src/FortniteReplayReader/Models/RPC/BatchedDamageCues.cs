@@ -3,9 +3,9 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.RPC
+namespace FortniteReplayReader.Models
 {
-    [NetFieldExportRPC("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", "NetMulticast_Athena_BatchedDamageCues")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
     public class BatchedDamageCues : INetFieldExportGroup
     {
         [NetFieldExport("HitActor", RepLayoutCmdType.PropertyObject)]
@@ -35,7 +35,7 @@ namespace FortniteReplayReader.Models.RPC
         [NetFieldExport("bIsShieldDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool? bIsShieldDestroyed { get; set; }
 
-        [NetFieldExport("bIsShieldApplied ", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("bIsShieldApplied", RepLayoutCmdType.PropertyBool)]
         public bool? bIsShieldApplied { get; set; }
 
         [NetFieldExport("bIsBallistic", RepLayoutCmdType.PropertyBool)]
@@ -45,10 +45,10 @@ namespace FortniteReplayReader.Models.RPC
         public uint? NonPlayerHitActor { get; set; }
 
         [NetFieldExport("NonPlayerLocation", RepLayoutCmdType.PropertyVector10)]
-        public FVector? NonPlayerLocation { get; set; }
+        public FVector NonPlayerLocation { get; set; }
 
         [NetFieldExport("NonPlayerNormal", RepLayoutCmdType.PropertyVectorNormal)]
-        public FVector? NonPlayerNormal { get; set; }
+        public FVector NonPlayerNormal { get; set; }
 
         [NetFieldExport("NonPlayerMagnitude", RepLayoutCmdType.PropertyFloat)]
         public float? NonPlayerMagnitude { get; set; }

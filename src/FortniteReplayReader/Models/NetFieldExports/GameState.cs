@@ -5,6 +5,22 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
+    [NetFieldExportClassNetCache("Athena_GameState_C_ClassNetCache")]
+    public class GameStateCache
+    {
+        [NetFieldExportRPCStruct("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier")]
+        public ActiveGameplayModifier[] ActiveGameplayModifiers { get; set; }
+
+        [NetFieldExportRPCStruct("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
+        public GameMemberInfo[] GameMemberInfoArray { get; set; }
+
+        [NetFieldExportRPCStruct("CurrentPlaylistInfo", "/Script/FortniteGame...")]
+        public object CurrentPlaylistInfo { get; set; }
+
+        [NetFieldExportRPCStruct("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData")]
+        public SpawnMachineRepData SpawnMachineRepData { get; set; }
+    }
+
     [NetFieldExportGroup("/Game/Athena/Athena_GameState.Athena_GameState_C")]
     public class GameState : INetFieldExportGroup
     {

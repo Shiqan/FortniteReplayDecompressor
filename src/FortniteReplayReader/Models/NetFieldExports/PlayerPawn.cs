@@ -5,6 +5,22 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
+    [NetFieldExportClassNetCache("PlayerPawn_Athena_C_ClassNetCache")]
+    public class PlayerPawnCache
+    {
+        [NetFieldExportRPCStruct("ClientObservedStats", "/Script/FortniteGame.FortClientObservedStat")]
+        public FortClientObservedStat ClientObservedStats { get; set; }
+
+        //[NetFieldExportRPCFunction("FastSharedReplication", "/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
+        //public FRepMovement FastSharedReplication { get; set; }
+
+        [NetFieldExportRPCFunction("NetMulticast_Athena_BatchedDamageCues", "/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
+        public BatchedDamageCues FastSharedReplication { get; set; }
+        
+        [NetFieldExportRPCFunction("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams")]
+        public InvokeGameplayCueAdded InvokeGameplayCueAdded { get; set; }
+    }
+
     [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]
     public class PlayerPawn : INetFieldExportGroup
     {

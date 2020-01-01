@@ -7,6 +7,16 @@ namespace Unreal.Core.Models
     /// </summary>
     public class FHitResult : IProperty
     {
+        public FHitResult()
+        {
+
+        }
+
+        public FHitResult(NetBitReader reader)
+        {
+            Serialize(reader);
+        }
+
         /// <summary>
         /// Indicates if this hit was a result of blocking collision. If false, there was no hit or it was an overlap/touch instead.
         /// </summary>

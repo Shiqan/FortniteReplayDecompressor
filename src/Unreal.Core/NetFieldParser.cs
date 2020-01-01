@@ -22,6 +22,7 @@ namespace Unreal.Core
         private static readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private static readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
         private static readonly Dictionary<string, string> _functionToNetFieldGroup = new Dictionary<string, string>();
+        private static Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
         private static readonly CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         static NetFieldParser()
@@ -37,11 +38,8 @@ namespace Unreal.Core
                     Type = type
                 };
 
-                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
-                {
-                    _netFieldGroups[attribute.Path] = info;
-                    AddNetFieldInfo(type, info);
-                }
+                _netFieldGroups[attribute.Path] = info;
+                AddNetFieldInfo(type, info);
             }
 
             // Allows deserializing type arrays
@@ -49,29 +47,18 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
-                {
-                    var info = _netFieldGroups[attribute.Path];
-                    AddNetFieldInfo(type, info);
-                }
+                var info = _netFieldGroups[attribute.Path];
+                AddNetFieldInfo(type, info);
             }
 
-            // RPC functions
-            var rpcFields = types.Where(c => c.GetCustomAttribute<NetFieldExportRPCAttribute>() != null);
-            foreach (var type in rpcFields)
+            // ClassNetCaches
+            var classNetCaches = types.Where(c => c.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>() != null);
+            foreach (var type in classNetCaches)
             {
-                var attribute = type.GetCustomAttribute<NetFieldExportRPCAttribute>();
-                var info = new NetFieldGroupInfo
-                {
-                    Type = type
-                };
-
-                if (IsDebugMode || Mode >= attribute.MinimalParseMode)
-                {
-                    _netFieldGroups[attribute.Path] = info;
-                    AddNetFieldInfo(type, info);
-                    _functionToNetFieldGroup[attribute.FunctionName] = attribute.Path;
-                }
+                var attribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
+                var info = new ClassNetCacheInfo();
+                AddClassNetInfo(type, info);
+                _classNetCacheToNetFieldGroup[attribute.Path] = info;
             }
 
             //Type layout for dynamic arrays
@@ -114,27 +101,63 @@ namespace Unreal.Core
             }
         }
 
+        private static void AddClassNetInfo(Type type, ClassNetCacheInfo info)
+        {
+            foreach (var property in type.GetProperties())
+            {
+                var structAttribute = property.GetCustomAttribute<NetFieldExportRPCStructAttribute>();
+                if (structAttribute != null)
+                {
+                    info.Properties[structAttribute.Name] = new ClassNetCachePropertyInfo() { 
+                        Name = structAttribute.Name, 
+                        PathName = structAttribute.PathName,
+                        EnablePropertyChecksum = structAttribute.EnablePropertyChecksum
+                    };
+                }
+                
+                var functionAttribute = property.GetCustomAttribute<NetFieldExportRPCFunctionAttribute>();
+                if (functionAttribute != null)
+                {
+                    _functionToNetFieldGroup[functionAttribute.Name] = functionAttribute.PathName;
+                }
+            }
+        }
+
         public static bool WillReadType(string group)
         {
             return _netFieldGroups.ContainsKey(group);
         }
+        
+        public static bool WillReadClassNetCache(string group)
+        {
+            return _classNetCacheToNetFieldGroup.ContainsKey(group);
+        }
 
-        public static bool TryGetNetFieldGroupRPC(string name, out string path)
+        public static bool TryGetFunctionGroup(string name, out string path)
         {
             return _functionToNetFieldGroup.TryGetValue(name, out path);
+        }
+
+        public static bool TryGetClassNetCache(string property, string group, out ClassNetCachePropertyInfo info)
+        {
+            info = null;
+            if (_classNetCacheToNetFieldGroup.TryGetValue(group, out var groupInfo))
+            {
+                return groupInfo.Properties.TryGetValue(property, out info);
+            }
+            return false;
         }
 
         public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             var group = exportGroup.PathName;
-            var fixedExportName = FixInvalidNames(export.Name);
 
             if (!_netFieldGroups.TryGetValue(group, out var netGroupInfo))
             {
                 return;
             }
 
-            if (!netGroupInfo.Properties.TryGetValue(fixedExportName, out var netFieldInfo))
+            if (!netGroupInfo.Properties.TryGetValue(export.Name, out var netFieldInfo))
             {
                 return;
             }
@@ -361,35 +384,6 @@ namespace Unreal.Core
             return (INetFieldExportGroup)_linqCache.CreateObject(netfieldGroup.Type);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        private static unsafe string FixInvalidNames(string str)
-        {
-            var len = str.Length;
-            var newChars = stackalloc char[len];
-            var currentChar = newChars;
-
-            for (var i = 0; i < len; ++i)
-            {
-                var c = str[i];
-
-                var isDigit = (c ^ '0') <= 9;
-
-                var val = (byte)((c & 0xDF) - 0x40);
-                var isChar = val > 0 && val <= 26;
-
-                if (isDigit || isChar)
-                {
-                    *currentChar++ = c;
-                }
-            }
-
-            return new string(newChars, 0, (int)(currentChar - newChars));
-        }
-
         private class NetFieldGroupInfo
         {
             public Type Type { get; set; }
@@ -400,6 +394,18 @@ namespace Unreal.Core
         {
             public NetFieldExportAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
+        }
+
+        public class ClassNetCachePropertyInfo
+        {
+            public string Name { get; set; }
+            public string PathName { get; set; }
+            public bool EnablePropertyChecksum { get; set; }
+        }
+
+        private class ClassNetCacheInfo
+        {
+            public Dictionary<string, ClassNetCachePropertyInfo> Properties { get; set; } = new Dictionary<string, ClassNetCachePropertyInfo>();
         }
     }
 }

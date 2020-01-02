@@ -1315,7 +1315,7 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (reader == null || reader.IsError)
+                if (reader == null || reader.IsError || reader.AtEnd())
                 {
                     _logger?.LogInformation($"ReceivedBunch: reader == nullptr or IsError: {classNetCache.PathName}");
                     continue;
@@ -1555,7 +1555,7 @@ namespace Unreal.Core
 
                 if (group?.NetFieldExportsLength <= handle)
                 {
-                    _logger?.LogWarning($"NetFieldExports length ({group?.NetFieldExports.Length}) < handle ({handle})");
+                    _logger?.LogWarning($"NetFieldExports length ({group?.NetFieldExportsLength}) < handle ({handle})");
                     return false;
                 }
 

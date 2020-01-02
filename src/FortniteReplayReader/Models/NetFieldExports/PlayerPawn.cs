@@ -444,7 +444,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GravityFloorGravityScalar", RepLayoutCmdType.PropertyUInt32)]
         public uint? GravityFloorGravityScalar { get; set; }
 
-        [NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.PropertyUInt32)]
+        [NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.PropertyObject)]
         public uint? ReplicatedWaterBody { get; set; }
 
         [NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyUInt32)]

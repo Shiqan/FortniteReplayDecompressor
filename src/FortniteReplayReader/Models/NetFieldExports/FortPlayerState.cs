@@ -5,6 +5,14 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
+    [NetFieldExportClassNetCache("FortPlayerStateAthena_ClassNetCache")]
+    public class FortPlayerStateCache
+    {
+        [NetFieldExportRPCFunction("Client_OnNewLevel", "/Script/FortniteGame.FortPlayerStateAthena:Client_OnNewLevel")]
+        public OnNewLevel Client_OnNewLevel { get; set; }
+    }
+
+
     [NetFieldExportGroup("/Script/FortniteGame.FortPlayerStateAthena")]
     public class FortPlayerState : INetFieldExportGroup
     {
@@ -130,7 +138,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("StreamerModeName", RepLayoutCmdType.Property)]
         public FText StreamerModeName { get; set; }
-        
+
         [NetFieldExport("PlayerNameCustomOverride", RepLayoutCmdType.Property)]
         public FText PlayerNameCustomOverride { get; set; }
 

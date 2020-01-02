@@ -9,18 +9,18 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class SpawnMachineRepData : INetFieldExportGroup
     {
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
-        public DebuggingObject Location { get; set; }
+        public FVector Location { get; set; }
 
-        [NetFieldExport("SpawnMachineState", RepLayoutCmdType.Property)]
-        public DebuggingObject SpawnMachineState { get; set; }
+        [NetFieldExport("SpawnMachineState", RepLayoutCmdType.Enum)]
+        public int SpawnMachineState { get; set; }
 
-        [NetFieldExport("SpawnMachineCooldownStartTime", RepLayoutCmdType.PropertyUInt32)]
-        public DebuggingObject SpawnMachineCooldownStartTime { get; set; }
+        [NetFieldExport("SpawnMachineCooldownStartTime", RepLayoutCmdType.PropertyFloat)]
+        public float SpawnMachineCooldownStartTime { get; set; }
 
-        [NetFieldExport("SpawnMachineCooldownEndTime", RepLayoutCmdType.PropertyUInt32)]
-        public DebuggingObject SpawnMachineCooldownEndTime { get; set; }
+        [NetFieldExport("SpawnMachineCooldownEndTime", RepLayoutCmdType.PropertyFloat)]
+        public float SpawnMachineCooldownEndTime { get; set; }
 
-        [NetFieldExport("SpawnMachineRepDataHandle", RepLayoutCmdType.PropertyUInt32)]
-        public DebuggingObject SpawnMachineRepDataHandle { get; set; }
+        [NetFieldExport("SpawnMachineRepDataHandle", RepLayoutCmdType.PropertyInt)]
+        public int SpawnMachineRepDataHandle { get; set; }
     }
 }

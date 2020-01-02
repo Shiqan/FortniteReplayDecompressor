@@ -96,8 +96,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("MapInfo", RepLayoutCmdType.Ignore)]
         public uint? MapInfo { get; set; }
 
-        [NetFieldExport("GoldenPoiLocationTags", RepLayoutCmdType.Ignore)]
-        public DebuggingObject GoldenPoiLocationTags { get; set; }
+        [NetFieldExport("GoldenPoiLocationTags", RepLayoutCmdType.Property)]
+        public FGameplayTagContainer GoldenPoiLocationTags { get; set; }
 
         [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Ignore)]
         public uint? DefaultBattleBus { get; set; }

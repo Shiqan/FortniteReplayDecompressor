@@ -1,35 +1,4 @@
----
-# Page settings
-layout: homepage
-keywords: fornite replay reader
+![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAABgCAMAAACQTr/kAAAAllBMVEVMaXH///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9QwCw4AAAAMXRSTlMAJNvv5QlSrfcbEYAB/voZDgXW9ekoH/LttBUHC+AzV0qhdMWoLV9ql8x7QodPOo+8n4r4ZAAACndJREFUeF7s1dsKgkAQgOFRHGunqXWzrMzItFAzhd7/5YI2oA1YBG8C97vbw9XPwIDjOI7jOACMUtilCjRH9fXMrpYwXawQIyLF7xN2fmzXJNMMJIVIvG3fnat7sVU6Vhg8reYHMYVA+BWo7c7F4nGZHcq1fwqCzX6d47BY8VXCn2Bm0JgSz5BkDCMw5eEnUOPrQPtdPF8tdYMgHBhrV6fmjGakV4KkTDGYWL/9kkRofmVFlKFxacXHKBXeDUGLqsY3lC3CCC927nQ9VV0NADDBoABJkBldMombqija+7+5I7UY6xcqB2ofzjr7+9lGAq8ZB1HS3Q0IEnTHCg39/hFRVRjZrI7MKCpf/9pV6uvNTBCbw34am/dfvuWt98X0GCPka+ZS1+eKAuTvvh7NK98OM/vskQbLhY/TL4DCIKz9DcsyS+Ms44t/HUGI5cU6Xt5zmZvQEUUYYjsrEOdSUjvEGEeynS82W8NYJ8fSQ6guhPdFjii6Vn89MztyJw7Fb/PPjycYPo61BCV6Tn4XCxerzxufVyc7ZPSdB1Vd+xDf3ZE2c9quQwN8Tnzr8e4oUy/soVvDyfbiUggNXuTmq9KY7SIcOtdcnZnf9OECLBMMgrJk3qnvs4ZhwYREK/IJhQZhXpjkWyxOG21jhXyTLVXrQngrclmCMuywu//L5VXbKiN4l8h2HgLvdSBzCf0Sy7px9RGq+75jpf8U1rXbJOggM2ECJhuIiLGg7CKdk6fZNkUO7/95uN7kcO1tiCcLsGRBewtkptNkbxjGaTP7GBrUfZ+89X8IS/bIh9UJ05YUDJ98ArDEAk5+nJO2bOGzPmKxXXzNCXXE0spaZnsnc4nw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)
+C# parser for your Fortnite replays.
 
-# Hero section
-title: Fortnite Replay Reader Documentation
-description: C# parser for your Fortnite replays.
-buttons:
-    - content: Let's get started
-      url: '/getting-started/'
-      external_url: false
-
-# Author box
-author: {}
-    # title: About Author
-    # title_url: '#'
-    # external_url: true
-    # description: ""
-
-# Grid navigation
-grid_navigation:
-    - title: Getting Started
-      excerpt: In this section you'll find basic information about the Fortnite Replay Reader and how to install it and use it properly. If you're first time user then you should read Getting Started section first.
-      cta: Read more
-      url: '/getting-started/'
-    - title: Configuration
-      excerpt: Here you can go through every single option available and set it properly.
-      cta: Read more
-      url: '/configuration/'
-    - title: Credits
-      excerpt: Credits due where credit's due
-      cta: Read more
-      url: '/credits/'
----
+Free, open source and fully extensible.

@@ -1,10 +1,9 @@
 # FortniteReplayDecompressor
 
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/p5CMqJC)
+[![Documentation Status](https://readthedocs.org/projects/fortnitereplaydecompressor/badge/?version=latest)](https://fortnitereplaydecompressor.readthedocs.io/en/latest/?badge=latest)
 
 C# parser for your Fortnite replays.
-
-# Getting Started
 
 ## Special thanks
 Special thanks to [Kuinox](https://github.com/Kuinox/ChartsNite) for the collaboration to figure out the compression and structure of the replay file.

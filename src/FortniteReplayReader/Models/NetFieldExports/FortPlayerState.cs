@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportClassNetCache("FortPlayerStateAthena_ClassNetCache")]
+    [NetFieldExportClassNetCache("FortPlayerStateAthena_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class FortPlayerStateCache
     {
         [NetFieldExportRPCFunction("Client_OnNewLevel", "/Script/FortniteGame.FortPlayerStateAthena:Client_OnNewLevel")]

@@ -15,7 +15,7 @@ namespace Unreal.Core
     {
         /// <summary>
         /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; 
-        /// see netconnection.cpp 84
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L84
         /// </summary>
         private const int DefaultMaxChannelSize = 32767;
 
@@ -66,6 +66,7 @@ namespace Unreal.Core
 
 
         public NetGuidCache GuidCache = new NetGuidCache();
+        public NetFieldParser netFieldParser;
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
         public int TotalPropertiesRead { get; private set; }
@@ -79,6 +80,7 @@ namespace Unreal.Core
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
             _parseMode = mode;
+            netFieldParser = new NetFieldParser(mode);
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
@@ -531,10 +533,8 @@ namespace Unreal.Core
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
-
                 // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
                 // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
-                // TODO: Combine with Fortnite SDK dump
                 return ((UnrealNames)nameIndex).ToString();
             }
 
@@ -1321,7 +1321,7 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (!NetFieldParser.WillReadClassNetCache(classNetCache.PathName))
+                if (!netFieldParser.WillReadClassNetCache(classNetCache.PathName))
                 {
                     continue;
                 }
@@ -1355,11 +1355,11 @@ namespace Unreal.Core
                 reader.Pop();
 #endif
 
-                var isRpcFunction = NetFieldParser.TryGetFunctionGroup(fieldCache.Name, out var groupPath);
+                var isRpcFunction = netFieldParser.TryGetFunctionGroup(fieldCache.Name, out var groupPath);
                 if (!isRpcFunction)
                 {
                     // Handle property
-                    if (NetFieldParser.TryGetClassNetCache(fieldCache.Name, classNetCache.PathName, out var groupInfo))
+                    if (netFieldParser.TryGetClassNetCache(fieldCache.Name, classNetCache.PathName, out var groupInfo))
                     {
                         var group = GuidCache.GetNetFieldExportGroup(groupInfo.PathName);
                         if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex, groupInfo.EnablePropertyChecksum))
@@ -1537,7 +1537,7 @@ namespace Unreal.Core
 
             _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
 
-            var exportGroup = NetFieldParser.CreateType(group?.PathName);
+            var exportGroup = netFieldParser.CreateType(group?.PathName);
             var hasData = false;
 
             while (true)
@@ -1591,7 +1591,7 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (!NetFieldParser.WillReadType(group.PathName))
+                if (!netFieldParser.WillReadType(group.PathName))
                 {
                     _logger?.LogInformation($"Not reading type {group.PathName}");
                     archive.SkipBits(numBits);
@@ -1612,7 +1612,7 @@ namespace Unreal.Core
                         NetworkVersion = Replay.Header.NetworkVersion
                     };
 
-                    NetFieldParser.ReadField(exportGroup, export, group, cmdReader);
+                    netFieldParser.ReadField(exportGroup, export, group, cmdReader);
 
                     if (cmdReader.IsError)
                     {

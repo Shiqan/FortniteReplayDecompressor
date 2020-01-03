@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication", minimalParseMode: ParseMode.Debug)]
     public class FastSharedReplication : INetFieldExportGroup
     {
         [NetFieldExport("SharedRepMovement", RepLayoutCmdType.RepMovement)]

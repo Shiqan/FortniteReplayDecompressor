@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportClassNetCache("Athena_GameState_C_ClassNetCache")]
+    [NetFieldExportClassNetCache("Athena_GameState_C_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class GameStateCache
     {
         [NetFieldExportRPCStruct("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier")]

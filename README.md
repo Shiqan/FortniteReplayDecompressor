@@ -4,6 +4,8 @@
 
 C# parser for your Fortnite replays.
 
+# Getting Started
+
 ## Special thanks
 Special thanks to [Kuinox](https://github.com/Kuinox/ChartsNite) for the collaboration to figure out the compression and structure of the replay file.
 

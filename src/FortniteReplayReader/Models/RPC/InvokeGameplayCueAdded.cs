@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams", minimalParseMode: ParseMode.Debug)]
     public class InvokeGameplayCueAdded : INetFieldExportGroup
     {
         [NetFieldExport("GameplayCueTag", RepLayoutCmdType.Property)]

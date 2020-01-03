@@ -10,7 +10,5 @@
     {
         //public AActor Actor { get; set; }
         public NetworkGUID ActorNetGUID { get; set; }
-
-        // TODO
     }
 }

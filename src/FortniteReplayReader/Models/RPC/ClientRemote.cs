@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerAddMapMarker")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerAddMapMarker", minimalParseMode: ParseMode.Debug)]
     public class AddMapMarker : INetFieldExportGroup
     {
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt)]
@@ -72,7 +72,7 @@ namespace FortniteReplayReader.Models
         //public DebuggingObject ScreenClamping { get; set; }
     }
     
-    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerRemoveMapMarker")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerRemoveMapMarker", minimalParseMode: ParseMode.Debug)]
     public class RemoveMapMarker : INetFieldExportGroup
     {
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt)]
@@ -82,7 +82,7 @@ namespace FortniteReplayReader.Models
         public int InstanceID { get; set; }
     }
     
-    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerDamagedResourceBuilding")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerDamagedResourceBuilding", minimalParseMode: ParseMode.Debug)]
     public class PlayerDamagedResourceBuilding : INetFieldExportGroup
     {
         [NetFieldExport("BuildingSMActor", RepLayoutCmdType.PropertyInt)]

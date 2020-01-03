@@ -7,7 +7,6 @@ namespace Unreal.Core.Models
     /// </summary>
     public class DataBunch
     {
-        // TODO: make BunchArchive?
         public DataBunch()
         {
 

@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortClientObservedStat")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortClientObservedStat", minimalParseMode: ParseMode.Debug)]
     public class FortClientObservedStat : INetFieldExportGroup
     {
         [NetFieldExport("StatName", RepLayoutCmdType.PropertyName)]

@@ -14,32 +14,37 @@ namespace Unreal.Core
     /// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
     /// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
     /// </summary>
-    public static class NetFieldParser
+    public class NetFieldParser
     {
-        public static ParseMode Mode { get; set; }
-        public static bool IsDebugMode => Mode == ParseMode.Debug;
+        private readonly ParseMode Mode;
+        private bool IsDebugMode => Mode == ParseMode.Debug;
 
-        private static readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        private static readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private static readonly Dictionary<string, string> _functionToNetFieldGroup = new Dictionary<string, string>();
-        private static Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
-        private static readonly CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
+        private Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
+        private Dictionary<string, string> _functionToNetFieldGroup = new Dictionary<string, string>();
+        private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
+        private CompiledLinqCache _linqCache = new CompiledLinqCache();
 
-        static NetFieldParser()
+        public NetFieldParser(ParseMode mode)
         {
+            Mode = mode;
+
             var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(i => i.GetTypes());
             var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (var type in netFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-                var info = new NetFieldGroupInfo
+                if (IsDebugMode || attribute.MinimalParseMode >= mode)
                 {
-                    Type = type
-                };
+                    var info = new NetFieldGroupInfo
+                    {
+                        Type = type
+                    };
 
-                _netFieldGroups[attribute.Path] = info;
-                AddNetFieldInfo(type, info);
+                    _netFieldGroups[attribute.Path] = info;
+                    AddNetFieldInfo(type, info);
+                }
             }
 
             // Allows deserializing type arrays
@@ -47,8 +52,11 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                var info = _netFieldGroups[attribute.Path];
-                AddNetFieldInfo(type, info);
+                if (IsDebugMode || attribute.MinimalParseMode >= mode)
+                {
+                    var info = _netFieldGroups[attribute.Path];
+                    AddNetFieldInfo(type, info);
+                }
             }
 
             // ClassNetCaches
@@ -56,9 +64,12 @@ namespace Unreal.Core
             foreach (var type in classNetCaches)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
-                var info = new ClassNetCacheInfo();
-                AddClassNetInfo(type, info);
-                _classNetCacheToNetFieldGroup[attribute.Path] = info;
+                if (IsDebugMode || attribute.MinimalParseMode >= mode)
+                {
+                    var info = new ClassNetCacheInfo();
+                    AddClassNetInfo(type, info);
+                    _classNetCacheToNetFieldGroup[attribute.Path] = info;
+                }
             }
 
             //Type layout for dynamic arrays
@@ -82,7 +93,7 @@ namespace Unreal.Core
 
         }
 
-        private static void AddNetFieldInfo(Type type, NetFieldGroupInfo info)
+        private void AddNetFieldInfo(Type type, NetFieldGroupInfo info)
         {
             foreach (var property in type.GetProperties())
             {
@@ -101,20 +112,21 @@ namespace Unreal.Core
             }
         }
 
-        private static void AddClassNetInfo(Type type, ClassNetCacheInfo info)
+        private void AddClassNetInfo(Type type, ClassNetCacheInfo info)
         {
             foreach (var property in type.GetProperties())
             {
                 var structAttribute = property.GetCustomAttribute<NetFieldExportRPCStructAttribute>();
                 if (structAttribute != null)
                 {
-                    info.Properties[structAttribute.Name] = new ClassNetCachePropertyInfo() { 
-                        Name = structAttribute.Name, 
+                    info.Properties[structAttribute.Name] = new ClassNetCachePropertyInfo()
+                    {
+                        Name = structAttribute.Name,
                         PathName = structAttribute.PathName,
                         EnablePropertyChecksum = structAttribute.EnablePropertyChecksum
                     };
                 }
-                
+
                 var functionAttribute = property.GetCustomAttribute<NetFieldExportRPCFunctionAttribute>();
                 if (functionAttribute != null)
                 {
@@ -123,22 +135,42 @@ namespace Unreal.Core
             }
         }
 
-        public static bool WillReadType(string group)
+        /// <summary>
+        /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if group should be parsed further, false otherwise</returns>
+        public bool WillReadType(string group)
         {
             return _netFieldGroups.ContainsKey(group);
         }
-        
-        public static bool WillReadClassNetCache(string group)
+
+        /// <summary>
+        /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if group should be parsed further, false otherwise</returns>
+        public bool WillReadClassNetCache(string group)
         {
             return _classNetCacheToNetFieldGroup.ContainsKey(group);
         }
 
-        public static bool TryGetFunctionGroup(string name, out string path)
+        /// <summary>
+        /// Returns whether or not the function name was found.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if function group path was found, false otherwise</returns>
+        public bool TryGetFunctionGroup(string name, out string path)
         {
             return _functionToNetFieldGroup.TryGetValue(name, out path);
         }
 
-        public static bool TryGetClassNetCache(string property, string group, out ClassNetCachePropertyInfo info)
+        /// <summary>
+        /// Returns whether or not the property of this classnetcache was found.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if classnetcache property was found, false otherwise</returns>
+        public bool TryGetClassNetCache(string property, string group, out ClassNetCachePropertyInfo info)
         {
             info = null;
             if (_classNetCacheToNetFieldGroup.TryGetValue(group, out var groupInfo))
@@ -148,7 +180,14 @@ namespace Unreal.Core
             return false;
         }
 
-        public static void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
+        /// <summary>
+        /// Tries to read the property and update the value accordingly.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="export"></param>
+        /// <param name="exportGroup"></param>
+        /// <param name="netBitReader"></param>
+        public void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             var group = exportGroup.PathName;
 
@@ -165,7 +204,7 @@ namespace Unreal.Core
             SetType(obj, exportGroup, netFieldInfo, netBitReader);
         }
 
-        private static object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
+        private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
         {
             object data = null;
 
@@ -250,7 +289,7 @@ namespace Unreal.Core
             return data;
         }
 
-        private static void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
+        private void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
         {
             var data = netFieldInfo.Attribute.Type switch
             {
@@ -268,7 +307,7 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3141
         /// </summary>
-        private static Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetBitReader netBitReader)
+        private Array ReadArrayField(NetFieldExportGroup netfieldExportGroup, NetFieldInfo fieldInfo, NetBitReader netBitReader)
         {
             var arrayIndexes = netBitReader.ReadIntPacked();
 
@@ -374,7 +413,12 @@ namespace Unreal.Core
             }
         }
 
-        public static INetFieldExportGroup CreateType(string group)
+        /// <summary>
+        /// Create the object associated with the NetFieldExportGroup. 
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public INetFieldExportGroup CreateType(string group)
         {
             if (group == null || !_netFieldGroups.TryGetValue(group, out var netfieldGroup))
             {

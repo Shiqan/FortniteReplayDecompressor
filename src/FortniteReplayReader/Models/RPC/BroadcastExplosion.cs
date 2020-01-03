@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion", minimalParseMode: ParseMode.Debug)]
     public class BroadcastExplosion : INetFieldExportGroup
     {
         [NetFieldExport("HitActors", RepLayoutCmdType.DynamicArray)]

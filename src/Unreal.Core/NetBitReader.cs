@@ -73,20 +73,24 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
         /// </summary>
-        public FRepMovement SerializeRepMovement()
+        public FRepMovement SerializeRepMovement(
+            VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
+            RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
+            VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
             var repMovement = new FRepMovement();
             var flags = ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) == 1;
-            repMovement.bRepPhysics = (flags & (1 << 1)) == 1;
+            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
+            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
 
-            repMovement.Location = SerializePropertyQuantizedVector(VectorQuantization.RoundTwoDecimals);
-            repMovement.Rotation = ReadRotation();
-            repMovement.LinearVelocity = SerializePropertyQuantizedVector(VectorQuantization.RoundWholeNumber);
+            repMovement.Location = SerializePropertyQuantizedVector(locationQuantizationLevel);
+            repMovement.Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort();
+
+            repMovement.LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel);
 
             if (repMovement.bRepPhysics)
             {
-                repMovement.AngularVelocity = SerializePropertyQuantizedVector(VectorQuantization.RoundWholeNumber);
+                repMovement.AngularVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel);
             }
 
             return repMovement;
@@ -109,7 +113,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// NetSerialization.cpp 1858
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2044
         /// </summary>
         public FVector SerializePropertyVectorNormal()
         {
@@ -117,7 +121,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// NetSerialization.h 1768
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1954
         /// </summary>
         public FVector SerializePropertyVector10()
         {
@@ -125,7 +129,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// NetSerialization.h 1768
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2000
         /// </summary>
         public FVector SerializePropertyVector100()
         {
@@ -138,7 +142,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// NetSerialization.h 1821
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1821
         /// </summary>
         public float ReadFixedCompressedFloat(int maxValue, int numBits)
         {
@@ -166,7 +170,7 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Unrealmath.cpp 65
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L72
         /// </summary>
         public FRotator SerializePropertyRotator()
         {
@@ -184,7 +188,7 @@ namespace Unreal.Core
 
         public int SerializePropertyByte()
         {
-            return SerializePropertyByte(-1);
+            return ReadByte();
         }
 
         /// <summary>
@@ -212,14 +216,8 @@ namespace Unreal.Core
             // Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
         }
 
-        public int SerializePropertyEnum(int enumMaxValue)
-        {
-            return ReadBitsToInt((int)CeilLogTwo64((ulong)enumMaxValue));
-            // Ar.SerializeBits(Data, FMath::CeilLogTwo64(Enum->GetMaxEnumValue()));
-        }
-
         /// <summary>
-        /// PropertyBaseObject.cpp 84
+        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBaseObject.cpp#L84
         /// </summary>
         public uint SerializePropertyObject()
         {
@@ -340,48 +338,6 @@ namespace Unreal.Core
             }
 
             return "";
-        }
-
-
-        /// <summary>
-        /// Computes the base 2 logarithm for a 64-bit value that is greater than 0.
-        /// The result is rounded down to the nearest integer.
-        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h#L332
-        /// </summary>
-        /// <param name="Value">The value to compute the log of</param>
-        /// <returns>Log2 of Value. 0 if Value is 0.</returns>
-        public static ulong FloorLog2_64(ulong Value)
-        {
-            ulong pos = 0;
-            if (Value >= 1ul << 32) { Value >>= 32; pos += 32; }
-            if (Value >= 1ul << 16) { Value >>= 16; pos += 16; }
-            if (Value >= 1ul << 8) { Value >>= 8; pos += 8; }
-            if (Value >= 1ul << 4) { Value >>= 4; pos += 4; }
-            if (Value >= 1ul << 2) { Value >>= 2; pos += 2; }
-            if (Value >= 1ul << 1) { pos += 1; }
-            return (Value == 0) ? 0 : pos;
-        }
-
-        /// <summary>
-        /// Counts the number of leading zeros in the bit representation of the 64-bit value.
-        /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h#L364
-        /// </summary>
-        /// <param name="Value">the value to determine the number of leading zeros for</param>
-        /// <returns>the number of zeros before the first "on" bit</returns>
-        public static ulong CountLeadingZeros64(ulong Value)
-        {
-            if (Value == 0)
-            {
-                return 64;
-            }
-
-            return 63 - FloorLog2_64(Value);
-        }
-
-        public static ulong CeilLogTwo64(ulong Arg)
-        {
-            var Bitmask = CountLeadingZeros64(Arg) << 57 >> 63;
-            return (64 - CountLeadingZeros64(Arg - 1)) & (~Bitmask);
         }
     }
 }

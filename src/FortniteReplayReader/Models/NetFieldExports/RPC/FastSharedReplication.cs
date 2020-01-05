@@ -3,7 +3,7 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models.NetFieldExports
 {
     [NetFieldExportGroup("/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication", minimalParseMode: ParseMode.Debug)]
     public class FastSharedReplication : INetFieldExportGroup

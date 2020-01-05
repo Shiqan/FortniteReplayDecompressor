@@ -90,6 +90,7 @@ namespace Unreal.Core
             return Replay;
         }
 
+#if DEBUG
         public virtual void Debug(string filename, string directory, byte[] data)
         {
             if (IsDebugMode)
@@ -110,6 +111,7 @@ namespace Unreal.Core
                 File.AppendAllLines($"{filename}.txt", new string[1] { line });
             }
         }
+#endif
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
@@ -286,12 +288,6 @@ namespace Unreal.Core
             }
 
             using var binaryArchive = Decompress(archive, (int)info.Length);
-
-#if DEBUG
-            Debug($"replaydata-{replayDataIndex}", "replaydata", binaryArchive.ReadBytes((int)binaryArchive.BaseStream.Length));
-            binaryArchive.Seek(0);
-#endif
-
             while (!binaryArchive.AtEnd())
             {
                 var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
@@ -301,9 +297,6 @@ namespace Unreal.Core
                 {
                     if (packet.State == PacketState.Success)
                     {
-#if DEBUG
-                        Debug($"replaydata-{replayDataIndex}-packet-{packetIndex}", "replay-packets", packet.Data);
-#endif
                         packetIndex++;
                         ReceivedRawPacket(packet);
                     }
@@ -506,7 +499,7 @@ namespace Unreal.Core
                 //    var time = bitReader.ReadSingle();
                 //}
 #if DEBUG
-                Debug($"externaldata-{externalDataIndex}-{netGuid}", "externaldata", externalData);
+                //Debug($"externaldata-{externalDataIndex}-{netGuid}", "externaldata", externalData);
 #endif
                 externalDataIndex++;
             }
@@ -770,12 +763,6 @@ namespace Unreal.Core
                 };
             }
 
-#if DEBUG
-            foreach (var packet in playbackPackets.Where(p => p.State == PacketState.Success))
-            {
-                Debug("packetsizes", $"size: {packet.Data.Length}, time: {timeSeconds}");
-            }
-#endif
             return playbackPackets;
         }
 
@@ -1048,18 +1035,6 @@ namespace Unreal.Core
                             PartialBunch.CloseReason = bunch.CloseReason;
                             PartialBunch.bIsReplicationPaused = bunch.bIsReplicationPaused;
                             PartialBunch.bHasMustBeMappedGUIDs = bunch.bHasMustBeMappedGUIDs;
-
-#if DEBUG
-                            PartialBunch.Archive.Mark();
-                            var alignpartial = PartialBunch.Archive.GetBitsLeft() % 8;
-                            if (alignpartial != 0)
-                            {
-                                var append = new bool[alignpartial];
-                                PartialBunch.Archive.AppendDataFromChecked(append);
-                            }
-                            Debug($"partialbunch-{PartialBunch.ChIndex}-{PartialBunch.ChName}", "partialbunches", PartialBunch.Archive.ReadBytes(PartialBunch.Archive.GetBitsLeft() / 8));
-                            PartialBunch.Archive.Pop();
-#endif
                             ReceivedSequencedBunch(PartialBunch);
                             return;
                         }
@@ -1290,8 +1265,7 @@ namespace Unreal.Core
                 return true;
             }
 
-            var classNetCache = GuidCache.GetNetFieldExportGroupForClassNetCache(netFieldExportGroup?.PathName);
-            if (classNetCache == null)
+            if (!GuidCache.TryGetClassNetCache(netFieldExportGroup?.PathName, out var classNetCache))
             {
                 _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
                 return false;
@@ -1351,7 +1325,7 @@ namespace Unreal.Core
                     }
                     ret[i / 8] = (byte)value;
                 }
-                Debug($"rpc-{fieldCache.Name}-{bits.Length}", "rpc", ret);
+                //Debug($"rpc-{fieldCache.Name}-{bits.Length}", "rpc", ret);
                 reader.Pop();
 #endif
 
@@ -1532,7 +1506,7 @@ namespace Unreal.Core
             }
 
 #if DEBUG
-            Debug("types", $"\n{group?.PathName}");
+            //Debug("types", $"\n{group?.PathName}");
 #endif
 
             _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
@@ -1572,15 +1546,12 @@ namespace Unreal.Core
                     NullHandles++;
 
                     _logger?.LogDebug($"Couldnt find handle {handle}, numbits is {numBits}");
-#if DEBUG
-                    Debug("missinghandles", $"\n{group?.PathName}\t{handle}\t{numBits}");
-#endif
                     archive.SkipBits(numBits);
                     continue;
                 }
 
 #if DEBUG
-                Debug("types", $"{export.Name}\t{export.Type}\t{numBits}");
+                //Debug("types", $"{export.Name}\t{export.Type}\t{numBits}");
 #endif
 
                 if (export.Incompatible)
@@ -1966,29 +1937,6 @@ namespace Unreal.Core
                 };
                 bunchIndex++;
 
-#if DEBUG
-                Debug("bunchsizes", $"packetIndex: {packetIndex}, bunchIndex: {bunchIndex - 1}, size: {bunchDataBits}");
-                bunch.Archive.Mark();
-                var bits = bunch.Archive.ReadBits(bunch.Archive.GetBitsLeft());
-                var ret = new byte[(int)Math.Ceiling(bits.Length / 8.0)];
-                for (var i = 0; i < bits.Length; i += 8)
-                {
-                    var value = 0;
-                    for (var j = 0; j < 8; j++)
-                    {
-                        if (i + j < bits.Length)
-                        {
-                            if (bits[i + j])
-                            {
-                                value += 1 << (7 - j);
-                            }
-                        }
-                    }
-                    ret[i / 8] = (byte)value;
-                }
-                Debug($"bunch-{bunchIndex}-{bunch.ChIndex}-{bunch.ChName}", "bunches", ret);
-                bunch.Archive.Pop();
-#endif
                 if (bunch.bHasPackageMapExports)
                 {
                     // Driver->NetGUIDInBytes += (BunchDataBits + (HeaderPos - IncomingStartPos)) >> 3 ??

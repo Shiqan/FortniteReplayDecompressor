@@ -33,7 +33,7 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Holds data about the tag dictionary
         /// </summary>
-        public NetFieldExportGroup NetworkGameplayTagNodeIndex // TODO make this a UGameplayTagsManager
+        public NetFieldExportGroup NetworkGameplayTagNodeIndex
         {
             get
             {
@@ -110,12 +110,20 @@ namespace Unreal.Core.Models
             return null;
         }
 
+        /// <summary>
+        /// Add a <see cref="NetFieldExportGroup"/> to the GuidCache.
+        /// </summary>
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
             NetFieldExportGroupMap[group] = exportGroup;
             NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = group;
         }
 
+        /// <summary>
+        /// Get the <see cref="NetFieldExportGroup"/> by the index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns><see cref="NetFieldExportGroup"/></returns>
         public NetFieldExportGroup GetNetFieldExportGroupFromIndex(uint index)
         {
             if (!NetFieldExportGroupIndexToGroup.TryGetValue(index, out var group))
@@ -125,6 +133,11 @@ namespace Unreal.Core.Models
             return NetFieldExportGroupMap[group];
         }
 
+        /// <summary>
+        /// Get the <see cref="NetFieldExportGroup"/> by the path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns><see cref="NetFieldExportGroup"/></returns>
         public NetFieldExportGroup GetNetFieldExportGroup(string path)
         {
             if (path == null || !NetFieldExportGroupMap.TryGetValue(path, out var group))
@@ -134,17 +147,11 @@ namespace Unreal.Core.Models
             return group;
         }
 
-        public void Cleanup()
-        {
-            //InReliable.Clear();
-            //Channels.Clear();
-            NetFieldExportGroupIndexToGroup.Clear();
-            NetFieldExportGroupMap.Clear();
-            NetGuidToPathName.Clear();
-            ObjectLookup.Clear();
-            NetFieldExportGroupMapPathFixed.Clear();
-        }
-
+        /// <summary>
+        /// Get the <see cref="NetFieldExportGroup"/> by the Actor guid.
+        /// </summary>
+        /// <param name="actor"></param>
+        /// <returns><see cref="NetFieldExportGroup"/></returns>
         public NetFieldExportGroup GetNetFieldExportGroup(Actor actor)
         {
             var guid = actor.Archetype;
@@ -156,7 +163,7 @@ namespace Unreal.Core.Models
                 isActor = true;
             }
 
-            if (!_archTypeToExportGroup.ContainsKey(guid.Value))
+            if (!_archTypeToExportGroup.TryGetValue(guid.Value, out var group))
             {
                 var path = NetGuidToPathName[guid.Value];
 
@@ -173,11 +180,10 @@ namespace Unreal.Core.Models
                     }
                 }
 
-                if (NetFieldExportGroupMapPathFixed.ContainsKey(guid.Value))
+                if (NetFieldExportGroupMapPathFixed.TryGetValue(guid.Value, out group))
                 {
                     _archTypeToExportGroup[guid.Value] = NetFieldExportGroupMapPathFixed[guid.Value];
-
-                    return NetFieldExportGroupMapPathFixed[guid.Value];
+                    return group;
                 }
 
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
@@ -201,15 +207,20 @@ namespace Unreal.Core.Models
 
                 return null;
             }
-
-            return _archTypeToExportGroup[guid.Value];
+            return group;
         }
 
-        public NetFieldExportGroup GetNetFieldExportGroupForClassNetCache(string group)
+        /// <summary>
+        /// Tries to find the ClassNetCache for the given group path.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if ClassNetCache was found, false otherwise</returns>
+        public bool TryGetClassNetCache(string group, out NetFieldExportGroup netFieldExportGroup)
         {
             if (group == null)
             {
-                return null;
+                netFieldExportGroup = null;
+                return false;
             }
 
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
@@ -218,14 +229,15 @@ namespace Unreal.Core.Models
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 
-            if (!NetFieldExportGroupMap.TryGetValue(classNetCachePath, out var netFieldExportGroup))
-            {
-                return null;
-            }
-
-            return netFieldExportGroup;
+            return NetFieldExportGroupMap.TryGetValue(classNetCachePath, out netFieldExportGroup);
         }
 
+        /// <summary>
+        /// Tries to resolve the tagIndex using the <see cref="NetworkGameplayTagNodeIndex"/>
+        /// </summary>
+        /// <param name="tagIndex"></param>
+        /// <param name="tagName"></param>
+        /// <returns>true if tag was resolved, false otherwise</returns>
         public bool TryGetTagName(uint tagIndex, out string tagName)
         {
             tagName = "";
@@ -260,6 +272,18 @@ namespace Unreal.Core.Models
 
             path = RemovePathPrefix(path, "Default__");
             return path;
+        }
+
+        /// <summary>
+        /// Empty the NetGuidCache
+        /// </summary>
+        public void Cleanup()
+        {
+            NetFieldExportGroupIndexToGroup.Clear();
+            NetFieldExportGroupMap.Clear();
+            NetGuidToPathName.Clear();
+            ObjectLookup.Clear();
+            NetFieldExportGroupMapPathFixed.Clear();
         }
 
         private string RemovePathPrefix(string path, string toRemove)

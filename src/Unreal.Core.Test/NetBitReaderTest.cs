@@ -13,6 +13,7 @@ namespace Unreal.Core.Test
             };
             var reader = new NetBitReader(rawData, 79);
             reader.SerializeRepMovement();
+            Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
 
@@ -26,6 +27,36 @@ namespace Unreal.Core.Test
 
             var reader = new NetBitReader(rawData, 118);
             reader.SerializeRepMovement();
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
+
+        [Fact]
+        public void RepMovementTest3()
+        {
+            byte[] rawData = {
+                0x34, 0xC6, 0x7F, 0xF7, 0xA1, 0xB7, 0x8B, 0xB0, 0x9F, 0xA2, 0xFE, 0xDD,
+                0xD9, 0x25
+            };
+
+            var reader = new NetBitReader(rawData, 110);
+            reader.SerializeRepMovement(locationQuantizationLevel: Models.Enums.VectorQuantization.RoundOneDecimal);
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
+
+        [Fact]
+        public void RepMovementTest4()
+        {
+            byte[] rawData = {
+                0x5A, 0x45, 0x13, 0xEF, 0x35, 0xFC, 0xA4, 0x4E, 0x77, 0xBF, 0x00, 0xDE,
+                0x1D, 0xD6, 0xF2, 0x18, 0xB0, 0x95, 0x4C, 0xF5, 0xD1, 0xF0, 0x14, 0x7E,
+                0xA7, 0x97, 0x1B, 0x01
+            };
+
+            var reader = new NetBitReader(rawData, 218);
+            reader.SerializeRepMovement();
+            Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
 
@@ -42,6 +73,7 @@ namespace Unreal.Core.Test
 
             var reader = new NetBitReader(rawData, 432);
             reader.SerializePropertyNetId();
+            Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
 
@@ -55,6 +87,7 @@ namespace Unreal.Core.Test
 
             var reader = new NetBitReader(rawData, 144);
             reader.SerializePropertyNetId();
+            Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
 
@@ -67,6 +100,7 @@ namespace Unreal.Core.Test
 
             var reader = new NetBitReader(rawData, 80);
             reader.SerializePropertyNetId();
+            Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
     }

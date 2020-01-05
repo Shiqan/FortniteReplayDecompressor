@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public BatchedDamageCues FastSharedReplication { get; set; }
         
         [NetFieldExportRPCFunction("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams")]
-        public InvokeGameplayCueAdded InvokeGameplayCueAdded { get; set; }
+        public GameplayCue InvokeGameplayCueAdded { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]
@@ -378,8 +378,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SimulatedProxyGameplayCues", RepLayoutCmdType.Enum)]
         public int? SimulatedProxyGameplayCues { get; set; }
 
-        [NetFieldExport("ItemWraps", RepLayoutCmdType.Ignore)]
-        public object ItemWraps { get; set; }
+        [NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
+        public uint[] ItemWraps { get; set; }
 
         [NetFieldExport("WeaponActivated", RepLayoutCmdType.PropertyBool)]
         public bool? WeaponActivated { get; set; }

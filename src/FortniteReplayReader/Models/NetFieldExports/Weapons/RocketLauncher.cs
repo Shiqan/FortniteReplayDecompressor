@@ -14,4 +14,32 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class HighTierRocketLauncher : BaseWeapon, INetFieldExportGroup
     {
     }
+
+    public abstract class BaseRocketLauncherProjectile : BaseProjectile, INetFieldExportGroup
+    {
+        [NetFieldExport("StopLocation", RepLayoutCmdType.PropertyVector100)]
+        public FVector StopLocation { get; set; }
+
+        [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector100)]
+        public FVector DecalLocation { get; set; }
+
+        [NetFieldExport("PawnHitResult", RepLayoutCmdType.Property)]
+        public FHitResult PawnHitResult { get; set; }
+
+        [NetFieldExport("bHasExploded", RepLayoutCmdType.PropertyBool)]
+        public bool bHasExploded { get; set; }
+
+        [NetFieldExport("bIsBeingKilled", RepLayoutCmdType.PropertyBool)]
+        public bool bIsBeingKilled { get; set; }
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_Prj_Ranged_Rocket_Athena.B_Prj_Ranged_Rocket_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class RocketLauncherProjectile : BaseRocketLauncherProjectile
+    {
+    }
+    [NetFieldExportGroup("/Game/Weapons/FORT_RocketLaunchers/Blueprints/B_Prj_Ranged_Rocket_Athena_LowTier.B_Prj_Ranged_Rocket_Athena_LowTier_C", minimalParseMode: ParseMode.Debug)]
+    public class LowTierRocketLauncherProjectile : BaseRocketLauncherProjectile
+    {
+        // replicated movement is one decimal...
+    }
 }

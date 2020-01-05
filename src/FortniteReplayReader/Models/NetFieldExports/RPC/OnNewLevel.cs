@@ -3,7 +3,7 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models
+namespace FortniteReplayReader.Models.NetFieldExports
 {
     [NetFieldExportGroup("/Script/FortniteGame.FortPlayerStateAthena:Client_OnNewLevel", minimalParseMode: ParseMode.Debug)]
     public class OnNewLevel : INetFieldExportGroup

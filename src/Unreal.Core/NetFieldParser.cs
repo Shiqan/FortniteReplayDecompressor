@@ -17,6 +17,7 @@ namespace Unreal.Core
     public class NetFieldParser
     {
         private readonly ParseMode Mode;
+        private readonly NetGuidCache GuidCache;
         private bool IsDebugMode => Mode == ParseMode.Debug;
 
         private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
@@ -25,9 +26,10 @@ namespace Unreal.Core
         private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
         private CompiledLinqCache _linqCache = new CompiledLinqCache();
 
-        public NetFieldParser(ParseMode mode)
+        public NetFieldParser(NetGuidCache cache, ParseMode mode)
         {
             Mode = mode;
+            GuidCache = cache;
 
             var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(i => i.GetTypes());
             var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
@@ -35,7 +37,7 @@ namespace Unreal.Core
             foreach (var type in netFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode >= mode)
+                if (IsDebugMode || attribute.MinimalParseMode <= mode)
                 {
                     var info = new NetFieldGroupInfo
                     {
@@ -52,7 +54,7 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode >= mode)
+                if (IsDebugMode || attribute.MinimalParseMode <= mode)
                 {
                     var info = _netFieldGroups[attribute.Path];
                     AddNetFieldInfo(type, info);
@@ -64,7 +66,7 @@ namespace Unreal.Core
             foreach (var type in classNetCaches)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode >= mode)
+                if (IsDebugMode || attribute.MinimalParseMode <= mode)
                 {
                     var info = new ClassNetCacheInfo();
                     AddClassNetInfo(type, info);
@@ -213,6 +215,7 @@ namespace Unreal.Core
                 case RepLayoutCmdType.Property:
                     data = _linqCache.CreateObject(objectType);
                     (data as IProperty).Serialize(netBitReader);
+                    (data as IResolvable)?.Resolve(GuidCache);
                     break;
                 case RepLayoutCmdType.PropertyBool:
                     data = netBitReader.SerializePropertyBool();

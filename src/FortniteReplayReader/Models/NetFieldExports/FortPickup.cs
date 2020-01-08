@@ -44,8 +44,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Count", RepLayoutCmdType.PropertyInt)]
         public int? Count { get; set; }
 
-        [NetFieldExport("ItemDefinition", RepLayoutCmdType.PropertyObject)]
-        public uint? ItemDefinition { get; set; }
+        [NetFieldExport("ItemDefinition", RepLayoutCmdType.Property)]
+        public ItemDefinition ItemDefinition { get; set; }
 
         [NetFieldExport("Durability", RepLayoutCmdType.PropertyFloat)]
         public float? Durability { get; set; }

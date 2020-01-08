@@ -8,8 +8,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo")]
     public class GameMemberInfo : INetFieldExportGroup
     {
-        [NetFieldExport("SquadId", RepLayoutCmdType.PropertyName)]
-        public string SquadId { get; set; }
+        [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte)]
+        public byte SquadId { get; set; }
 
         [NetFieldExport("TeamIndex", RepLayoutCmdType.Enum)]
         public int TeamIndex { get; set; }

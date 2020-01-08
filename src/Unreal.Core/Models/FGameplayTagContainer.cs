@@ -6,7 +6,7 @@ namespace Unreal.Core.Models
     /// A Tag Container holds a collection of FGameplayTags.
     /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Classes/GameplayTagContainer.h#L275
     /// </summary>
-    public class FGameplayTagContainer : IProperty
+    public class FGameplayTagContainer : IProperty, IResolvable
     {
         public FGameplayTag[] Tags { get; private set; }
 
@@ -27,6 +27,14 @@ namespace Unreal.Core.Models
             for (var i = 0; i < numTags; i++)
             {
                 Tags[i] = new FGameplayTag(reader);
+            }
+        }
+
+        public void Resolve(NetGuidCache cache)
+        {
+            for (var i = 0; i < Tags.Length; i++)
+            {
+                Tags[i].Resolve(cache);
             }
         }
     }

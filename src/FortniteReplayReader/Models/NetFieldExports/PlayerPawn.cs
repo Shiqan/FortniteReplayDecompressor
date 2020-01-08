@@ -319,7 +319,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? ParachuteAttachment { get; set; }
 
         [NetFieldExport("AuthoritativeValue", RepLayoutCmdType.Ignore)]
-        public uint? AuthoritativeValue { get; set; }
+        public uint AuthoritativeValue { get; set; }
+
+        [NetFieldExport("AuthoritativeRootMotion", RepLayoutCmdType.Ignore)]
+        public object AuthoritativeRootMotion { get; set; }
 
         [NetFieldExport("SocketOffset", RepLayoutCmdType.Ignore)]
         public object SocketOffset { get; set; }
@@ -354,8 +357,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("CrouchedSprintSpeed", RepLayoutCmdType.PropertyFloat)]
         public float? CrouchedSprintSpeed { get; set; }
 
-        [NetFieldExport("AnimMontage", RepLayoutCmdType.PropertyObject)]
+        [NetFieldExport("AnimMontage", RepLayoutCmdType.Ignore)]
         public uint? AnimMontage { get; set; }
+
+        [NetFieldExport("AnimRootMotionTranslationScale", RepLayoutCmdType.Ignore)]
+        public uint? AnimRootMotionTranslationScale { get; set; }
 
         [NetFieldExport("PlayRate", RepLayoutCmdType.PropertyFloat)]
         public float? PlayRate { get; set; }
@@ -378,9 +384,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SimulatedProxyGameplayCues", RepLayoutCmdType.Enum)]
         public int? SimulatedProxyGameplayCues { get; set; }
 
-        [NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
-        public uint[] ItemWraps { get; set; }
-
         [NetFieldExport("WeaponActivated", RepLayoutCmdType.PropertyBool)]
         public bool? WeaponActivated { get; set; }
 
@@ -393,23 +396,26 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("BannerColorId", RepLayoutCmdType.PropertyString)]
         public string BannerColorId { get; set; }
 
+        [NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
+        public uint[] ItemWraps { get; set; }
+
         [NetFieldExport("SkyDiveContrail", RepLayoutCmdType.PropertyObject)]
-        public uint? SkyDiveContrail { get; set; }
+        public uint SkyDiveContrail { get; set; }
 
         [NetFieldExport("Glider", RepLayoutCmdType.PropertyObject)]
-        public uint? Glider { get; set; }
+        public uint Glider { get; set; }
 
         [NetFieldExport("Pickaxe", RepLayoutCmdType.PropertyObject)]
-        public uint? Pickaxe { get; set; }
+        public uint Pickaxe { get; set; }
 
         [NetFieldExport("bIsDefaultCharacter", RepLayoutCmdType.PropertyBool)]
         public bool? bIsDefaultCharacter { get; set; }
 
         [NetFieldExport("Character", RepLayoutCmdType.PropertyObject)]
-        public uint? Character { get; set; }
+        public uint Character { get; set; }
 
         [NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.Ignore)]
-        public object[] CharacterVariantChannels { get; set; }
+        public uint[] CharacterVariantChannels { get; set; }
 
         [NetFieldExport("DBNOHoister", RepLayoutCmdType.PropertyUInt32)]
         public uint? DBNOHoister { get; set; }
@@ -418,19 +424,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public object DBNOCarryEvent { get; set; }
 
         [NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject)]
-        public uint? Backpack { get; set; }
+        public uint Backpack { get; set; }
 
         [NetFieldExport("LoadingScreen", RepLayoutCmdType.PropertyObject)]
-        public uint? LoadingScreen { get; set; }
+        public uint LoadingScreen { get; set; }
 
         [NetFieldExport("Dances", RepLayoutCmdType.DynamicArray)]
         public uint[] Dances { get; set; }
 
         [NetFieldExport("MusicPack", RepLayoutCmdType.PropertyObject)]
-        public uint? MusicPack { get; set; }
+        public uint MusicPack { get; set; }
 
         [NetFieldExport("PetSkin", RepLayoutCmdType.PropertyObject)]
-        public uint? PetSkin { get; set; }
+        public uint PetSkin { get; set; }
 
         [NetFieldExport("EncryptedPawnReplayData", RepLayoutCmdType.Property)]
         public FAthenaPawnReplayData EncryptedPawnReplayData { get; set; }

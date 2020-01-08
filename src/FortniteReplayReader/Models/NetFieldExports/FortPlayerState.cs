@@ -40,6 +40,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsABot", RepLayoutCmdType.PropertyBool)]
         public bool? bIsABot { get; set; }
 
+        [NetFieldExport("bIsSpectator", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsSpectator { get; set; }
+
         [NetFieldExport("bOnlySpectator", RepLayoutCmdType.PropertyBool)]
         public bool? bOnlySpectator { get; set; }
 
@@ -49,7 +52,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("UniqueId", RepLayoutCmdType.PropertyNetId)]
         public string UniqueId { get; set; }
 
-        [NetFieldExport("PlayerNamePrivate", RepLayoutCmdType.PropertyString)]
+        [NetFieldExport("PlayerNamePrivate", RepLayoutCmdType.Ignore)]
         public string PlayerNamePrivate { get; set; }
 
         [NetFieldExport("bIsGameSessionOwner", RepLayoutCmdType.PropertyBool)]

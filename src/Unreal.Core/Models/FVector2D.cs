@@ -16,12 +16,6 @@
         public float X { get; set; }
         public float Y { get; set; }
 
-        public void Serialize(NetBitReader reader)
-        {
-            X = reader.SerializePropertyFloat();
-            Y = reader.SerializePropertyFloat();
-        }
-
         public override string ToString()
         {
             return $"X: {X}, Y: {Y}";

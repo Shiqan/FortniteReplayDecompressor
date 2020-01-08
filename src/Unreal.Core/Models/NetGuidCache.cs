@@ -233,6 +233,17 @@ namespace Unreal.Core.Models
         }
 
         /// <summary>
+        /// Tries to resolve the netguid using the <see cref="NetGuidToPathName"/>
+        /// </summary>
+        /// <param name="netguid"></param>
+        /// <param name="pathName"></param>
+        /// <returns>true if netguid was resolved, false otherwise</returns>
+        public bool TryGetPathName(uint netguid, out string pathName)
+        {
+            return NetGuidToPathName.TryGetValue(netguid, out pathName);
+        }
+
+        /// <summary>
         /// Tries to resolve the tagIndex using the <see cref="NetworkGameplayTagNodeIndex"/>
         /// </summary>
         /// <param name="tagIndex"></param>

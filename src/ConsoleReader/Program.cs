@@ -30,8 +30,8 @@ namespace ConsoleReader
 
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
-            var replayFile = "Replays/season11.11.replay";
-            //var replayFile = "Replays/season11.31.replay";
+            //var replayFile = "Replays/season11.11.replay";
+            var replayFile = "Replays/season11.31.replay";
             //var replayFile = "Replays/season11.replay";
             //var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.04.05-20.22.58.replay";
@@ -44,7 +44,7 @@ namespace ConsoleReader
             var sw = new Stopwatch();
             sw.Start();
             var reader = new ReplayReader(logger);
-            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Debug);
+            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Normal);
             sw.Stop();
 
             Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");

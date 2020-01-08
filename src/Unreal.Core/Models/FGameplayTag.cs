@@ -5,7 +5,7 @@ namespace Unreal.Core.Models
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Classes/GameplayTagContainer.h#L52
     /// </summary>
-    public class FGameplayTag : IProperty
+    public class FGameplayTag : IProperty, IResolvable
     {
         public FGameplayTag()
         {
@@ -27,6 +27,14 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             TagIndex = reader.ReadIntPacked();
+        }
+
+        public void Resolve(NetGuidCache cache)
+        {
+            if (cache.TryGetTagName(TagIndex, out var name))
+            {
+                TagName = name;
+            }
         }
     }
 }

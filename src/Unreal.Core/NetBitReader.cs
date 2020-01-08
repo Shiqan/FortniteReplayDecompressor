@@ -223,11 +223,7 @@ namespace Unreal.Core
         {
             //InternalLoadObject(); // TODO make available in archive
 
-            var netGuid = new NetworkGUID()
-            {
-                Value = ReadIntPacked()
-            };
-            return netGuid.Value;
+            return ReadIntPacked();
 
             //if (!netGuid.IsValid())
             //{

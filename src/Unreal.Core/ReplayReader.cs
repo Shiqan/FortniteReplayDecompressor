@@ -80,7 +80,7 @@ namespace Unreal.Core
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
             _parseMode = mode;
-            netFieldParser = new NetFieldParser(mode);
+            netFieldParser = new NetFieldParser(GuidCache, mode);
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);

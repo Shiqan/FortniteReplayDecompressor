@@ -1,8 +1,11 @@
-﻿namespace Unreal.Core.Models.Enums
+﻿using System;
+
+namespace Unreal.Core.Models.Enums
 {
     /// <summary>
     /// Setting to determines how much should be parsed.
     /// </summary>
+    [Flags]
     public enum ParseMode
     {
         /// <summary>

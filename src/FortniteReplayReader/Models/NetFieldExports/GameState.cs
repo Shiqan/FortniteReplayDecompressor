@@ -15,7 +15,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public GameMemberInfo[] GameMemberInfoArray { get; set; }
 
         [NetFieldExportRPCStruct("CurrentPlaylistInfo", "/Script/FortniteGame...")]
-        public object CurrentPlaylistInfo { get; set; }
+        public PlaylistInfo CurrentPlaylistInfo { get; set; }
 
         [NetFieldExportRPCStruct("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData")]
         public SpawnMachineRepData SpawnMachineRepData { get; set; }
@@ -148,7 +148,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int? SpawnPointsAllocated { get; set; }
 
         [NetFieldExport("PlayerSharedMaxTrapAttributes", RepLayoutCmdType.DynamicArray)]
-        public object[] PlayerSharedMaxTrapAttributes { get; set; }
+        public float[] PlayerSharedMaxTrapAttributes { get; set; }
 
         [NetFieldExport("TotalPlayerStructures", RepLayoutCmdType.PropertyInt)]
         public int? TotalPlayerStructures { get; set; }

@@ -150,39 +150,20 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Get the <see cref="NetFieldExportGroup"/> by the Actor guid.
         /// </summary>
-        /// <param name="actor"></param>
+        /// <param name="netguid"></param>
         /// <returns><see cref="NetFieldExportGroup"/></returns>
-        public NetFieldExportGroup GetNetFieldExportGroup(Actor actor)
+        public NetFieldExportGroup GetNetFieldExportGroup(uint netguid)
         {
-            var guid = actor.Archetype;
-            var isActor = false;
-
-            if (guid == null)
+            if (!_archTypeToExportGroup.TryGetValue(netguid, out var group))
             {
-                guid = actor.ActorNetGUID;
-                isActor = true;
-            }
-
-            if (!_archTypeToExportGroup.TryGetValue(guid.Value, out var group))
-            {
-                var path = NetGuidToPathName[guid.Value];
-
-                if (isActor)
+                if (!NetGuidToPathName.TryGetValue(netguid, out var path))
                 {
-                    //The default types never end up here.
                     return null;
-
-                    var tempPath = CoreRedirects.GetRedirect(path);
-
-                    if (!string.IsNullOrEmpty(tempPath))
-                    {
-                        path = tempPath;
-                    }
                 }
 
-                if (NetFieldExportGroupMapPathFixed.TryGetValue(guid.Value, out group))
+                if (NetFieldExportGroupMapPathFixed.TryGetValue(netguid, out group))
                 {
-                    _archTypeToExportGroup[guid.Value] = NetFieldExportGroupMapPathFixed[guid.Value];
+                    _archTypeToExportGroup[netguid] = NetFieldExportGroupMapPathFixed[netguid];
                     return group;
                 }
 
@@ -198,15 +179,33 @@ namespace Unreal.Core.Models
 
                     if (path.Contains(groupPathFixed, StringComparison.Ordinal))
                     {
-                        NetFieldExportGroupMapPathFixed[guid.Value] = NetFieldExportGroupMap[groupPath];
-                        _archTypeToExportGroup[guid.Value] = NetFieldExportGroupMap[groupPath];
+                        NetFieldExportGroupMapPathFixed[netguid] = NetFieldExportGroupMap[groupPath];
+                        _archTypeToExportGroup[netguid] = NetFieldExportGroupMap[groupPath];
 
                         return NetFieldExportGroupMap[groupPath];
                     }
                 }
 
+                var cleanedPath = CleanPathSuffix(path);
+                foreach (var groupPathKvp in NetFieldExportGroupMap)
+                {
+                    var groupPath = groupPathKvp.Key;
+
+                    if (_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
+                    {
+                        if (groupPathFixed.Contains(cleanedPath, StringComparison.Ordinal))
+                        {
+                            NetFieldExportGroupMapPathFixed[netguid] = NetFieldExportGroupMap[groupPath];
+                            _archTypeToExportGroup[netguid] = NetFieldExportGroupMap[groupPath];
+
+                            return NetFieldExportGroupMap[groupPath];
+                        }
+                    }
+                }
+
                 return null;
             }
+
             return group;
         }
 
@@ -313,6 +312,18 @@ namespace Unreal.Core.Models
             }
 
             return path.Substring(toRemove.Length);
+        }
+
+        private string CleanPathSuffix(string path)
+        {
+            for (int i = path.Length - 1; i >= 0; i--)
+            {
+                if (!char.IsDigit(path[i]) && path[i] != '_')
+                {
+                    return path.Substring(0, i + 1);
+                }
+            }
+            return path;
         }
     }
 }

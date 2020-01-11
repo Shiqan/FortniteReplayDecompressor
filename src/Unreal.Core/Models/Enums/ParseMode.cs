@@ -36,6 +36,11 @@ namespace Unreal.Core.Models.Enums
         /// <summary>
         /// Use with caution :)
         /// </summary>
-        Debug
+        Debug,
+
+        /// <summary>
+        /// Ignore
+        /// </summary>
+        Ignore
     }
 }

@@ -453,8 +453,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedWaterBody", RepLayoutCmdType.PropertyObject)]
         public uint? ReplicatedWaterBody { get; set; }
 
-        [NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyUInt32)]
-        public uint? DBNORevivalStacking { get; set; }
+        [NetFieldExport("DBNORevivalStacking", RepLayoutCmdType.PropertyByte)]
+        public byte? DBNORevivalStacking { get; set; }
 
         [NetFieldExport("ServerWorldTimeRevivalTime", RepLayoutCmdType.PropertyUInt32)]
         public uint? ServerWorldTimeRevivalTime { get; set; }

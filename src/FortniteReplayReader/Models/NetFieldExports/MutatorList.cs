@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortMutatorListComponent", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.FortMutatorListComponent", minimalParseMode: ParseMode.Ignore)]
     public class MutatorList : INetFieldExportGroup
     {
         [NetFieldExport("OverrideMode", RepLayoutCmdType.Property)]

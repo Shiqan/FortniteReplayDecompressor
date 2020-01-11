@@ -11,6 +11,7 @@ namespace Unreal.Core.Models
         public string ChannelName { get; set; }
         public uint ChannelIndex { get; set; }
         public ChannelType ChannelType { get; set; }
+        public bool IgnoreChannel { get; set; }
 
         public Actor Actor { get; set; }
         public uint? ArchetypeId => Actor?.Archetype?.Value;

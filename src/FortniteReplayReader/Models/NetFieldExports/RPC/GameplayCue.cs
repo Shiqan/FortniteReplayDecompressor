@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GameplayCueTag", RepLayoutCmdType.Property)]
         public FGameplayTag GameplayCueTag { get; set; }
 
-        [NetFieldExport("Parameters", RepLayoutCmdType.Property)]
+        [NetFieldExport("Parameters", RepLayoutCmdType.Ignore)]
         public FGameplayCueParameters Parameters { get; set; }
 
         [NetFieldExport("PredictionKey", RepLayoutCmdType.Property)]

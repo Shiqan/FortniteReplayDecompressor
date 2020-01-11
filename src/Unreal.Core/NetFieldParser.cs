@@ -19,6 +19,7 @@ namespace Unreal.Core
         private readonly ParseMode Mode;
         private readonly NetGuidCache GuidCache;
         private bool IsDebugMode => Mode == ParseMode.Debug;
+        public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
 
         private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
@@ -74,6 +75,14 @@ namespace Unreal.Core
                 }
             }
 
+            // PlayerControllers
+            var controllers = types.Where(c => c.GetCustomAttribute<PlayerControllerAttribute>() != null);
+            foreach (var type in controllers)
+            {
+                var attribute = type.GetCustomAttribute<PlayerControllerAttribute>();
+                PlayerControllerGroups.Add(attribute.Path);
+            }
+
             //Type layout for dynamic arrays
             _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
             _primitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
@@ -123,6 +132,7 @@ namespace Unreal.Core
                 {
                     info.Properties[structAttribute.Name] = new ClassNetCachePropertyInfo()
                     {
+                        PropertyInfo = property,
                         Name = structAttribute.Name,
                         PathName = structAttribute.PathName,
                         EnablePropertyChecksum = structAttribute.EnablePropertyChecksum
@@ -172,7 +182,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="group"></param>
         /// <returns>true if classnetcache property was found, false otherwise</returns>
-        public bool TryGetClassNetCache(string property, string group, out ClassNetCachePropertyInfo info)
+        public bool TryGetClassNetCacheProperty(string property, string group, out ClassNetCachePropertyInfo info)
         {
             info = null;
             if (_classNetCacheToNetFieldGroup.TryGetValue(group, out var groupInfo))
@@ -430,6 +440,17 @@ namespace Unreal.Core
 
             return (INetFieldExportGroup)_linqCache.CreateObject(netfieldGroup.Type);
         }
+        
+        /// <summary>
+        /// Create the object associated with the property that should be read.
+        /// Used as a workaround for RPC structs.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IProperty CreatePropertyType(Type type)
+        {
+            return (IProperty)_linqCache.CreateObject(type);
+        }
 
         private class NetFieldGroupInfo
         {
@@ -445,6 +466,7 @@ namespace Unreal.Core
 
         public class ClassNetCachePropertyInfo
         {
+            public PropertyInfo PropertyInfo { get; set; }
             public string Name { get; set; }
             public string PathName { get; set; }
             public bool EnablePropertyChecksum { get; set; }

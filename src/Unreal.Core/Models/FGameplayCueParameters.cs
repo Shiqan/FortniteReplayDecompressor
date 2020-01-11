@@ -134,7 +134,8 @@ namespace Unreal.Core.Models
                 // FGameplayEffectContextHandle
                 if (reader.ReadBit())
                 {
-
+                    var handle = new FGameplayEffectContextHandle();
+                    handle.Serialize(reader);
                 }
             }
             if ((RepBits & (1 << (int)RepFlag.REP_Location)) > 0)

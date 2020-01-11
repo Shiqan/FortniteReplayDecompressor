@@ -15,7 +15,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public int Role { get; set; }
 
-        [NetFieldExport("ForceMetadataRelevant", RepLayoutCmdType.PropertyObject)]
+        [NetFieldExport("ForceMetadataRelevant", RepLayoutCmdType.Property)]
         public DebuggingObject ForceMetadataRelevant { get; set; }
 
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]

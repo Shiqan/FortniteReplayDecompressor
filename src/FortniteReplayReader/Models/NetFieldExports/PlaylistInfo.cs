@@ -1,6 +1,7 @@
 ﻿using Unreal.Core;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
@@ -11,8 +12,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         public void Serialize(NetBitReader reader)
         {
-            reader.SkipBits(2);
+            if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
+            {
+                reader.ReadBit();
+            }
+            reader.ReadBit();
             Id = reader.ReadIntPacked();
+            reader.SkipBits(31);
         }
 
         public void Resolve(NetGuidCache cache)

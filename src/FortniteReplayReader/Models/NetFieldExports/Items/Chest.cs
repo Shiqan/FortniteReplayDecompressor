@@ -14,10 +14,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ResourceType", RepLayoutCmdType.Property)]
         public DebuggingObject ResourceType { get; set; }
 
-        [NetFieldExport("ProxyGameplayCueDamagePhysicalMagnitude", RepLayoutCmdType.Property)]
+        [NetFieldExport("ProxyGameplayCueDamagePhysicalMagnitude", RepLayoutCmdType.Ignore)]
         public DebuggingObject ProxyGameplayCueDamagePhysicalMagnitude { get; set; }
 
-        [NetFieldExport("EffectContext", RepLayoutCmdType.Property)]
+        [NetFieldExport("EffectContext", RepLayoutCmdType.Ignore)]
         public DebuggingObject EffectContext { get; set; }
     }
 }

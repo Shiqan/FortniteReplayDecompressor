@@ -23,6 +23,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -38,6 +39,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -53,6 +55,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -68,6 +71,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -83,6 +87,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -98,6 +103,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -113,6 +119,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
         [Fact]
@@ -131,6 +138,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
         
         [Fact]
@@ -149,6 +157,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
         
         [Fact]
@@ -167,6 +176,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
         
         [Fact]
@@ -185,6 +195,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseElimination(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
     }
 }

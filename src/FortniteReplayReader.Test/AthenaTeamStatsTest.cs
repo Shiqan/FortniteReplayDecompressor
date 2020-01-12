@@ -18,6 +18,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseTeamStats(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
             Assert.Equal(35u, result.Position);
             Assert.Equal(96u, result.TotalPlayers);
         }
@@ -32,6 +33,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseTeamStats(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
             Assert.Equal(2u, result.Position);
             Assert.Equal(99u, result.TotalPlayers);
         }

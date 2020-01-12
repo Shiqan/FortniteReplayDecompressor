@@ -1315,24 +1315,8 @@ namespace Unreal.Core
                 }
 #if DEBUG
                 reader.Mark();
-                var bits = reader.ReadBits(reader.GetBitsLeft());
-                var ret = new byte[(int)Math.Ceiling(bits.Length / 8.0)];
-                for (var i = 0; i < bits.Length; i += 8)
-                {
-                    var value = 0;
-                    for (var j = 0; j < 8; j++)
-                    {
-                        if (i + j < bits.Length)
-                        {
-                            if (bits[i + j])
-                            {
-                                value += 1 << (7 - j);
-                            }
-                        }
-                    }
-                    ret[i / 8] = (byte)value;
-                }
-                //Debug($"rpc-{fieldCache.Name}-{bits.Length}", "rpc", ret);
+                //Debug($"rpc-{fieldCache.Name}-{reader.GetBitsLeft()}", "rpc", reader.ReadBytes(Math.Max((int)Math.Ceiling(reader.GetBitsLeft() / 8.0), 1)));
+                reader.Reset();
                 reader.Pop();
 #endif
 
@@ -1398,7 +1382,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!reader.AtEnd())
+            if (!Channels[channelIndex].IgnoreChannel && netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
             {
                 _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
                 return false;
@@ -1597,7 +1581,7 @@ namespace Unreal.Core
 
 #if DEBUG
                 archive.Mark();
-                Debug($"cmd-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
+                //Debug($"cmd-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
                 archive.Pop();
 #endif
                 hasData = true;
@@ -1614,8 +1598,10 @@ namespace Unreal.Core
                     if (cmdReader.IsError)
                     {
                         PropertyError++;
-
                         _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+#if DEBUG
+                        Debug("failed-properties", $"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+#endif
                         continue;
                     }
 
@@ -1623,6 +1609,9 @@ namespace Unreal.Core
                     {
                         FailedToRead++;
                         _logger?.LogWarning($"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+#if DEBUG
+                        Debug("failed-properties", $"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+#endif
 
                         continue;
                     }

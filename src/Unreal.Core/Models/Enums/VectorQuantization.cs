@@ -6,11 +6,19 @@
     /// </summary>
     public enum VectorQuantization
     {
-        /** Each vector component will be rounded to the nearest whole number. */
+        /// <summary>
+        /// Each vector component will be rounded to the nearest whole number.
+        /// </summary>
         RoundWholeNumber,
-        /** Each vector component will be rounded, preserving one decimal place. */
+
+        /// <summary>
+        /// Each vector component will be rounded, preserving one decimal place.
+        /// </summary>
         RoundOneDecimal,
-        /** Each vector component will be rounded, preserving two decimal places. */
+
+        /// <summary>
+        /// Each vector component will be rounded, preserving two decimal places.
+        /// </summary>
         RoundTwoDecimals
     }
 }

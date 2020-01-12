@@ -9,13 +9,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [PlayerController("BP_ReplayPC_Athena_C")]
     public class ReplayPC : INetFieldExportGroup
     {
+        [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
+        public int? Role { get; set; }
+
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public int? RemoteRole { get; set; }
 
         [NetFieldExport("PlayerState", RepLayoutCmdType.PropertyObject)]
         public uint PlayerState { get; set; }
 
-        [NetFieldExport("SpawnLocation", RepLayoutCmdType.PropertyVector100)]
-        public FVector SpwanLocation { get; set; }
+        [NetFieldExport("SpawnLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector SpawnLocation { get; set; }
     }
 }

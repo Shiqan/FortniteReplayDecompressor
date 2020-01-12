@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Script/FortniteGame.SpawnMachineRepData", minimalParseMode: ParseMode.Debug)]
     public class SpawnMachineRepData : INetFieldExportGroup
     {
-        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
+        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
         public FVector Location { get; set; }
 
         [NetFieldExport("SpawnMachineState", RepLayoutCmdType.Enum)]

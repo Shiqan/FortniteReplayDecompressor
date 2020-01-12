@@ -34,6 +34,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseMatchStats(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
 
             var expected = new Stats
             {
@@ -65,6 +66,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseMatchStats(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
 
             var expected = new Stats
             {
@@ -94,6 +96,7 @@ namespace FortniteReplayReader.Test
             var result = reader.ParseMatchStats(archive, null);
 
             Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
 
             var expected = new Stats
             {

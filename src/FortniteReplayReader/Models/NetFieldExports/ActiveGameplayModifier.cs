@@ -9,6 +9,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class ActiveGameplayModifier : INetFieldExportGroup
     {
         [NetFieldExport("ModifierDef", RepLayoutCmdType.Property)]
-        public DebuggingObject ModifierDef { get; set; }
+        public ItemDefinition ModifierDef { get; set; }
     }
 }

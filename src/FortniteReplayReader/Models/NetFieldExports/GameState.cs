@@ -130,7 +130,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int? GameFlagData { get; set; }
 
         [NetFieldExport("AdditionalPlaylistLevelsStreamed", RepLayoutCmdType.DynamicArray)]
-        public object[] AdditionalPlaylistLevelsStreamed { get; set; }
+        public FName[] AdditionalPlaylistLevelsStreamed { get; set; }
 
         [NetFieldExport("WorldDaysElapsed", RepLayoutCmdType.PropertyInt)]
         public int? WorldDaysElapsed { get; set; }
@@ -174,7 +174,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ServerChangelistNumber", RepLayoutCmdType.PropertyInt)]
         public int? ServerChangelistNumber { get; set; }
 
-        [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.PropertyUInt32)]
+        [NetFieldExport("CreativeRealEstatePlotManager", RepLayoutCmdType.Ignore)]
         public uint? CreativeRealEstatePlotManager { get; set; }
 
         [NetFieldExport("WarmupCountdownStartTime", RepLayoutCmdType.PropertyFloat)]

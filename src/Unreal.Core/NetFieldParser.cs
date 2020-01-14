@@ -117,6 +117,7 @@ namespace Unreal.Core
 
                 info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
                 {
+                    MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
                     Attribute = netFieldExportAttribute,
                     PropertyInfo = property
                 };
@@ -307,6 +308,10 @@ namespace Unreal.Core
             var data = netFieldInfo.Attribute.Type switch
             {
                 RepLayoutCmdType.DynamicArray => ReadArrayField(exportGroup, netFieldInfo, netBitReader),
+                RepLayoutCmdType.RepMovement => netFieldInfo.MovementAttribute != null ? netBitReader.SerializeRepMovement(
+                    locationQuantizationLevel: netFieldInfo.MovementAttribute.LocationQuantizationLevel,
+                    rotationQuantizationLevel: netFieldInfo.MovementAttribute.RotationQuantizationLevel,
+                    velocityQuantizationLevel: netFieldInfo.MovementAttribute.VelocityQuantizationLevel) : netBitReader.SerializeRepMovement(),
                 _ => ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType),
             };
 
@@ -440,7 +445,7 @@ namespace Unreal.Core
 
             return (INetFieldExportGroup)_linqCache.CreateObject(netfieldGroup.Type);
         }
-        
+
         /// <summary>
         /// Create the object associated with the property that should be read.
         /// Used as a workaround for RPC structs.
@@ -460,6 +465,7 @@ namespace Unreal.Core
 
         private class NetFieldInfo
         {
+            public RepMovementAttribute MovementAttribute { get; set; }
             public NetFieldExportAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
         }

@@ -18,18 +18,19 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint Instigator { get; set; }
 
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        [RepMovement(rotationQuantizationLevel: RotatorQuantization.ShortComponents)]
         public FRepMovement ReplicatedMovement { get; set; }
 
-        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector100)]
+        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
         public FVector Location { get; set; }
 
-        [NetFieldExport("UpVector", RepLayoutCmdType.Property)]
-        public DebuggingObject UpVector { get; set; }
+        [NetFieldExport("UpVector", RepLayoutCmdType.PropertyVector)]
+        public FVector UpVector { get; set; }
 
-        [NetFieldExport("ForwardVector", RepLayoutCmdType.Property)]
-        public DebuggingObject ForwardVector { get; set; }
+        [NetFieldExport("ForwardVector", RepLayoutCmdType.PropertyVector)]
+        public FVector ForwardVector { get; set; }
 
-        [NetFieldExport("SurfaceTypeVehicleOn", RepLayoutCmdType.Property)]
-        public DebuggingObject SurfaceTypeVehicleOn { get; set; }
+        [NetFieldExport("SurfaceTypeVehicleOn", RepLayoutCmdType.Enum)]
+        public int SurfaceTypeVehicleOn { get; set; }
     }
 }

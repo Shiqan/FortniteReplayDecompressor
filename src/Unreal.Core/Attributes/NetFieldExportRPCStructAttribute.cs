@@ -12,6 +12,11 @@ namespace Unreal.Core.Attributes
         public string PathName { get; private set; }
 
         /// <summary>
+        /// Indicates whether or not this struct should be parsed directly when being read (instead of going through <see cref="ReplayReader{T}.ReceiveProperties(FBitArchive, Models.NetFieldExportGroup, uint, bool)"/>.
+        /// </summary>
+        public bool CustomStruct { get; private set; }
+
+        /// <summary>
         /// Indicates whether or not the checksum bit should be read when receiving properties.
         /// </summary>
         public bool EnablePropertyChecksum { get; private set; }

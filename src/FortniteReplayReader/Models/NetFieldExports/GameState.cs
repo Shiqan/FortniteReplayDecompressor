@@ -201,7 +201,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayersLeft", RepLayoutCmdType.PropertyInt)]
         public int? PlayersLeft { get; set; }
 
-        [NetFieldExport("ReplOverrideData", RepLayoutCmdType.PropertyUInt32)]
+        [NetFieldExport("ReplOverrideData", RepLayoutCmdType.Ignore)]
         public uint? ReplOverrideData { get; set; }
 
         [NetFieldExport("EndGameStartTime", RepLayoutCmdType.PropertyFloat)]
@@ -213,8 +213,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("EndGameKickPlayerTime", RepLayoutCmdType.PropertyFloat)]
         public float? EndGameKickPlayerTime { get; set; }
 
-        [NetFieldExport("ServerToClientPreloadList", RepLayoutCmdType.DynamicArray)]
-        public object[] ServerToClientPreloadList { get; set; }
+        [NetFieldExport("ServerToClientPreloadList", RepLayoutCmdType.Ignore)]
+        public ItemDefinition[] ServerToClientPreloadList { get; set; }
 
         [NetFieldExport("ClientVehicleClassesToLoad", RepLayoutCmdType.DynamicArray)]
         public int[] ClientVehicleClassesToLoad { get; set; }

@@ -1580,9 +1580,9 @@ namespace Unreal.Core
                 }
 
 #if DEBUG
-                archive.Mark();
+                //archive.Mark();
                 //Debug($"cmd-{export.Name}-{numBits}", "cmds", archive.ReadBytes(Math.Max((int)Math.Ceiling(numBits / 8.0), 1)));
-                archive.Pop();
+                //archive.Pop();
 #endif
                 hasData = true;
                 try

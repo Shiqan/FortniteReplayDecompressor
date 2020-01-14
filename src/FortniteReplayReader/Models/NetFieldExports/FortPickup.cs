@@ -80,8 +80,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.DynamicArray)]
         public float[] GenericAttributeValues { get; set; }
 
-        [NetFieldExport("CombineTarget", RepLayoutCmdType.PropertyUInt32)]
-        public uint? CombineTarget { get; set; }
+        [NetFieldExport("CombineTarget", RepLayoutCmdType.Property)]
+        public ItemDefinition CombineTarget { get; set; }
 
         [NetFieldExport("PickupTarget", RepLayoutCmdType.PropertyObject)]
         public uint? PickupTarget { get; set; }

@@ -17,10 +17,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
     public abstract class BaseRocketLauncherProjectile : BaseProjectile, INetFieldExportGroup
     {
-        [NetFieldExport("StopLocation", RepLayoutCmdType.PropertyVector100)]
+        [NetFieldExport("StopLocation", RepLayoutCmdType.PropertyVector)]
         public FVector StopLocation { get; set; }
 
-        [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector100)]
+        [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector)]
         public FVector DecalLocation { get; set; }
 
         [NetFieldExport("PawnHitResult", RepLayoutCmdType.Property)]

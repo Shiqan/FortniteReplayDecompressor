@@ -270,8 +270,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsWaitingForEmoteInteraction", RepLayoutCmdType.PropertyBool)]
         public bool? bIsWaitingForEmoteInteraction { get; set; }
 
-        [NetFieldExport("GroupEmoteLookTarget", RepLayoutCmdType.PropertyUInt32)]
-        public uint? GroupEmoteLookTarget { get; set; }
+        [NetFieldExport("GroupEmoteLookTarget", RepLayoutCmdType.Property)]
+        public ItemDefinition GroupEmoteLookTarget { get; set; }
 
         [NetFieldExport("bIsSkydiving", RepLayoutCmdType.PropertyBool)]
         public bool? bIsSkydiving { get; set; }
@@ -417,11 +417,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.Ignore)]
         public uint[] CharacterVariantChannels { get; set; }
 
-        [NetFieldExport("DBNOHoister", RepLayoutCmdType.PropertyUInt32)]
-        public uint? DBNOHoister { get; set; }
+        [NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
+        public ActorGuid DBNOHoister { get; set; }
 
-        [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore)]
-        public object DBNOCarryEvent { get; set; }
+        [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Property)]
+        public DebuggingObject DBNOCarryEvent { get; set; }
 
         [NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject)]
         public uint Backpack { get; set; }

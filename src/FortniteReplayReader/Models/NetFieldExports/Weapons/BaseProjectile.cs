@@ -22,6 +22,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public byte Team { get; set; }
 
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        [RepMovement(
+            locationQuantizationLevel: VectorQuantization.RoundWholeNumber,
+            rotationQuantizationLevel: RotatorQuantization.ByteComponents,
+            velocityQuantizationLevel: VectorQuantization.RoundWholeNumber)]
         public FRepMovement ReplicatedMovement { get; set; }
 
         [NetFieldExport("ReplicatedMaxSpeed", RepLayoutCmdType.Property)]

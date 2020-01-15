@@ -3,15 +3,15 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Weapons
 {
     [NetFieldExportGroup("/Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_Light_PDW_Athena.B_Pistol_Light_PDW_Athena_C", minimalParseMode: ParseMode.Debug)]
-    public class LightPWD : BaseWeapon, INetFieldExportGroup
+    public class LightPWD : BaseWeapon
     {
     }
     
     [NetFieldExportGroup("/Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_PDW_Athena_HighTier.B_Pistol_PDW_Athena_HighTier_C", minimalParseMode: ParseMode.Debug)]
-    public class HighTierPWD : BaseWeapon, INetFieldExportGroup
+    public class HighTierPWD : BaseWeapon
     {
     }
 }

@@ -7,6 +7,7 @@ using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Encryption;
+using System.Linq;
 
 namespace Unreal.Core
 {
@@ -1313,56 +1314,49 @@ namespace Unreal.Core
                 {
                     continue;
                 }
-#if DEBUG
-                reader.Mark();
-                //Debug($"rpc-{fieldCache.Name}-{reader.GetBitsLeft()}", "rpc", reader.ReadBytes(Math.Max((int)Math.Ceiling(reader.GetBitsLeft() / 8.0), 1)));
-                reader.Reset();
-                reader.Pop();
-#endif
 
-                var isRpcFunction = netFieldParser.TryGetFunctionGroup(fieldCache.Name, out var groupPath);
-                if (!isRpcFunction)
+                if (netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var classNetProperty))
                 {
-                    // Handle property
-                    if (netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var groupInfo))
+                    if (classNetProperty.IsFunction)
                     {
-                        var group = GuidCache.GetNetFieldExportGroup(groupInfo.PathName);
-                        if (group != null)
+                        // Handle function call
+                        var functionGroup = GuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                        if (!ReceivedRPC(reader, functionGroup, bunch.ChIndex))
                         {
-                            if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex, groupInfo.EnablePropertyChecksum))
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // Handle property
+                        if (classNetProperty.IsCustomStruct)
+                        {
+                            if (!ReceiveCustomProperty(reader, classNetProperty, bunch.ChIndex))
                             {
-                                //FieldCache->bIncompatible = true;
+                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name} (bunchIndex: {bunchIndex})");
                                 continue;
                             }
                         }
                         else
                         {
-                            var export = netFieldParser.CreatePropertyType(groupInfo.PropertyInfo.PropertyType);
-                            var netreader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
+                            var group = GuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                            if (group != null)
                             {
-                                EngineNetworkVersion = reader.EngineNetworkVersion,
-                                NetworkVersion = reader.NetworkVersion
-                            };
-                            export.Serialize(netreader);
-                            (export as IResolvable).Resolve(GuidCache);
+                                if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex, classNetProperty.EnablePropertyChecksum))
+                                {
+                                    //FieldCache->bIncompatible = true; TODO?
+                                    _logger?.LogWarning($"Failed to parse custom delta property {fieldCache.Name} (bunchIndex: {bunchIndex})");
+                                    continue;
+                                }
+                            }
                         }
-                    }
-                    else
-                    {
-                        _logger.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
                     }
                 }
                 else
                 {
-                    // Handle function call
-                    var functionGroup = GuidCache.GetNetFieldExportGroup(groupPath);
-                    if (!ReceivedRPC(reader, functionGroup, bunch.ChIndex))
-                    {
-                        return false;
-                    }
+                    _logger.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
                 }
             }
-
             return true;
         }
 
@@ -1389,6 +1383,46 @@ namespace Unreal.Core
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="fieldCache"></param>
+        /// <param name="channelIndex"></param>
+        /// <returns></returns>
+        public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldParser.ClassNetCachePropertyInfo fieldCache, uint channelIndex)
+        {
+            var export = netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
+            if (export != null)
+            {
+                var cmdReader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft())) // TODO
+                {
+                    EngineNetworkVersion = reader.EngineNetworkVersion,
+                    NetworkVersion = reader.NetworkVersion
+                };
+                export.Serialize(cmdReader);
+
+                if (cmdReader.IsError)
+                {
+                    PropertyError++;
+                    _logger?.LogWarning($"Custom Property {fieldCache.Name} caused error when reading (bits: {cmdReader.LastBit})");
+                }
+
+                if (!cmdReader.AtEnd())
+                {
+                    FailedToRead++;
+                    _logger?.LogWarning($"Custom Property {fieldCache.Name} didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {cmdReader.LastBit}");
+                }
+
+                (export as IResolvable).Resolve(GuidCache);
+
+                OnExportRead(channelIndex, export as INetFieldExportGroup);
+
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

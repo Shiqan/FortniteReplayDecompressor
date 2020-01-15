@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Attributes;
+﻿using FortniteReplayReader.Models.NetFieldExports.RPC;
+using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -8,16 +9,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportClassNetCache("PlayerPawn_Athena_C_ClassNetCache")]
     public class PlayerPawnCache
     {
-        [NetFieldExportRPCStruct("ClientObservedStats", "/Script/FortniteGame.FortClientObservedStat")]
+        [NetFieldExportRPC("ClientObservedStats", "/Script/FortniteGame.FortClientObservedStat")]
         public FortClientObservedStat ClientObservedStats { get; set; }
 
         //[NetFieldExportRPCFunction("FastSharedReplication", "/Script/FortniteGame.FortPlayerPawnAthena:FastSharedReplication")]
         //public FRepMovement FastSharedReplication { get; set; }
 
-        [NetFieldExportRPCFunction("NetMulticast_Athena_BatchedDamageCues", "/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
+        [NetFieldExportRPC("NetMulticast_Athena_BatchedDamageCues", "/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", isFunction: true)]
         public BatchedDamageCues FastSharedReplication { get; set; }
-        
-        [NetFieldExportRPCFunction("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams")]
+
+        [NetFieldExportRPC("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams", isFunction: true)]
         public GameplayCue InvokeGameplayCueAdded { get; set; }
     }
 
@@ -303,8 +304,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsInsideSafeZone", RepLayoutCmdType.PropertyBool)]
         public bool? bIsInsideSafeZone { get; set; }
 
-        [NetFieldExport("Zipline", RepLayoutCmdType.PropertyUInt32)]
-        public uint? Zipline { get; set; }
+        [NetFieldExport("bIsOutsideSafeZone", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsOutsideSafeZone { get; set; }
+
+        [NetFieldExport("Zipline", RepLayoutCmdType.Property)]
+        public ItemDefinition Zipline { get; set; }
 
         [NetFieldExport("PetState", RepLayoutCmdType.PropertyObject)]
         public uint? PetState { get; set; }
@@ -397,16 +401,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public string BannerColorId { get; set; }
 
         [NetFieldExport("ItemWraps", RepLayoutCmdType.DynamicArray)]
-        public uint[] ItemWraps { get; set; }
+        public ItemDefinition[] ItemWraps { get; set; }
 
-        [NetFieldExport("SkyDiveContrail", RepLayoutCmdType.PropertyObject)]
-        public uint SkyDiveContrail { get; set; }
+        [NetFieldExport("SkyDiveContrail", RepLayoutCmdType.Property)]
+        public ItemDefinition SkyDiveContrail { get; set; }
 
-        [NetFieldExport("Glider", RepLayoutCmdType.PropertyObject)]
-        public uint Glider { get; set; }
+        [NetFieldExport("Glider", RepLayoutCmdType.Property)]
+        public ItemDefinition Glider { get; set; }
 
-        [NetFieldExport("Pickaxe", RepLayoutCmdType.PropertyObject)]
-        public uint Pickaxe { get; set; }
+        [NetFieldExport("Pickaxe", RepLayoutCmdType.Property)]
+        public ItemDefinition Pickaxe { get; set; }
 
         [NetFieldExport("bIsDefaultCharacter", RepLayoutCmdType.PropertyBool)]
         public bool? bIsDefaultCharacter { get; set; }
@@ -430,13 +434,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint LoadingScreen { get; set; }
 
         [NetFieldExport("Dances", RepLayoutCmdType.DynamicArray)]
-        public uint[] Dances { get; set; }
+        public ItemDefinition[] Dances { get; set; }
 
-        [NetFieldExport("MusicPack", RepLayoutCmdType.PropertyObject)]
-        public uint MusicPack { get; set; }
+        [NetFieldExport("MusicPack", RepLayoutCmdType.Property)]
+        public ItemDefinition MusicPack { get; set; }
 
-        [NetFieldExport("PetSkin", RepLayoutCmdType.PropertyObject)]
-        public uint PetSkin { get; set; }
+        [NetFieldExport("PetSkin", RepLayoutCmdType.Property)]
+        public ItemDefinition PetSkin { get; set; }
 
         [NetFieldExport("EncryptedPawnReplayData", RepLayoutCmdType.Property)]
         public FAthenaPawnReplayData EncryptedPawnReplayData { get; set; }
@@ -476,5 +480,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("PlayRespawnFXOnSpawn", RepLayoutCmdType.Ignore)]
         public bool? PlayRespawnFXOnSpawn { get; set; }
+
+        [NetFieldExport("bIsSkydivingFromLaunchPad", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsSkydivingFromLaunchPad { get; set; }
+
+        [NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
+        public bool? bInGliderRedeploy { get; set; }
     }
 }

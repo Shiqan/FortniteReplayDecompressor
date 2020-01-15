@@ -128,7 +128,7 @@ namespace Unreal.Core
         {
             foreach (var property in type.GetProperties())
             {
-                var structAttribute = property.GetCustomAttribute<NetFieldExportRPCStructAttribute>();
+                var structAttribute = property.GetCustomAttribute<NetFieldExportRPCAttribute>();
                 if (structAttribute != null)
                 {
                     info.Properties[structAttribute.Name] = new ClassNetCachePropertyInfo()
@@ -136,14 +136,10 @@ namespace Unreal.Core
                         PropertyInfo = property,
                         Name = structAttribute.Name,
                         PathName = structAttribute.PathName,
-                        EnablePropertyChecksum = structAttribute.EnablePropertyChecksum
+                        IsFunction = structAttribute.IsFunction,
+                        EnablePropertyChecksum = structAttribute.EnablePropertyChecksum,
+                        IsCustomStruct = structAttribute.CustomStruct
                     };
-                }
-
-                var functionAttribute = property.GetCustomAttribute<NetFieldExportRPCFunctionAttribute>();
-                if (functionAttribute != null)
-                {
-                    _functionToNetFieldGroup[functionAttribute.Name] = functionAttribute.PathName;
                 }
             }
         }
@@ -166,16 +162,6 @@ namespace Unreal.Core
         public bool WillReadClassNetCache(string group)
         {
             return _classNetCacheToNetFieldGroup.ContainsKey(group);
-        }
-
-        /// <summary>
-        /// Returns whether or not the function name was found.
-        /// </summary>
-        /// <param name="group"></param>
-        /// <returns>true if function group path was found, false otherwise</returns>
-        public bool TryGetFunctionGroup(string name, out string path)
-        {
-            return _functionToNetFieldGroup.TryGetValue(name, out path);
         }
 
         /// <summary>
@@ -476,6 +462,8 @@ namespace Unreal.Core
             public string Name { get; set; }
             public string PathName { get; set; }
             public bool EnablePropertyChecksum { get; set; }
+            public bool IsFunction { get; set; }
+            public bool IsCustomStruct { get; set; }
         }
 
         private class ClassNetCacheInfo

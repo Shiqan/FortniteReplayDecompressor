@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportClassNetCache("FortInventory_ClassNetCache")]
     public class FortInventoryCache
     {
-        [NetFieldExportRPCStruct("Inventory", "/Script/FortniteGame.FortInventory")]
+        [NetFieldExportRPC("Inventory", "/Script/FortniteGame.FortInventory")]
         public FortInventory Inventory { get; set; }
     }
 

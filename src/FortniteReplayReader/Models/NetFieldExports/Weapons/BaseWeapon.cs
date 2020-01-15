@@ -1,10 +1,11 @@
 ﻿using Unreal.Core.Attributes;
+using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Weapons
 {
-    public abstract class BaseWeapon
+    public abstract class BaseWeapon : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
         public bool bHidden { get; set; }
@@ -28,7 +29,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool bIsReloadingWeapon { get; set; }
 
         [NetFieldExport("WeaponData", RepLayoutCmdType.Property)]
-        public DebuggingObject WeaponData { get; set; }
+        public ItemDefinition WeaponData { get; set; }
 
         [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.Property)]
         public DebuggingObject LastFireTimeVerified { get; set; }

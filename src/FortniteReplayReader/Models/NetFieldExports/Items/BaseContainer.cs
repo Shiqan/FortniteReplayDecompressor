@@ -1,10 +1,11 @@
 ﻿using Unreal.Core.Attributes;
+using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Items
 {
-    public abstract class BaseContainer
+    public abstract class BaseContainer : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
         public bool bHidden { get; set; }

@@ -3,9 +3,9 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortVehicleSeatComponent", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.FortVehicleSeatComponent", minimalParseMode: ParseMode.Ignore)]
     public class SeatComponent : INetFieldExportGroup
     {
         [NetFieldExport("PlayerSlots", RepLayoutCmdType.Property)]
@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public DebuggingObject WeaponComponent { get; set; }
     }
 
-    [NetFieldExportGroup("/Script/FortniteGame.FortVehicleSeatWeaponComponent", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.FortVehicleSeatWeaponComponent", minimalParseMode: ParseMode.Ignore)]
     public class WeaponSeatComponent : INetFieldExportGroup
     {
         [NetFieldExport("bWeaponEquipped", RepLayoutCmdType.PropertyBool)]

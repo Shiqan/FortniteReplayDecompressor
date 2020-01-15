@@ -1,10 +1,11 @@
 ﻿using Unreal.Core.Attributes;
+using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Weapons
 {
-    public abstract class BaseProjectile
+    public abstract class BaseProjectile : INetFieldExportGroup
     {
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public int RemoteRole { get; set; }
@@ -33,5 +34,23 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("GravityScale", RepLayoutCmdType.PropertyFloat)]
         public float GravityScale { get; set; }
+    }
+
+    public abstract class BaseRocketLauncherProjectile : BaseProjectile
+    {
+        [NetFieldExport("StopLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector StopLocation { get; set; }
+
+        [NetFieldExport("DecalLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector DecalLocation { get; set; }
+
+        [NetFieldExport("PawnHitResult", RepLayoutCmdType.Property)]
+        public FHitResult PawnHitResult { get; set; }
+
+        [NetFieldExport("bHasExploded", RepLayoutCmdType.PropertyBool)]
+        public bool bHasExploded { get; set; }
+
+        [NetFieldExport("bIsBeingKilled", RepLayoutCmdType.PropertyBool)]
+        public bool bIsBeingKilled { get; set; }
     }
 }

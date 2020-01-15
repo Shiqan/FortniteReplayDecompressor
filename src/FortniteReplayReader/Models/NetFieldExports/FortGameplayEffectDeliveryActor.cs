@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Attributes;
+﻿using FortniteReplayReader.Models.NetFieldExports.RPC;
+using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -10,7 +11,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
     //[NetFieldExportClassNetCache("B_Prj_Ranged_Rocket_Athena_LowTier_C_ClassNetCache")]
     public class FortGameplayEffectDeliveryActorCache
     {
-        [NetFieldExportRPCFunction("BroadcastExplosion", "/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion")]
+        [NetFieldExportRPC("BroadcastExplosion", "/Script/FortniteGame.FortGameplayEffectDeliveryActor:BroadcastExplosion", isFunction: true)]
         public BroadcastExplosion BroadcastExplosion { get; set; }
     }
 }

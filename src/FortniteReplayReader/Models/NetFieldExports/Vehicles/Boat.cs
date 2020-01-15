@@ -1,9 +1,10 @@
-﻿using Unreal.Core.Attributes;
+﻿using FortniteReplayReader.Models.NetFieldExports.Weapons;
+using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 {
     [NetFieldExportGroup("/Game/Athena/DrivableVehicles/Meatball/Meatball_Large/MeatballVehicle_L.MeatballVehicle_L_C", minimalParseMode: ParseMode.Debug)]
     public class Boat : INetFieldExportGroup
@@ -32,5 +33,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("SurfaceTypeVehicleOn", RepLayoutCmdType.Enum)]
         public int SurfaceTypeVehicleOn { get; set; }
+    }
+
+    [NetFieldExportClassNetCache("B_Prj_Meatball_Missile_C_ClassNetCache")]
+    public class BoatMissleClassNetCache : BaseExplosion
+    {
     }
 }

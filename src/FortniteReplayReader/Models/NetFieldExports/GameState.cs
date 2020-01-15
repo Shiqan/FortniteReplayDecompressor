@@ -8,16 +8,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportClassNetCache("Athena_GameState_C_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class GameStateCache
     {
-        [NetFieldExportRPCStruct("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier")]
+        [NetFieldExportRPC("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier")]
         public ActiveGameplayModifier[] ActiveGameplayModifiers { get; set; }
 
-        [NetFieldExportRPCStruct("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
+        [NetFieldExportRPC("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
         public GameMemberInfo[] GameMemberInfoArray { get; set; }
 
-        [NetFieldExportRPCStruct("CurrentPlaylistInfo", "/Script/FortniteGame...")]
+        [NetFieldExportRPC("CurrentPlaylistInfo", "CurrentPlaylistInfo", customStruct: true)]
         public PlaylistInfo CurrentPlaylistInfo { get; set; }
 
-        [NetFieldExportRPCStruct("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData")]
+        [NetFieldExportRPC("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData")]
         public SpawnMachineRepData SpawnMachineRepData { get; set; }
     }
 
@@ -228,9 +228,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("StormCapState", RepLayoutCmdType.Enum)]
         public int? StormCapState { get; set; }
 
-        [NetFieldExport("WinningPlayerList", RepLayoutCmdType.DynamicArray)]
-        public int[] WinningPlayerList { get; set; }
-
         [NetFieldExport("FlightStartLocation", RepLayoutCmdType.PropertyVector100)]
         public FVector FlightStartLocation { get; set; }
 
@@ -267,8 +264,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("LobbyAction", RepLayoutCmdType.PropertyInt)]
         public int? LobbyAction { get; set; }
 
-        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.PropertyUInt32)]
-        public uint? WinningPlayerState { get; set; }
+        [NetFieldExport("WinningPlayerState", RepLayoutCmdType.Property)]
+        public ActorGuid WinningPlayerState { get; set; }
+
+        [NetFieldExport("WinningPlayerList", RepLayoutCmdType.DynamicArray)]
+        public ActorGuid[] WinningPlayerList { get; set; }
 
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningTeam { get; set; }

@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Attributes;
+﻿using FortniteReplayReader.Models.NetFieldExports.RPC;
+using Unreal.Core.Attributes;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -6,13 +7,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportClassNetCache("FortBroadcastRemoteClientInfo_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class FortBroadcastRemoteClientInfoCache
     {
-        [NetFieldExportRPCFunction("ClientRemotePlayerAddMapMarker", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerAddMapMarker")]
+        [NetFieldExportRPC("ClientRemotePlayerAddMapMarker", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerAddMapMarker", isFunction: true)]
         public AddMapMarker AddMapMarker { get; set; }
 
-        [NetFieldExportRPCFunction("ClientRemotePlayerRemoveMapMarker", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerRemoveMapMarker")]
+        [NetFieldExportRPC("ClientRemotePlayerRemoveMapMarker", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerRemoveMapMarker", isFunction: true)]
         public RemoveMapMarker RemoveMapMarker { get; set; }
 
-        [NetFieldExportRPCFunction("ClientRemotePlayerDamagedResourceBuilding", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerDamagedResourceBuilding")]
+        [NetFieldExportRPC("ClientRemotePlayerDamagedResourceBuilding", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerDamagedResourceBuilding", isFunction: true)]
         public PlayerDamagedResourceBuilding PlayerDamagedResourceBuilding { get; set; }
 
         //[NetFieldExportRPCFunction("ClientRemotePlayerHitMarkers", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerHitMarkers")]

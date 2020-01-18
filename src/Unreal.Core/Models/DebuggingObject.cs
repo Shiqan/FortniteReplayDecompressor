@@ -21,6 +21,7 @@ namespace Unreal.Core.Models
         public int? IntValue => Bytes.Length == 4 ? BitConverter.ToInt32(Bytes, 0) : new int?();
         public long? LongValue => Bytes.Length == 8 ? BitConverter.ToInt64(Bytes, 0) : new long?();
         public int? ByteValue => Bytes.Length == 1 ? Bytes[0] : new byte?();
+        public uint IntPacked => AsIntPacked();
         public string NetId => AsNetId();
         public List<IProperty> PotentialProperties => AsPotentialPropeties();
         public List<DebuggingHandle> PossibleExport => AsExportHandle();
@@ -107,6 +108,12 @@ namespace Unreal.Core.Models
             }
 
             return rotator;
+        }
+
+        private uint AsIntPacked()
+        {
+            _reader.Reset();
+            return _reader.ReadIntPacked();
         }
 
         private FVector AsVector(VectorType type)

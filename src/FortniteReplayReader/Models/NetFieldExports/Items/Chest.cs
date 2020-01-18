@@ -11,8 +11,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
         [NetFieldExport("bDestroyOnPlayerBuildingPlacement", RepLayoutCmdType.PropertyBool)]
         public bool bDestroyOnPlayerBuildingPlacement { get; set; }
 
-        [NetFieldExport("ResourceType", RepLayoutCmdType.Property)]
-        public DebuggingObject ResourceType { get; set; }
+        [NetFieldExport("ResourceType", RepLayoutCmdType.Enum)]
+        public int ResourceType { get; set; }
 
         [NetFieldExport("ProxyGameplayCueDamagePhysicalMagnitude", RepLayoutCmdType.Ignore)]
         public DebuggingObject ProxyGameplayCueDamagePhysicalMagnitude { get; set; }

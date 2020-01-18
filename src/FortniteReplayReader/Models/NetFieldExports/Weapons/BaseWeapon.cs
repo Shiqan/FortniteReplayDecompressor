@@ -31,20 +31,20 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
         [NetFieldExport("WeaponData", RepLayoutCmdType.Property)]
         public ItemDefinition WeaponData { get; set; }
 
-        [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.Property)]
-        public DebuggingObject LastFireTimeVerified { get; set; }
+        [NetFieldExport("LastFireTimeVerified", RepLayoutCmdType.PropertyFloat)]
+        public float LastFireTimeVerified { get; set; }
 
-        [NetFieldExport("A", RepLayoutCmdType.Property)]
-        public DebuggingObject A { get; set; }
+        [NetFieldExport("A", RepLayoutCmdType.PropertyUInt32)]
+        public uint A { get; set; }
 
-        [NetFieldExport("B", RepLayoutCmdType.Property)]
-        public DebuggingObject B { get; set; }
+        [NetFieldExport("B", RepLayoutCmdType.PropertyUInt32)]
+        public uint B { get; set; }
 
-        [NetFieldExport("C", RepLayoutCmdType.Property)]
-        public DebuggingObject C { get; set; }
+        [NetFieldExport("C", RepLayoutCmdType.PropertyUInt32)]
+        public uint C { get; set; }
 
-        [NetFieldExport("D", RepLayoutCmdType.Property)]
-        public DebuggingObject D { get; set; }
+        [NetFieldExport("D", RepLayoutCmdType.PropertyUInt32)]
+        public uint D { get; set; }
 
         [NetFieldExport("WeaponLevel", RepLayoutCmdType.PropertyInt)]
         public int WeaponLevel { get; set; }

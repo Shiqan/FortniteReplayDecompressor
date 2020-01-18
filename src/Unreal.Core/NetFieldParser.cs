@@ -14,11 +14,10 @@ namespace Unreal.Core
     /// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
     /// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
     /// </summary>
-    public class NetFieldParser
+    public partial class NetFieldParser
     {
         private readonly ParseMode Mode;
         private readonly NetGuidCache GuidCache;
-        private bool IsDebugMode => Mode == ParseMode.Debug;
         public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
 
         private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
@@ -38,7 +37,7 @@ namespace Unreal.Core
             foreach (var type in netFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode <= mode)
+                if (attribute.MinimalParseMode <= mode)
                 {
                     var info = new NetFieldGroupInfo
                     {
@@ -55,7 +54,7 @@ namespace Unreal.Core
             foreach (var type in netSubFields)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode <= mode)
+                if (attribute.MinimalParseMode <= mode)
                 {
                     var info = _netFieldGroups[attribute.Path];
                     AddNetFieldInfo(type, info);
@@ -67,7 +66,7 @@ namespace Unreal.Core
             foreach (var type in classNetCaches)
             {
                 var attribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
-                if (IsDebugMode || attribute.MinimalParseMode <= mode)
+                if (attribute.MinimalParseMode <= mode)
                 {
                     var info = new ClassNetCacheInfo();
                     AddClassNetInfo(type, info);
@@ -109,18 +108,32 @@ namespace Unreal.Core
             foreach (var property in type.GetProperties())
             {
                 var netFieldExportAttribute = property.GetCustomAttribute<NetFieldExportAttribute>();
+                var handleAttribute = property.GetCustomAttribute<NetFieldExportHandleAttribute>();
 
-                if (netFieldExportAttribute == null)
+                if (netFieldExportAttribute == null && handleAttribute == null)
                 {
                     continue;
                 }
 
-                info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                if (netFieldExportAttribute != null)
                 {
-                    MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
-                    Attribute = netFieldExportAttribute,
-                    PropertyInfo = property
-                };
+                    info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
+                    {
+                        MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
+                        Attribute = netFieldExportAttribute,
+                        PropertyInfo = property
+                    };
+                }
+                else
+                {
+                    info.UsesHandles = true;
+                    info.Handles[handleAttribute.Handle] = new NetFieldInfo
+                    {
+                        MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
+                        Attribute = handleAttribute,
+                        PropertyInfo = property
+                    };
+                }
             }
         }
 
@@ -184,9 +197,10 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="export"></param>
+        /// <param name="handle"></param>
         /// <param name="exportGroup"></param>
         /// <param name="netBitReader"></param>
-        public void ReadField(object obj, NetFieldExport export, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
+        public void ReadField(object obj, NetFieldExport export, uint handle, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             var group = exportGroup.PathName;
 
@@ -195,12 +209,42 @@ namespace Unreal.Core
                 return;
             }
 
-            if (!netGroupInfo.Properties.TryGetValue(export.Name, out var netFieldInfo))
+            NetFieldInfo netFieldInfo;
+            if (netGroupInfo.UsesHandles)
             {
-                return;
+                if (!netGroupInfo.Handles.TryGetValue(handle, out netFieldInfo))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (!netGroupInfo.Properties.TryGetValue(export.Name, out netFieldInfo))
+                {
+                    return;
+                }
             }
 
             SetType(obj, exportGroup, netFieldInfo, netBitReader);
+        }
+
+        private void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
+        {
+            var data = netFieldInfo.Attribute.Type switch
+            {
+                RepLayoutCmdType.DynamicArray => ReadArrayField(exportGroup, netFieldInfo, netBitReader),
+                RepLayoutCmdType.RepMovement => netFieldInfo.MovementAttribute != null ? netBitReader.SerializeRepMovement(
+                    locationQuantizationLevel: netFieldInfo.MovementAttribute.LocationQuantizationLevel,
+                    rotationQuantizationLevel: netFieldInfo.MovementAttribute.RotationQuantizationLevel,
+                    velocityQuantizationLevel: netFieldInfo.MovementAttribute.VelocityQuantizationLevel) : netBitReader.SerializeRepMovement(),
+                _ => ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType),
+            };
+
+            if (data != null)
+            {
+                var typeAccessor = TypeAccessor.Create(obj.GetType());
+                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
+            }
         }
 
         private object ReadDataType(RepLayoutCmdType replayout, NetBitReader netBitReader, Type objectType = null)
@@ -266,6 +310,9 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyInt:
                     data = netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
                     break;
+                case RepLayoutCmdType.PropertyInt16:
+                    data = netBitReader.ReadInt16();
+                    break;
                 case RepLayoutCmdType.PropertyUInt64:
                     data = netBitReader.ReadUInt64();
                     break;
@@ -281,31 +328,12 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyVector2D:
                     data = netBitReader.SerializePropertyVector2D();
                     break;
-                case RepLayoutCmdType.Ignore:
+                default:
                     netBitReader.Seek(netBitReader.GetBitsLeft(), System.IO.SeekOrigin.Current);
                     break;
             }
 
             return data;
-        }
-
-        private void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)
-        {
-            var data = netFieldInfo.Attribute.Type switch
-            {
-                RepLayoutCmdType.DynamicArray => ReadArrayField(exportGroup, netFieldInfo, netBitReader),
-                RepLayoutCmdType.RepMovement => netFieldInfo.MovementAttribute != null ? netBitReader.SerializeRepMovement(
-                    locationQuantizationLevel: netFieldInfo.MovementAttribute.LocationQuantizationLevel,
-                    rotationQuantizationLevel: netFieldInfo.MovementAttribute.RotationQuantizationLevel,
-                    velocityQuantizationLevel: netFieldInfo.MovementAttribute.VelocityQuantizationLevel) : netBitReader.SerializeRepMovement(),
-                _ => ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType),
-            };
-
-            if (data != null)
-            {
-                var typeAccessor = TypeAccessor.Create(obj.GetType());
-                typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;
-            }
         }
 
         /// <summary>
@@ -405,7 +433,7 @@ namespace Unreal.Core
 
                     if (!isPrimitveType)
                     {
-                        ReadField(data, export, netfieldExportGroup, cmdReader);
+                        ReadField(data, export, handle, netfieldExportGroup, cmdReader);
                     }
                     else
                     {
@@ -446,13 +474,15 @@ namespace Unreal.Core
         private class NetFieldGroupInfo
         {
             public Type Type { get; set; }
+            public bool UsesHandles { get; set; }
             public Dictionary<string, NetFieldInfo> Properties { get; set; } = new Dictionary<string, NetFieldInfo>();
+            public Dictionary<uint, NetFieldInfo> Handles { get; set; } = new Dictionary<uint, NetFieldInfo>();
         }
 
         private class NetFieldInfo
         {
             public RepMovementAttribute MovementAttribute { get; set; }
-            public NetFieldExportAttribute Attribute { get; set; }
+            public NetFieldAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
         }
 

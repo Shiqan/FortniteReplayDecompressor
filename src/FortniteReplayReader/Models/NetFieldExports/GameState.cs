@@ -87,20 +87,20 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("SupplyDropWaveStartedSoundCue", RepLayoutCmdType.Ignore)]
         public uint? SupplyDropWaveStartedSoundCue { get; set; }
 
-        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Ignore)]
+        [NetFieldExport("TeamXPlayersLeft", RepLayoutCmdType.Property)]
         public DebuggingObject TeamXPlayersLeft { get; set; }
 
         [NetFieldExport("SafeZoneIndicator", RepLayoutCmdType.Ignore)]
         public uint? SafeZoneIndicator { get; set; }
 
-        [NetFieldExport("MapInfo", RepLayoutCmdType.Ignore)]
-        public uint? MapInfo { get; set; }
+        [NetFieldExport("MapInfo", RepLayoutCmdType.Property)]
+        public ItemDefinition MapInfo { get; set; }
 
         [NetFieldExport("GoldenPoiLocationTags", RepLayoutCmdType.Property)]
         public FGameplayTagContainer GoldenPoiLocationTags { get; set; }
 
-        [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Ignore)]
-        public uint? DefaultBattleBus { get; set; }
+        [NetFieldExport("DefaultBattleBus", RepLayoutCmdType.Property)]
+        public ItemDefinition DefaultBattleBus { get; set; }
 
         [NetFieldExport("bReplicatedHasBegunPlay", RepLayoutCmdType.PropertyBool)]
         public bool? bReplicatedHasBegunPlay { get; set; }

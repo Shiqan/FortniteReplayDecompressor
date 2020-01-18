@@ -27,8 +27,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         [NetFieldExport("AmmoInClip", RepLayoutCmdType.Property)]
         public DebuggingObject AmmoInClip { get; set; }
 
-        [NetFieldExport("LastFireTime", RepLayoutCmdType.Property)]
-        public DebuggingObject LastFireTime { get; set; }
+        [NetFieldExport("LastFireTime", RepLayoutCmdType.PropertyFloat)]
+        public float LastFireTime { get; set; }
 
         [NetFieldExport("bHasPrevious", RepLayoutCmdType.PropertyBool)]
         public bool bHasPrevious { get; set; }

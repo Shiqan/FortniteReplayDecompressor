@@ -29,8 +29,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
             velocityQuantizationLevel: VectorQuantization.RoundWholeNumber)]
         public FRepMovement ReplicatedMovement { get; set; }
 
-        [NetFieldExport("ReplicatedMaxSpeed", RepLayoutCmdType.Property)]
-        public DebuggingObject ReplicatedMaxSpeed { get; set; }
+        [NetFieldExport("ReplicatedMaxSpeed", RepLayoutCmdType.PropertyFloat)]
+        public float ReplicatedMaxSpeed { get; set; }
 
         [NetFieldExport("GravityScale", RepLayoutCmdType.PropertyFloat)]
         public float GravityScale { get; set; }

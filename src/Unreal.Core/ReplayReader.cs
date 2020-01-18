@@ -64,8 +64,9 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        public NetGuidCache GuidCache = new NetGuidCache();
+        public NetGuidCache GuidCache;
         public NetFieldParser netFieldParser;
+
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
         public int TotalPropertiesRead { get; private set; }
@@ -79,6 +80,7 @@ namespace Unreal.Core
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
             _parseMode = mode;
+            GuidCache = new NetGuidCache();
             netFieldParser = new NetFieldParser(GuidCache, mode);
 
             ReadReplayInfo(archive);
@@ -1627,14 +1629,14 @@ namespace Unreal.Core
                         NetworkVersion = archive.NetworkVersion
                     };
 
-                    netFieldParser.ReadField(exportGroup, export, group, cmdReader);
+                    netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader);
 
                     if (cmdReader.IsError)
                     {
                         PropertyError++;
-                        _logger?.LogWarning($"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
 #if DEBUG
-                        Debug("failed-properties", $"Property {export.Name} caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
 #endif
                         continue;
                     }
@@ -1642,9 +1644,9 @@ namespace Unreal.Core
                     if (!cmdReader.AtEnd())
                     {
                         FailedToRead++;
-                        _logger?.LogWarning($"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+                        _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
 #if DEBUG
-                        Debug("failed-properties", $"Property {export.Name} ({group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+                        Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
 #endif
 
                         continue;

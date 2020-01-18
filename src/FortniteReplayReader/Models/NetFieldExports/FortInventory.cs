@@ -42,17 +42,17 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("LoadedAmmo", RepLayoutCmdType.PropertyInt)]
         public int? LoadedAmmo { get; set; }
 
-        [NetFieldExport("A", RepLayoutCmdType.PropertyInt)]
-        public int? A { get; set; }
+        [NetFieldExport("A", RepLayoutCmdType.PropertyUInt32)]
+        public uint? A { get; set; }
 
-        [NetFieldExport("B", RepLayoutCmdType.PropertyInt)]
-        public int? B { get; set; }
+        [NetFieldExport("B", RepLayoutCmdType.PropertyUInt32)]
+        public uint? B { get; set; }
 
-        [NetFieldExport("C", RepLayoutCmdType.PropertyInt)]
-        public int? C { get; set; }
+        [NetFieldExport("C", RepLayoutCmdType.PropertyUInt32)]
+        public uint? C { get; set; }
 
-        [NetFieldExport("D", RepLayoutCmdType.PropertyInt)]
-        public int? D { get; set; }
+        [NetFieldExport("D", RepLayoutCmdType.PropertyUInt32)]
+        public uint? D { get; set; }
 
         [NetFieldExport("inventory_overflow_date", RepLayoutCmdType.PropertyBool)]
         public bool? InventoryOverflowDate { get; set; }

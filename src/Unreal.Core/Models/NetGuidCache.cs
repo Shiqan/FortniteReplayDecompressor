@@ -4,10 +4,14 @@ using System.Collections.Generic;
 namespace Unreal.Core.Models
 {
     /// <summary>
-    /// 
+    /// Class to track all NetGuids being loaded during a replay.
     /// </summary>
-    public class NetGuidCache
+    public partial class NetGuidCache
     {
+        public NetGuidCache()
+        {
+        }
+
         public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>
@@ -294,6 +298,10 @@ namespace Unreal.Core.Models
             NetGuidToPathName.Clear();
             ObjectLookup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
+
+            _archTypeToExportGroup.Clear();
+            _cleanedPaths.Clear();
+            _cleanedClassNetCache.Clear();
         }
 
         private string RemovePathPrefix(string path, string toRemove)

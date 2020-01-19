@@ -5,7 +5,6 @@ pages:
 - Introduction: introduction.md
 - Overview: overview.md
 - Concepts:
-  - Events: events.md
   - Receiving Properties: receiving-properties.md
   - RPC structs and functions: rpc.md
 - Credits: credits.md

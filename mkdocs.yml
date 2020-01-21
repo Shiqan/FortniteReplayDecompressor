@@ -7,6 +7,7 @@ pages:
 - Concepts:
   - Receiving Properties: receiving-properties.md
   - RPC structs and functions: rpc.md
+- Performance: performance.md
 - Credits: credits.md
 
 theme: readthedocs

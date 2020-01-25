@@ -5,7 +5,11 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo")]
+    /// <summary>
+    /// GameMemberInfo gives for each real player their <see cref="TeamIndex"></see> and <see cref="SquadId"/>.
+    /// However, <see cref="FortPlayerState"/> also contains this information, so no need to track this group.
+    /// </summary>
+    [NetFieldExportGroup("/Script/FortniteGame.GameMemberInfo", minimalParseMode: ParseMode.Ignore)]
     public class GameMemberInfo : INetFieldExportGroup
     {
         [NetFieldExport("SquadId", RepLayoutCmdType.PropertyByte)]

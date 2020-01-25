@@ -22,10 +22,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool bDestroyed { get; set; }
 
-        [NetFieldExport("StaticMesh", RepLayoutCmdType.PropertyObject)]
+        [NetFieldExport("bInstantDeath", RepLayoutCmdType.PropertyBool)]
+        public bool bInstantDeath { get; set; }
+
+        [NetFieldExport("StaticMesh", RepLayoutCmdType.Ignore)]
         public uint StaticMesh { get; set; }
 
-        [NetFieldExport("AltMeshIdx", RepLayoutCmdType.PropertyUInt32)]
+        [NetFieldExport("AltMeshIdx", RepLayoutCmdType.Ignore)]
         public uint AltMeshIdx { get; set; }
 
         [NetFieldExport("WeaponData", RepLayoutCmdType.Property)]
@@ -72,5 +75,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
 
         [NetFieldExport("bForceReplayRollback", RepLayoutCmdType.PropertyBool)]
         public bool? bForceReplayRollback { get; set; }
+
+
     }
 }

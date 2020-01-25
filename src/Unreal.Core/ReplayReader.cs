@@ -391,7 +391,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183
         /// </summary>
         /// <param name="archive"></param>
-        /// <returns>ReplayInfo</returns>
         public virtual void ReadReplayInfo(FArchive archive)
         {
             var magicNumber = archive.ReadUInt32();
@@ -1582,7 +1581,7 @@ namespace Unreal.Core
 
                 if (group?.NetFieldExportsLength <= handle)
                 {
-                    _logger?.LogWarning($"NetFieldExports length ({group?.NetFieldExportsLength}) < handle ({handle})");
+                    _logger?.LogWarning($"NetFieldExports length for group {group.PathName} ({group?.NetFieldExportsLength}) < handle ({handle})");
                     return false;
                 }
 
@@ -1598,7 +1597,7 @@ namespace Unreal.Core
                 {
                     NullHandles++;
 
-                    _logger?.LogDebug($"Couldnt find handle {handle}, numbits is {numBits}");
+                    _logger?.LogWarning($"Couldnt find handle {handle} for group {group.PathName}, numbits is {numBits}");
                     archive.SkipBits(numBits);
                     continue;
                 }
@@ -1637,6 +1636,8 @@ namespace Unreal.Core
                         _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        cmdReader.Reset();
+                        Debug($"cmd-{export.Name}-{numBits}", "cmds", cmdReader.ReadBytes(Math.Max((int)Math.Ceiling(cmdReader.GetBitsLeft() / 8.0), 1)));
 #endif
                         continue;
                     }
@@ -1647,6 +1648,8 @@ namespace Unreal.Core
                         _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+                        cmdReader.Reset();
+                        Debug($"cmd-{export.Name}-{numBits}", "cmds", cmdReader.ReadBytes(Math.Max((int)Math.Ceiling(cmdReader.GetBitsLeft() / 8.0), 1)));
 #endif
 
                         continue;

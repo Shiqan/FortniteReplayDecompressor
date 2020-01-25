@@ -22,7 +22,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public GameplayCue InvokeGameplayCueAdded { get; set; }
     }
 
-    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C")]
+    [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", minimalParseMode: ParseMode.Minimal)]
     public class PlayerPawn : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
@@ -415,8 +415,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bIsDefaultCharacter", RepLayoutCmdType.PropertyBool)]
         public bool? bIsDefaultCharacter { get; set; }
 
-        [NetFieldExport("Character", RepLayoutCmdType.PropertyObject)]
-        public uint Character { get; set; }
+        [NetFieldExport("Character", RepLayoutCmdType.Property)]
+        public ItemDefinition Character { get; set; }
 
         [NetFieldExport("CharacterVariantChannels", RepLayoutCmdType.Ignore)]
         public uint[] CharacterVariantChannels { get; set; }
@@ -424,14 +424,14 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("DBNOHoister", RepLayoutCmdType.Property)]
         public ActorGuid DBNOHoister { get; set; }
 
-        [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Property)]
+        [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore)]
         public DebuggingObject DBNOCarryEvent { get; set; }
 
-        [NetFieldExport("Backpack", RepLayoutCmdType.PropertyObject)]
-        public uint Backpack { get; set; }
+        [NetFieldExport("Backpack", RepLayoutCmdType.Property)]
+        public ItemDefinition Backpack { get; set; }
 
-        [NetFieldExport("LoadingScreen", RepLayoutCmdType.PropertyObject)]
-        public uint LoadingScreen { get; set; }
+        [NetFieldExport("LoadingScreen", RepLayoutCmdType.Property)]
+        public ItemDefinition LoadingScreen { get; set; }
 
         [NetFieldExport("Dances", RepLayoutCmdType.DynamicArray)]
         public ItemDefinition[] Dances { get; set; }

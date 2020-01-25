@@ -1,9 +1,12 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
@@ -56,6 +59,7 @@ namespace FortniteReplayReader
         protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
+            Debug("onexportread", exportGroup.GetType().Name);
         }
 
         public override void ReadReplayHeader(FArchive archive)

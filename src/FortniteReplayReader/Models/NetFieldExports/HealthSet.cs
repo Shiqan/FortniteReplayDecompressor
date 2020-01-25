@@ -8,42 +8,42 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class HealthSet : INetFieldExportGroup
     {
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]
-        public float? HealthBaseValue { get; set; }
+        public float HealthBaseValue { get; set; }
 
         [NetFieldExportHandle(1, RepLayoutCmdType.PropertyFloat)]
-        public float? HealthCurrentValue { get; set; }
+        public float HealthCurrentValue { get; set; }
 
         [NetFieldExportHandle(3, RepLayoutCmdType.PropertyFloat)]
-        public float? HealthMaxValue { get; set; }
+        public float HealthMaxValue { get; set; }
 
         [NetFieldExportHandle(7, RepLayoutCmdType.PropertyFloat)]
-        public float? HealthUnclampedBaseValue { get; set; }
+        public float HealthUnclampedBaseValue { get; set; }
 
         [NetFieldExportHandle(8, RepLayoutCmdType.PropertyFloat)]
-        public float? HealthUnclampedCurrentValue { get; set; }
+        public float HealthUnclampedCurrentValue { get; set; }
 
         //[NetFieldExportHandle(9, RepLayoutCmdType.PropertyFloat)]
-        //public float? BaseValue { get; set; }
+        //public float BaseValue { get; set; }
 
         //[NetFieldExportHandle(10, RepLayoutCmdType.PropertyFloat)]
-        //public float? CurrentValue { get; set; }
+        //public float CurrentValue { get; set; }
 
         //[NetFieldExportHandle(15, RepLayoutCmdType.PropertyFloat)]
-        //public float? Maximum { get; set; }
+        //public float Maximum { get; set; }
 
         //[NetFieldExportHandle(16, RepLayoutCmdType.PropertyFloat)]
-        //public float? UnClampedBaseValue { get; set; }
+        //public float UnClampedBaseValue { get; set; }
 
         //[NetFieldExportHandle(17, RepLayoutCmdType.PropertyFloat)]
-        //public float? UnclampedCurrentValue { get; set; }
+        //public float UnclampedCurrentValue { get; set; }
 
         [NetFieldExportHandle(18, RepLayoutCmdType.PropertyFloat)]
-        public float? ShieldBaseValue { get; set; }
+        public float ShieldBaseValue { get; set; }
 
         [NetFieldExportHandle(19, RepLayoutCmdType.PropertyFloat)]
-        public float? ShieldCurrentValue { get; set; }
+        public float ShieldCurrentValue { get; set; }
 
         [NetFieldExportHandle(21, RepLayoutCmdType.PropertyFloat)]
-        public float? ShieldMaxValue { get; set; }
+        public float ShieldMaxValue { get; set; }
     }
 }

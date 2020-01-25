@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPoiManager")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPoiManager", minimalParseMode: ParseMode.Full)]
     public class FortPoiManager : INetFieldExportGroup
     {
         [NetFieldExport("WorldGridStart", RepLayoutCmdType.PropertyVector2D)]

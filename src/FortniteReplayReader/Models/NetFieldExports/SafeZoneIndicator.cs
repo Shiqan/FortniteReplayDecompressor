@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Game/Athena/SafeZone/SafeZoneIndicator.SafeZoneIndicator_C")]
+    [NetFieldExportGroup("/Game/Athena/SafeZone/SafeZoneIndicator.SafeZoneIndicator_C", minimalParseMode: ParseMode.Normal)]
     public class SafeZoneIndicator : INetFieldExportGroup
     {
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]

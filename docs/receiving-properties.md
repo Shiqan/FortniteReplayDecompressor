@@ -1,8 +1,6 @@
 We took the liberty to implement most (if not all) Fortnite groups for you. 
 However, if you want to know the details or leverage the Unreal.Core reader for another game, here is how it works.
 
-=====
-
 ### Setup
 
 In order to receive properties, you have to mark classes with the `NetFieldExportGroup` attribute. This property requires a path argument in order to map the NetFieldExportGroup to your class. 
@@ -23,8 +21,8 @@ The properties themselves should be mapped with a `NetFieldExport` attribute, wh
 In some cases, the names are not included in the replay. So we'll have use their handles (after spending hours in order to figure out what they mean of course).
 
 ``` csharp
-        [NetFieldExportHandle(1, RepLayoutCmdType.PropertyFloat)]
-        public float HealthCurrentValue { get; set; }
+	[NetFieldExportHandle(1, RepLayoutCmdType.PropertyFloat)]
+	public float HealthCurrentValue { get; set; }
 ```
 
 ### Receiving

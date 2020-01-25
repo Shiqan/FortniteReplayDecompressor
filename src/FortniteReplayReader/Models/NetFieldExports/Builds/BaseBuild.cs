@@ -40,11 +40,11 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         [NetFieldExport("BuildingAnimation", RepLayoutCmdType.Enum)]
         public int BuildingAnimation { get; set; }
 
-        [NetFieldExport("BuildTime", RepLayoutCmdType.Property)]
+        [NetFieldExport("BuildTime", RepLayoutCmdType.Ignore)]
         public FQuantizedBuildingAttribute BuildTime { get; set; }
 
-        [NetFieldExport("RepairTime", RepLayoutCmdType.Property)]
-        public FQuantizedBuildingAttribute BuilRepairTimedTime { get; set; }
+        [NetFieldExport("RepairTime", RepLayoutCmdType.Ignore)]
+        public FQuantizedBuildingAttribute RepairTime { get; set; }
 
         [NetFieldExport("Health", RepLayoutCmdType.PropertyInt16)]
         public short Health { get; set; }
@@ -66,5 +66,17 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 
         [NetFieldExport("bAttachmentPlacementBlockedBack", RepLayoutCmdType.PropertyBool)]
         public bool bAttachmentPlacementBlockedBack { get; set; }
+
+        [NetFieldExport("bUnderConstruction", RepLayoutCmdType.PropertyBool)]
+        public bool bUnderConstruction { get; set; }
+
+        [NetFieldExport("StaticMesh", RepLayoutCmdType.Ignore)]
+        public uint StaticMesh { get; set; }
+
+        [NetFieldExport("Gnomed", RepLayoutCmdType.PropertyBool)]
+        public bool Gnomed { get; set; }
+
+        [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Property)]
+        public DebuggingObject InitialOverlappingVehicles { get; set; }
     }
 }

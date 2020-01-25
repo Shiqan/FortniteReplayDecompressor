@@ -19,7 +19,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public uint Instigator { get; set; }
 
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        [RepMovement(rotationQuantizationLevel: RotatorQuantization.ShortComponents)]
+        [RepMovement(
+            locationQuantizationLevel: VectorQuantization.RoundWholeNumber,
+            rotationQuantizationLevel: RotatorQuantization.ShortComponents,
+            velocityQuantizationLevel: VectorQuantization.RoundTwoDecimals)]
         public FRepMovement ReplicatedMovement { get; set; }
 
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
@@ -33,6 +36,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
 
         [NetFieldExport("SurfaceTypeVehicleOn", RepLayoutCmdType.Enum)]
         public int SurfaceTypeVehicleOn { get; set; }
+
+        [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Property)]
+        public DebuggingObject InitialOverlappingVehicles { get; set; }
     }
 
     [NetFieldExportClassNetCache("B_Prj_Meatball_Missile_C_ClassNetCache")]

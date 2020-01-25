@@ -295,9 +295,6 @@ namespace Unreal.Core
         /// <exception cref="OverflowException"></exception>
         public override uint ReadSerializedInt(int maxValue)
         {
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitWriter.cpp#L123
-            //  const int32 LengthBits = FMath::CeilLogTwo(ValueMax); ???
-
             uint value = 0;
             for (uint mask = 1; (value + mask) < maxValue; mask *= 2)
             {

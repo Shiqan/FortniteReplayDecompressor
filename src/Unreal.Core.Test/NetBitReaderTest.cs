@@ -89,6 +89,41 @@ namespace Unreal.Core.Test
         }
 
         [Fact]
+        public void RepMovementTest6()
+        {
+            // supply drop season 11
+            byte[] rawData = {
+                0x74, 0x20, 0x88, 0x53, 0x86, 0xDA, 0x16, 0xD8, 0x02, 0x40, 0x00, 0x38,
+                0x2B, 0x00
+            };
+
+            var reader = new NetBitReader(rawData, 105);
+            reader.SerializeRepMovement(locationQuantizationLevel: VectorQuantization.RoundWholeNumber,
+                rotationQuantizationLevel: RotatorQuantization.ByteComponents,
+                velocityQuantizationLevel: VectorQuantization.RoundWholeNumber);
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
+
+        [Fact]
+        public void RepMovementTest7()
+        {
+            // meatball vehicle season 11.40
+            byte[] rawData = {
+                0xDA, 0x34, 0x06, 0xCA, 0x0A, 0xFE, 0x68, 0x40, 0x29, 0xBE, 0xB9, 0xFF,
+                0x83, 0x55, 0x1A, 0xF9, 0x47, 0xF2, 0xBD, 0xBE, 0x54, 0x3B, 0xFB, 0x88,
+                0xAB, 0xBF, 0x70, 0xB3, 0xCB, 0x02
+            };
+
+            var reader = new NetBitReader(rawData, 236);
+            reader.SerializeRepMovement(locationQuantizationLevel: VectorQuantization.RoundWholeNumber,
+                rotationQuantizationLevel: RotatorQuantization.ShortComponents,
+                velocityQuantizationLevel: VectorQuantization.RoundTwoDecimals);
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
+
+        [Fact]
         public void NetUniqueIdTest()
         {
             byte[] rawData = {

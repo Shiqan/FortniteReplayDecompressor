@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.SpawnMachineRepData", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.SpawnMachineRepData", minimalParseMode: ParseMode.Full)]
     public class SpawnMachineRepData : INetFieldExportGroup
     {
         [NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]

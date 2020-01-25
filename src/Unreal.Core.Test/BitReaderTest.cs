@@ -115,5 +115,13 @@ namespace Unreal.Core.Test
             reader = new BitReader(new byte[] { 1 });
             Assert.Equal(1u, reader.ReadSerializedInt(3));
         }
+        
+        [Fact]
+        public void ReadSerializedIntTest2()
+        {
+            reader = new BitReader(new byte[] { 0x64 });
+            Assert.Equal(0u, reader.ReadSerializedInt(2));
+            Assert.Equal(1, reader.Position);
+        }
     }
 }

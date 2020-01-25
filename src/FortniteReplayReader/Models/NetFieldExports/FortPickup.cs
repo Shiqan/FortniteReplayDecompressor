@@ -127,5 +127,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("PawnWhoDroppedPickup", RepLayoutCmdType.PropertyObject)]
         public uint? PawnWhoDroppedPickup { get; set; }
+
+        [NetFieldExport("OrderIndex", RepLayoutCmdType.PropertyUInt16)]
+        public ushort? OrderIndex { get; set; }
     }
 }

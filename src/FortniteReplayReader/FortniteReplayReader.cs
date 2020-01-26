@@ -4,13 +4,10 @@ using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
-using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -18,9 +15,11 @@ namespace FortniteReplayReader
 {
     public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
+        private readonly FortniteReplayBuilder Builder;
         public ReplayReader(ILogger logger = null)
         {
             Replay = new FortniteReplay();
+            Builder = new FortniteReplayBuilder(Replay);
             _logger = logger;
         }
 
@@ -56,10 +55,31 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
-            Debug("onexportread", exportGroup.GetType().Name);
+            //Debug("onexportread", exportGroup.GetType().Name);
+
+            switch (exportGroup)
+            {
+                case GameState state:
+                    Builder.UpdateGameState(state);
+                    break;
+                case PlaylistInfo playlist:
+                    Builder.UpdatePlaylistInfo(playlist);
+                    break;
+                case ActiveGameplayModifier modifier:
+                    Builder.UpdateGameplayModifiers(modifier);
+                    break;
+                case FortPlayerState state:
+                    Builder.UpdatePlayerState(channelIndex, state);
+                    break;
+                case PlayerPawn pawn:
+                    break;
+                case SafeZoneIndicator safeZone:
+                    Builder.UpdateSafeZones(safeZone);
+                    break;
+            }
         }
 
         public override void ReadReplayHeader(FArchive archive)

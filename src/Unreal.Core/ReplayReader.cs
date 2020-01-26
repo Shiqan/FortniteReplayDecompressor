@@ -1676,9 +1676,9 @@ namespace Unreal.Core
         /// <summary>
         /// Receive the netfield group after receiving properties.
         /// </summary>
-        /// <param name="channel"></param>
+        /// <param name="channelIndex"></param>
         /// <param name="exportGroup"></param>
-        protected abstract void OnExportRead(uint channel, INetFieldExportGroup exportGroup);
+        protected abstract void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579

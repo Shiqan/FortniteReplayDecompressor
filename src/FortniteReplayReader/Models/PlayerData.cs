@@ -1,9 +1,41 @@
-﻿using System.Collections.Generic;
+﻿using FortniteReplayReader.Models.NetFieldExports;
+using System.Collections.Generic;
 
 namespace FortniteReplayReader.Models
 {
     public class PlayerData
-    {
+    { 
+        public PlayerData()
+        {
+
+        }
+
+        public PlayerData(FortPlayerState playerState)
+        {
+            EpicId = playerState.UniqueId;
+            BotId = playerState.BotUniqueId;
+            IsBot = playerState.bIsABot;
+            IsGameSessionOwner = playerState.bIsGameSessionOwner;
+            StreamerModeName = playerState.StreamerModeName?.Text;
+            Level = playerState.Level;
+            Platform = playerState.Platform;
+            HasFinishedLoading = playerState.bHasFinishedLoading;
+            HasStartedPlaying = playerState.bHasStartedPlaying;
+            HasThankedBusDriver = playerState.bThankedBusDriver;
+            IsUsingAnonymousMode = playerState.bUsingAnonymousMode;
+            IsUsingStreamerMode = playerState.bUsingStreamerMode;
+            RebootCounter = playerState.RebootCounter;
+            HasEverSkydivedFromBus = playerState.bHasEverSkydivedFromBus;
+            HasEverSkydivedFromBusAndLanded = playerState.bHasEverSkydivedFromBusAndLanded;
+
+            Cosmetics = new Cosmetics()
+            {
+                CharacterBodyType = playerState.CharacterBodyType,
+                HeroType = playerState.HeroType?.Name,
+                CharacterGender = playerState.CharacterGender
+            };
+        }
+
         public string PlayerId => IsBot ? BotId : EpicId;
         public string EpicId { get; set; }
         public string BotId { get; set; }

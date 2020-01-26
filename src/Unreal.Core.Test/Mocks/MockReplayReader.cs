@@ -14,7 +14,7 @@ namespace Unreal.Core.Test.Mocks
             return Replay;
         }
 
-        protected override void OnExportRead(uint channel, INetFieldExportGroup exportGroup)
+        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             // pass
         }

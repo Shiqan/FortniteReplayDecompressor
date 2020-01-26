@@ -15,13 +15,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public object Role { get; set; }
 
         [NetFieldExport("LastRadius", RepLayoutCmdType.PropertyFloat)]
-        public float? LastRadius { get; set; }
+        public float LastRadius { get; set; }
 
         [NetFieldExport("NextRadius", RepLayoutCmdType.PropertyFloat)]
-        public float? NextRadius { get; set; }
+        public float NextRadius { get; set; }
 
         [NetFieldExport("NextNextRadius", RepLayoutCmdType.PropertyFloat)]
-        public float? NextNextRadius { get; set; }
+        public float NextNextRadius { get; set; }
 
         [NetFieldExport("LastCenter", RepLayoutCmdType.PropertyVector100)]
         public FVector LastCenter { get; set; }
@@ -33,18 +33,18 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FVector NextNextCenter { get; set; }
 
         [NetFieldExport("SafeZoneStartShrinkTime", RepLayoutCmdType.PropertyFloat)]
-        public float? SafeZoneStartShrinkTime { get; set; }
+        public float SafeZoneStartShrinkTime { get; set; }
 
         [NetFieldExport("SafeZoneFinishShrinkTime", RepLayoutCmdType.PropertyFloat)]
-        public float? SafeZoneFinishShrinkTime { get; set; }
+        public float SafeZoneFinishShrinkTime { get; set; }
 
         [NetFieldExport("bPausedForPreview", RepLayoutCmdType.PropertyBool)]
-        public bool? bPausedForPreview { get; set; }
+        public bool bPausedForPreview { get; set; }
 
         [NetFieldExport("MegaStormDelayTimeBeforeDestruction", RepLayoutCmdType.PropertyFloat)]
-        public float? MegaStormDelayTimeBeforeDestruction { get; set; }
+        public float MegaStormDelayTimeBeforeDestruction { get; set; }
 
         [NetFieldExport("Radius", RepLayoutCmdType.PropertyFloat)]
-        public float? Radius { get; set; }
+        public float Radius { get; set; }
     }
 }

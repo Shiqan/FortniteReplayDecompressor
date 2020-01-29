@@ -2,6 +2,7 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.RPC;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -58,8 +59,7 @@ namespace FortniteReplayReader
         protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
-            //Debug("onexportread", exportGroup.GetType().Name);
-
+            Debug("onexportread", exportGroup.GetType().Name);
             switch (exportGroup)
             {
                 case GameState state:
@@ -76,8 +76,24 @@ namespace FortniteReplayReader
                     break;
                 case PlayerPawn pawn:
                     break;
+                case FortPickup pickup:
+                    break;
+                case FortInventory inventory:
+                    break;
+                case BatchedDamageCues damage:
+                    break;
+                case BroadcastExplosion explosione:
+                    break;
                 case SafeZoneIndicator safeZone:
                     Builder.UpdateSafeZones(safeZone);
+                    break;
+                case SupplyDropLlama llama:
+                    Builder.UpdateLlama(channelIndex, llama);
+                    break;
+                case Models.NetFieldExports.SupplyDrop drop:
+                    Builder.UpdateSupplyDrop(channelIndex, drop);
+                    break;
+                case FortPoiManager poiManager:
                     break;
             }
         }

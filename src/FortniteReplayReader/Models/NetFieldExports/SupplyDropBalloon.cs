@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Game/Athena/SupplyDrops/AthenaSupplyDropBalloon.AthenaSupplyDropBalloon_C")]
+    [NetFieldExportGroup("/Game/Athena/SupplyDrops/AthenaSupplyDropBalloon.AthenaSupplyDropBalloon_C", minimalParseMode: ParseMode.Ignore)]
     public class SupplyDropBalloon : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]

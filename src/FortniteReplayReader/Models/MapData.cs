@@ -6,10 +6,10 @@ namespace FortniteReplayReader.Models
     {
         public IEnumerable<BattleBus> BattleBusFlightPaths { get; set; }
         public IList<SafeZone> SafeZones { get; set; } = new List<SafeZone>();
+        public IList<Llama> Llamas { get; set; } = new List<Llama>();
+        public IList<SupplyDrop> SupplyDrops { get; set; } = new List<SupplyDrop>();
 
-        //public IEnumerable<LLama> lLamas { get; set; }
         //public IEnumerable<RebootVan> RebootVans { get; set; }
-        //public IEnumerable<SupplyDrop> SupplyDrops { get; set; }
 
         //public FortPoiManager PoiManager { get; set; }
 

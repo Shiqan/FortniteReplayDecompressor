@@ -24,11 +24,6 @@ namespace Unreal.Core.Models.Enums
         Normal,
         
         /// <summary>
-        /// Parses events and all useful data, including weapons and vehicles.
-        /// </summary>
-        Extended,
-
-        /// <summary>
         /// Parses events and all useful data, including damage events, weapons and RPC structs and functions.
         /// </summary>
         Full,

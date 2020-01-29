@@ -5,35 +5,35 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C")]
+    [NetFieldExportGroup("/Game/Athena/SupplyDrops/Llama/AthenaSupplyDrop_Llama.AthenaSupplyDrop_Llama_C", minimalParseMode: ParseMode.Full)]
     public class SupplyDropLlama : INetFieldExportGroup
     {
         [NetFieldExport("bHidden", RepLayoutCmdType.PropertyBool)]
-        public bool? bHidden { get; set; }
+        public bool bHidden { get; set; }
 
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public object RemoteRole { get; set; }
 
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        public FRepMovement ReplicatedMovement { get; set; }
-
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public object Role { get; set; }
 
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        public FRepMovement? ReplicatedMovement { get; set; }
+
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
-        public bool? bDestroyed { get; set; }
+        public bool bDestroyed { get; set; }
 
         [NetFieldExport("bEditorPlaced", RepLayoutCmdType.PropertyBool)]
-        public bool? bEditorPlaced { get; set; }
+        public bool bEditorPlaced { get; set; }
 
         [NetFieldExport("bInstantDeath", RepLayoutCmdType.PropertyBool)]
-        public bool? bInstantDeath { get; set; }
+        public bool bInstantDeath { get; set; }
 
         [NetFieldExport("bHasSpawnedPickups", RepLayoutCmdType.PropertyBool)]
-        public bool? bHasSpawnedPickups { get; set; }
+        public bool bHasSpawnedPickups { get; set; }
 
         [NetFieldExport("Looted", RepLayoutCmdType.PropertyBool)]
-        public bool? Looted { get; set; }
+        public bool Looted { get; set; }
 
         [NetFieldExport("FinalDestination", RepLayoutCmdType.PropertyVector)]
         public FVector FinalDestination { get; set; }

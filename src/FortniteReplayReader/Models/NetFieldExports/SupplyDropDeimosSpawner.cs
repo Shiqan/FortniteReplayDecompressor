@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Game/Athena/Deimos/Spawners/RiftSpawners/AthenaSupplyDrop_DeimosSpawner.AthenaSupplyDrop_DeimosSpawner_C")]
+    [NetFieldExportGroup("/Game/Athena/Deimos/Spawners/RiftSpawners/AthenaSupplyDrop_DeimosSpawner.AthenaSupplyDrop_DeimosSpawner_C", minimalParseMode: ParseMode.Ignore)]
     public class SupplyDropDeimosSpawner : INetFieldExportGroup
     {
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]

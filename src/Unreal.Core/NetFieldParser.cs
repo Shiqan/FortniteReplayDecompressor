@@ -240,7 +240,7 @@ namespace Unreal.Core
                 _ => ReadDataType(netFieldInfo.Attribute.Type, netBitReader, netFieldInfo.PropertyInfo.PropertyType),
             };
 
-            if (data != null)
+            if (data != null && !netBitReader.IsError)
             {
                 var typeAccessor = TypeAccessor.Create(obj.GetType());
                 typeAccessor[obj, netFieldInfo.PropertyInfo.Name] = data;

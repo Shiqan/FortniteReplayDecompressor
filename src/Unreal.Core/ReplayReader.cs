@@ -1269,7 +1269,7 @@ namespace Unreal.Core
             {
                 if (!ReceiveProperties(archive, netFieldExportGroup, bunch.ChIndex))
                 {
-                    if (!Channels[bunch.ChIndex].IgnoreChannel)
+                    if (!Channels[bunch.ChIndex].IsIgnoringChannel(netFieldExportGroup.PathName))
                     {
                         _logger?.LogWarning($"RepLayout->ReceiveProperties FAILED for channel {bunch.ChIndex} and bunch {bunchIndex}");
                     }
@@ -1377,7 +1377,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!Channels[channelIndex].IgnoreChannel && netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
+            if (!Channels[channelIndex].IsIgnoringChannel(netFieldExportGroup.PathName) && netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
             {
                 _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
                 return false;
@@ -1540,7 +1540,7 @@ namespace Unreal.Core
         {
             TotalGroupsRead++;
 
-            if (Channels[channelIndex].IgnoreChannel)
+            if (Channels[channelIndex].IsIgnoringChannel(group.PathName))
             {
                 _logger?.LogInformation($"Ignoring channel for type {group.PathName}");
                 return false;
@@ -1549,7 +1549,8 @@ namespace Unreal.Core
             if (!netFieldParser.WillReadType(group.PathName))
             {
                 _logger?.LogInformation($"Not reading type {group.PathName}");
-                Channels[channelIndex].IgnoreChannel = true;
+                Channels[channelIndex].IgnoreChannel(group.PathName);
+
                 return false;
             }
 
@@ -1727,6 +1728,7 @@ namespace Unreal.Core
                 EngineNetworkVersion = archive.EngineNetworkVersion,
                 NetworkVersion = archive.NetworkVersion
             };
+
             if (archive.IsError)
             {
                 _logger?.LogWarning($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");

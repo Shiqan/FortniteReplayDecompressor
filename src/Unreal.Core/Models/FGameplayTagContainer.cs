@@ -32,7 +32,9 @@ namespace Unreal.Core.Models
 
         public void Resolve(NetGuidCache cache)
         {
-            for (var i = 0; i < Tags.Length; i++)
+            if (Tags == null) return;
+
+            for (var i = 0; i < Tags?.Length; i++)
             {
                 Tags[i].Resolve(cache);
             }

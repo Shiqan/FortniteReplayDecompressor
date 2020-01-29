@@ -256,7 +256,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int GamePhase { get; set; }
 
         [NetFieldExport("Aircrafts", RepLayoutCmdType.DynamicArray)]
-        public Aircraft[] Aircrafts { get; set; }
+        public ItemDefinition[] Aircrafts { get; set; }
 
         [NetFieldExport("bAircraftIsLocked", RepLayoutCmdType.PropertyBool)]
         public bool bAircraftIsLocked { get; set; }

@@ -21,10 +21,8 @@ namespace FortniteReplayReader.Models
             Platform = playerState.Platform;
             HasFinishedLoading = playerState.bHasFinishedLoading;
             HasStartedPlaying = playerState.bHasStartedPlaying;
-            HasThankedBusDriver = playerState.bThankedBusDriver;
             IsUsingAnonymousMode = playerState.bUsingAnonymousMode;
             IsUsingStreamerMode = playerState.bUsingStreamerMode;
-            RebootCounter = playerState.RebootCounter;
             HasEverSkydivedFromBus = playerState.bHasEverSkydivedFromBus;
             HasEverSkydivedFromBusAndLanded = playerState.bHasEverSkydivedFromBusAndLanded;
 
@@ -48,11 +46,15 @@ namespace FortniteReplayReader.Models
         public bool IsGameSessionOwner { get; set; }
         public bool HasFinishedLoading { get; set; }
         public bool HasStartedPlaying { get; set; }
-        public bool HasThankedBusDriver { get; set; }
+        public bool? HasThankedBusDriver { get; set; }
         public bool IsUsingStreamerMode { get; set; }
         public bool IsUsingAnonymousMode { get; set; }
 
         public uint RebootCounter { get; set; }
+        public int? Placement { get; set; }
+        public uint? Kills { get; set; }
+        public uint? TeamKills { get; set; }
+        public int? DeathCause { get; set; }
 
         public bool HasEverSkydivedFromBus { get; set; }
         public bool HasEverSkydivedFromBusAndLanded { get; set; }

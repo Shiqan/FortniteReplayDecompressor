@@ -1089,8 +1089,6 @@ namespace Unreal.Core
         {
             if (bunch.bHasMustBeMappedGUIDs)
             {
-                TotalMappedGUIDs++;
-
                 var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
                 for (var i = 0; i < numMustBeMappedGUIDs; i++)
                 {
@@ -1524,7 +1522,7 @@ namespace Unreal.Core
                 var elementID = reader.ReadInt32();
 
                 // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
-                ReceiveProperties(reader, group, channelIndex, enablePropertyChecksum);
+                ReceiveProperties(reader, group, channelIndex, !enablePropertyChecksum);
             }
 
             return true;
@@ -2051,13 +2049,13 @@ namespace Unreal.Core
                 }
 
                 // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
-                //if (!Channel && !bunch.bReliable)
-                //{
-                //    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
-                //    {
-                //        continue;
-                //    }
-                //}
+                if (!channel && !bunch.bReliable)
+                {
+                    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
+                    {
+                        continue;
+                    }
+                }
 
                 // Create channel if necessary
                 if (!channel)
@@ -2074,8 +2072,6 @@ namespace Unreal.Core
                     //}
 
                     // Reliable (either open or later), so create new channel.
-                    // Channel = CreateChannelByName(Bunch.ChName, EChannelCreateFlags::None, Bunch.ChIndex);
-
                     var newChannel = new UChannel()
                     {
                         ChannelName = bunch.ChName,
@@ -2084,14 +2080,14 @@ namespace Unreal.Core
                     };
 
                     Channels[bunch.ChIndex] = newChannel;
+
                     // Notify the server of the new channel.
                     // if( !Driver->Notify->NotifyAcceptingChannel( Channel ) ) { continue; }
                 }
 
-                // Dispatch the raw, unsequenced bunch to the channel
-                // Channel->ReceivedRawBunch( Bunch, bLocalSkipAck ); //warning: May destroy channel.
                 try
                 {
+                    // Dispatch the raw, unsequenced bunch to the channel
                     ReceivedRawBunch(bunch);
                 }
                 catch (Exception ex)
@@ -2102,7 +2098,7 @@ namespace Unreal.Core
 
             if (!bitReader.AtEnd())
             {
-                _logger?.LogWarning("Packet not fully read...");
+                _logger?.LogWarning($"Packet {packetIndex} not fully read...");
             }
         }
 

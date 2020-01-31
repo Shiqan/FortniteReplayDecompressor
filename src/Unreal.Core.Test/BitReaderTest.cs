@@ -104,9 +104,11 @@ namespace Unreal.Core.Test
         [Fact]
         public void ReadPackedIntTest()
         {
-            // This version is bit compatible with FArchive::SerializeIntPacked, see CustomBinaryReader
             reader = new BitReader(new byte[] { 14 });
             Assert.Equal(7u, reader.ReadIntPacked());
+            
+            reader = new BitReader(new byte[] { 36, 64 });
+            Assert.Equal(18u, reader.ReadIntPacked());
         }
 
         [Fact]

@@ -360,7 +360,7 @@ namespace Unreal.Core
                 Position = byteAlignedPositon;
 
                 byte currentByte = ReadByte();
-                byte nextByte = 0;
+                byte nextByte = currentByte;
                 if (BitsUsed != 0)
                 {
                     nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();

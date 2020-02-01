@@ -8,16 +8,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportClassNetCache("Athena_GameState_C_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class GameStateCache
     {
-        [NetFieldExportRPC("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier")]
+        [NetFieldExportRPC("ActiveGameplayModifiers", "/Script/FortniteGame.ActiveGameplayModifier", enablePropertyChecksum: false)]
         public ActiveGameplayModifier[] ActiveGameplayModifiers { get; set; }
 
-        [NetFieldExportRPC("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo")]
+        [NetFieldExportRPC("GameMemberInfoArray", "/Script/FortniteGame.GameMemberInfo", enablePropertyChecksum: false)]
         public GameMemberInfo[] GameMemberInfoArray { get; set; }
 
         [NetFieldExportRPC("CurrentPlaylistInfo", "CurrentPlaylistInfo", customStruct: true)]
         public PlaylistInfo CurrentPlaylistInfo { get; set; }
 
-        [NetFieldExportRPC("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData")]
+        [NetFieldExportRPC("SpawnMachineRepData", "/Script/FortniteGame.SpawnMachineRepData", enablePropertyChecksum: false)]
         public SpawnMachineRepData SpawnMachineRepData { get; set; }
     }
 

@@ -6,6 +6,7 @@ using FortniteReplayReader.Models.NetFieldExports.RPC;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
@@ -56,7 +57,23 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
+        public override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
+        {
+            if (actor != null)
+            {
+                Builder.AddActorChannel(channelIndex, actor.Value);
+            }
+        }
+
+        public override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
+        {
+            if (actor != null)
+            {
+                Builder.RemoveChannel(channelIndex, actor.Value);
+            }
+        }
+
+        public override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
             Debug("onexportread", exportGroup.GetType().Name);
@@ -75,6 +92,7 @@ namespace FortniteReplayReader
                     Builder.UpdatePlayerState(channelIndex, state);
                     break;
                 case PlayerPawn pawn:
+                    Builder.UpdatePlayerPawn(channelIndex, pawn);
                     break;
                 case FortPickup pickup:
                     break;

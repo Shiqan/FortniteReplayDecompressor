@@ -13,13 +13,28 @@ namespace FortniteReplayReader
     {
         private readonly FortniteReplay Replay;
 
+        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
+        private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>();
+        private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
+        
+
         public FortniteReplayBuilder(FortniteReplay replay)
         {
             Replay = replay;
+        }
+
+        public void AddActorChannel(uint channelIndex, uint guid)
+        {
+            _actorToChannel[guid] = channelIndex;
+        }
+
+        public void RemoveChannel(uint channelIndex, uint guid)
+        {
+            _actorToChannel.Remove(guid);
         }
 
         public void UpdateGameState(GameState state)
@@ -55,7 +70,7 @@ namespace FortniteReplayReader
 
         public void UpdatePlayerState(uint channelIndex, FortPlayerState state)
         {
-            if (state.bOnlySpectator) return;
+            if (state.bOnlySpectator == true) return;
 
             if (!_players.TryGetValue(channelIndex, out var playerData))
             {
@@ -71,8 +86,49 @@ namespace FortniteReplayReader
             playerData.Placement ??= state.Place;
             playerData.TeamKills ??= state.TeamKillScore;
             playerData.Kills ??= state.KillScore;
-            playerData.DeathCause ??= state.DeathCause;
             playerData.HasThankedBusDriver ??= state.bThankedBusDriver;
+
+            playerData.DeathCause ??= state.DeathCause;
+            playerData.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
+
+            playerData.Cosmetics.Parts ??= state.Parts?.Name;
+            playerData.Cosmetics.VariantRequiredCharacterParts ??= state.VariantRequiredCharacterParts?.Select(i => i.Name);
+        }
+
+        public void UpdatePlayerPawn(uint channelIndex, PlayerPawn pawn)
+        {
+            if (!_playerPawns.TryGetValue(channelIndex, out var p))
+            {
+                if (pawn.PlayerState == null) return;
+
+                var actorId = pawn.PlayerState.Value;
+                if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
+                {
+                    _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
+                    _playerPawns[channelIndex] = pawn;
+                }
+                else
+                {
+                    // no player state channel?
+                    return;
+                }
+            }
+
+            var playerState = _players[_pawnChannelToStateChannel[channelIndex]];
+            
+            playerState.Cosmetics.Character ??= pawn.Character?.Name;
+            playerState.Cosmetics.BannerColorId ??= pawn.BannerColorId;
+            playerState.Cosmetics.BannerIconId ??= pawn.BannerIconId;
+            playerState.Cosmetics.IsDefaultCharacter ??= pawn.bIsDefaultCharacter;
+            playerState.Cosmetics.Backpack ??= pawn.Backpack?.Name;
+            playerState.Cosmetics.PetSkin ??= pawn.PetSkin?.Name;
+            playerState.Cosmetics.Glider ??= pawn.Glider?.Name;
+            playerState.Cosmetics.LoadingScreen ??= pawn.LoadingScreen?.Name;
+            playerState.Cosmetics.MusicPack ??= pawn.MusicPack?.Name;
+            playerState.Cosmetics.Pickaxe ??= pawn.Pickaxe?.Name;
+            playerState.Cosmetics.SkyDiveContrail ??= pawn.SkyDiveContrail?.Name;
+            playerState.Cosmetics.Dances ??= pawn.Dances?.Select(i => i.Name);
+            playerState.Cosmetics.ItemWraps ??= pawn.ItemWraps?.Select(i => i.Name);
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)
@@ -102,7 +158,7 @@ namespace FortniteReplayReader
                 llama.HasSpawnedPickups = true;
             }
         }
-        
+
         public void UpdateSupplyDrop(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
         {
             if (!_drops.TryGetValue(channelIndex, out var drop))

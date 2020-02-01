@@ -1074,6 +1074,7 @@ namespace Unreal.Core
                 //ConditionalCleanUp(false, Bunch.CloseReason);
                 // lots of stuff is happening here, but maybe this is enough... :)
                 Channels[bunch.ChIndex] = null;
+                OnChannelClosed(bunch.ChIndex, Channels[bunch.ChIndex]?.Actor?.ActorNetGUID);
                 return true;
             }
 
@@ -1191,6 +1192,7 @@ namespace Unreal.Core
                 }
 
                 channel.Actor = inActor;
+                OnChannelOpened(channel.ChannelIndex, inActor.ActorNetGUID);
 
                 //SetChannelActor(NewChannelActor);
 
@@ -1677,7 +1679,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="channelIndex"></param>
         /// <param name="exportGroup"></param>
-        protected abstract void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup);
+        public abstract void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
@@ -2102,6 +2104,19 @@ namespace Unreal.Core
             }
         }
 
+        /// <summary>
+        /// Notifies when a new actor channel is created.
+        /// </summary>
+        /// <param name="channelIndex"></param>
+        /// <param name="actor"></param>
+        public abstract void OnChannelOpened(uint channelIndex, NetworkGUID actor);
+
+        /// <summary>
+        /// Notifies when a channel is closed.
+        /// </summary>
+        /// <param name="channelIndex"></param>
+        /// <param name="actor"></param>
+        public abstract void OnChannelClosed(uint channelIndex, NetworkGUID actor);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9

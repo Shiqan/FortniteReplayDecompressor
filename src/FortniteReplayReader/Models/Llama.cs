@@ -23,6 +23,7 @@ namespace FortniteReplayReader.Models
         public FVector Location { get; set; }
         public bool HasSpawnedPickups { get; set; }
         public bool Looted { get; set; }
+        public float? LootedTime { get; set; }
         public FVector FinalDestination { get; set; }
     }
 }

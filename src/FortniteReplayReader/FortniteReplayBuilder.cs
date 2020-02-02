@@ -1,6 +1,5 @@
 ﻿using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,13 +13,15 @@ namespace FortniteReplayReader
         private readonly FortniteReplay Replay;
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
+        private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
+
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
-        private Dictionary<uint, PlayerPawn> _playerPawns = new Dictionary<uint, PlayerPawn>();
-        private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
-        
+        private float? ReplicatedWorldTimeSeconds = 0;
+        private int? TeamsLeft = 100;
+        private int? SafeZonePhase = 0;
 
         public FortniteReplayBuilder(FortniteReplay replay)
         {
@@ -56,6 +57,21 @@ namespace FortniteReplayReader
             Replay.GameData.SafeZonesStartTime ??= state.SafeZonesStartTime;
 
             Replay.MapData.BattleBusFlightPaths ??= state.TeamFlightPaths?.Select(i => new BattleBus(i) { Skin = state.DefaultBattleBus?.Name });
+
+            if (state.TeamsLeft != null)
+            {
+                TeamsLeft = state.TeamsLeft;
+            }
+            
+            if (state.SafeZonePhase != null)
+            {
+                SafeZonePhase = state.SafeZonePhase;
+            }
+
+            if (state.ReplicatedWorldTimeSeconds != null)
+            {
+                ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
+            }
         }
 
         public void UpdatePlaylistInfo(PlaylistInfo playlist)
@@ -70,7 +86,10 @@ namespace FortniteReplayReader
 
         public void UpdatePlayerState(uint channelIndex, FortPlayerState state)
         {
-            if (state.bOnlySpectator == true) return;
+            if (state.bOnlySpectator == true)
+            {
+                return;
+            }
 
             if (!_players.TryGetValue(channelIndex, out var playerData))
             {
@@ -83,39 +102,87 @@ namespace FortniteReplayReader
                 playerData.RebootCounter = state.RebootCounter;
             }
 
+            if (state.RebootCounter > 0 || state.bDBNO != null || state.DeathCause != null)
+            {
+                UpdateKillFeed(channelIndex, playerData, state);
+            }
+
             playerData.Placement ??= state.Place;
             playerData.TeamKills ??= state.TeamKillScore;
             playerData.Kills ??= state.KillScore;
             playerData.HasThankedBusDriver ??= state.bThankedBusDriver;
 
             playerData.DeathCause ??= state.DeathCause;
+            playerData.DeathCircumstance ??= state.DeathCircumstance;
             playerData.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
 
             playerData.Cosmetics.Parts ??= state.Parts?.Name;
             playerData.Cosmetics.VariantRequiredCharacterParts ??= state.VariantRequiredCharacterParts?.Select(i => i.Name);
         }
 
+        public void UpdateKillFeed(uint channelIndex, PlayerData data, FortPlayerState state)
+        {
+            var entry = new KillFeedEntry();
+
+            if (state.FinisherOrDowner == null)
+            {
+                return;
+            }
+
+            if (state.RebootCounter != null)
+            {
+                entry.IsRevived = true;
+            }
+
+            if (state.bDBNO == true)
+            {
+                entry.IsDowned = true;
+            }
+
+            if (!_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out var actorChannelIndex))
+            {
+                return;
+            }
+
+            if (!_players.TryGetValue(actorChannelIndex, out var finisherOrDownerData))
+            {
+                return;
+            }
+
+            entry.PlayerId = data.PlayerId;
+            entry.PlayerIsBot = data.IsBot == true;
+            entry.FinisherOrDowner = finisherOrDownerData.PlayerId;
+            entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot == true;
+            entry.TimeSeconds = ReplicatedWorldTimeSeconds;
+
+            entry.Distance ??= state.Distance;
+            entry.DeathCause ??= state.DeathCause;
+            entry.DeathCircumstance ??= state.DeathCircumstance;
+            entry.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
+
+            Replay.KillFeed.Add(entry);
+        }
+
         public void UpdatePlayerPawn(uint channelIndex, PlayerPawn pawn)
         {
-            if (!_playerPawns.TryGetValue(channelIndex, out var p))
+            if (pawn.PlayerState == null)
             {
-                if (pawn.PlayerState == null) return;
+                return;
+            }
 
-                var actorId = pawn.PlayerState.Value;
-                if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
-                {
-                    _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
-                    _playerPawns[channelIndex] = pawn;
-                }
-                else
-                {
-                    // no player state channel?
-                    return;
-                }
+            var actorId = pawn.PlayerState.Value;
+            if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
+            {
+                _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
+            }
+            else
+            {
+                // no player state channel?
+                return;
             }
 
             var playerState = _players[_pawnChannelToStateChannel[channelIndex]];
-            
+
             playerState.Cosmetics.Character ??= pawn.Character?.Name;
             playerState.Cosmetics.BannerColorId ??= pawn.BannerColorId;
             playerState.Cosmetics.BannerIconId ??= pawn.BannerIconId;
@@ -133,7 +200,10 @@ namespace FortniteReplayReader
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)
         {
-            if (safeZone.SafeZoneStartShrinkTime <= 0 && safeZone.SafeZoneFinishShrinkTime <= 0) return;
+            if (safeZone.SafeZoneStartShrinkTime <= 0 && safeZone.SafeZoneFinishShrinkTime <= 0)
+            {
+                return;
+            }
 
             Replay.MapData.SafeZones.Add(new SafeZone(safeZone));
         }
@@ -151,6 +221,7 @@ namespace FortniteReplayReader
             if (supplyDropLlama.Looted)
             {
                 llama.Looted = true;
+                llama.LootedTime = ReplicatedWorldTimeSeconds;
             }
 
             if (supplyDropLlama.bHasSpawnedPickups)
@@ -172,11 +243,13 @@ namespace FortniteReplayReader
             if (supplyDrop.Opened)
             {
                 drop.Opened = true;
+                drop.OpenedTime = ReplicatedWorldTimeSeconds;
             }
 
             if (supplyDrop.BalloonPopped)
             {
                 drop.BalloonPopped = true;
+                drop.BalloonPoppedTime = ReplicatedWorldTimeSeconds;
             }
 
             if (supplyDrop.bHasSpawnedPickups)

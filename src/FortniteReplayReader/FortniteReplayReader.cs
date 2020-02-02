@@ -76,7 +76,7 @@ namespace FortniteReplayReader
         public override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
-            Debug("onexportread", exportGroup.GetType().Name);
+
             switch (exportGroup)
             {
                 case GameState state:

@@ -21,7 +21,9 @@ namespace FortniteReplayReader.Models
         //public FRepMovement ReplicatedMovement { get; set; }
         public bool HasSpawnedPickups { get; set; }
         public bool Opened { get; set; }
+        public float? OpenedTime { get; set; }
         public bool BalloonPopped { get; set; }
+        public float? BalloonPoppedTime { get; set; }
         public float FallSpeed { get; set; }
         public FVector LandingLocation { get; set; }
         public float FallHeight { get; set; }

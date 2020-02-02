@@ -60,6 +60,7 @@ namespace FortniteReplayReader.Models
         public uint? Kills { get; set; }
         public uint? TeamKills { get; set; }
         public int? DeathCause { get; set; }
+        public int? DeathCircumstance { get; set; }
         public IEnumerable<string> DeathTags { get; set; }
 
         public bool? HasEverSkydivedFromBus { get; set; }

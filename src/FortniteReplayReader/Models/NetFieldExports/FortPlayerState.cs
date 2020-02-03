@@ -36,7 +36,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int? PlayerID { get; set; }
 
         [NetFieldExport("Ping", RepLayoutCmdType.PropertyByte)]
-        public byte Ping { get; set; }
+        public byte? Ping { get; set; }
 
         [NetFieldExport("bIsABot", RepLayoutCmdType.PropertyBool)]
         public bool? bIsABot { get; set; }
@@ -192,7 +192,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public int? DeathCause { get; set; }
 
         [NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
-        public float Distance { get; set; }
+        public float? Distance { get; set; }
 
         [NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
         public FGameplayTagContainer DeathTags { get; set; }
@@ -201,10 +201,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool? bResurrectionChipAvailable { get; set; }
 
         [NetFieldExport("ResurrectionExpirationTime", RepLayoutCmdType.PropertyFloat)]
-        public float ResurrectionExpirationTime { get; set; }
+        public float? ResurrectionExpirationTime { get; set; }
 
-        [NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyUInt32)]
-        public uint? ResurrectionExpirationLength { get; set; }
+        [NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyFloat)]
+        public float? ResurrectionExpirationLength { get; set; }
 
         [NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore)]
         public FVector WorldLocation { get; set; }

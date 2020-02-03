@@ -10,23 +10,22 @@ namespace FortniteReplayReader
     /// </summary>
     public class FortniteReplayBuilder
     {
-        private readonly FortniteReplay Replay;
+        private GameData GameData = new GameData();
+        private MapData MapData = new MapData();
+        private List<KillFeedEntry> KillFeed = new List<KillFeedEntry>();
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
 
+        private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
+        private Dictionary<int?, TeamData> _teams = new Dictionary<int?, TeamData>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
         private int? TeamsLeft = 100;
         private int? SafeZonePhase = 0;
-
-        public FortniteReplayBuilder(FortniteReplay replay)
-        {
-            Replay = replay;
-        }
 
         public void AddActorChannel(uint channelIndex, uint guid)
         {
@@ -40,29 +39,29 @@ namespace FortniteReplayReader
 
         public void UpdateGameState(GameState state)
         {
-            Replay.GameData.GameSessionId ??= state?.GameSessionId;
-            Replay.GameData.UtcTimeStartedMatch ??= state.UtcTimeStartedMatch?.Time;
-            Replay.GameData.MapInfo ??= state.MapInfo?.Name;
+            GameData.GameSessionId ??= state?.GameSessionId;
+            GameData.UtcTimeStartedMatch ??= state.UtcTimeStartedMatch?.Time;
+            GameData.MapInfo ??= state.MapInfo?.Name;
 
-            Replay.GameData.IsLargeTeamGame ??= state.bIsLargeTeamGame;
-            Replay.GameData.TournamentRound ??= state.EventTournamentRound;
+            GameData.IsLargeTeamGame ??= state.bIsLargeTeamGame;
+            GameData.TournamentRound ??= state.EventTournamentRound;
 
-            Replay.GameData.AdditionalPlaylistLevels ??= state.AdditionalPlaylistLevelsStreamed?.Select(i => i.Name);
+            GameData.AdditionalPlaylistLevels ??= state.AdditionalPlaylistLevelsStreamed?.Select(i => i.Name);
 
-            Replay.GameData.TeamCount ??= state.TeamCount;
-            Replay.GameData.TeamSize ??= state.TeamSize;
-            Replay.GameData.TotalPlayerStructures ??= state.TotalPlayerStructures;
+            GameData.TeamCount ??= state.TeamCount;
+            GameData.TeamSize ??= state.TeamSize;
+            GameData.TotalPlayerStructures ??= state.TotalPlayerStructures;
 
-            Replay.GameData.AircraftStartTime ??= state.AircraftStartTime;
-            Replay.GameData.SafeZonesStartTime ??= state.SafeZonesStartTime;
+            GameData.AircraftStartTime ??= state.AircraftStartTime;
+            GameData.SafeZonesStartTime ??= state.SafeZonesStartTime;
 
-            Replay.MapData.BattleBusFlightPaths ??= state.TeamFlightPaths?.Select(i => new BattleBus(i) { Skin = state.DefaultBattleBus?.Name });
+            MapData.BattleBusFlightPaths ??= state.TeamFlightPaths?.Select(i => new BattleBus(i) { Skin = state.DefaultBattleBus?.Name });
 
             if (state.TeamsLeft != null)
             {
                 TeamsLeft = state.TeamsLeft;
             }
-            
+
             if (state.SafeZonePhase != null)
             {
                 SafeZonePhase = state.SafeZonePhase;
@@ -76,17 +75,47 @@ namespace FortniteReplayReader
 
         public void UpdatePlaylistInfo(PlaylistInfo playlist)
         {
-            Replay.GameData.CurrentPlaylist ??= playlist.Name;
+            GameData.CurrentPlaylist ??= playlist.Name;
         }
 
         public void UpdateGameplayModifiers(ActiveGameplayModifier modifier)
         {
-            Replay.GameData.ActiveGameplayModifiers.Add(modifier.ModifierDef?.Name);
+            GameData.ActiveGameplayModifiers.Add(modifier.ModifierDef?.Name);
+        }
+
+        public void UpdateTeamData()
+        {
+            foreach (var playerData in _players.Values)
+            {
+                if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
+                {
+                    _teams[playerData.TeamIndex] = new TeamData() 
+                    { 
+                        TeamIndex = playerData.TeamIndex,
+                        PlayerIds = new List<string>() { playerData.PlayerId },
+                        Placement = playerData.Placement,
+                        PartyOwnerId = playerData.IsPartyLeader ? playerData.PlayerId : ""
+                    };
+                    continue;
+                }
+
+                teamData.PlayerIds.Add(playerData.PlayerId);
+                if (playerData.IsPartyLeader)
+                {
+                    teamData.PartyOwnerId = playerData.PlayerId;
+                }
+            }
         }
 
         public void UpdatePlayerState(uint channelIndex, FortPlayerState state)
         {
             if (state.bOnlySpectator == true)
+            {
+                _onlySpectatingPlayers.Add(channelIndex);
+                return;
+            }
+
+            if (_onlySpectatingPlayers.Contains(channelIndex))
             {
                 return;
             }
@@ -126,6 +155,7 @@ namespace FortniteReplayReader
 
             if (state.FinisherOrDowner == null)
             {
+                // TODO
                 return;
             }
 
@@ -141,6 +171,7 @@ namespace FortniteReplayReader
 
             if (!_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out var actorChannelIndex))
             {
+                // TODO
                 return;
             }
 
@@ -160,7 +191,7 @@ namespace FortniteReplayReader
             entry.DeathCircumstance ??= state.DeathCircumstance;
             entry.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
 
-            Replay.KillFeed.Add(entry);
+            KillFeed.Add(entry);
         }
 
         public void UpdatePlayerPawn(uint channelIndex, PlayerPawn pawn)
@@ -205,7 +236,7 @@ namespace FortniteReplayReader
                 return;
             }
 
-            Replay.MapData.SafeZones.Add(new SafeZone(safeZone));
+            MapData.SafeZones.Add(new SafeZone(safeZone));
         }
 
         public void UpdateLlama(uint channelIndex, SupplyDropLlama supplyDropLlama)
@@ -213,7 +244,7 @@ namespace FortniteReplayReader
             if (!_llamas.TryGetValue(channelIndex, out var llama))
             {
                 llama = new Llama(channelIndex, supplyDropLlama);
-                Replay.MapData.Llamas.Add(llama);
+                MapData.Llamas.Add(llama);
                 _llamas.Add(channelIndex, llama);
                 return;
             }
@@ -235,7 +266,7 @@ namespace FortniteReplayReader
             if (!_drops.TryGetValue(channelIndex, out var drop))
             {
                 drop = new Models.SupplyDrop(channelIndex, supplyDrop);
-                Replay.MapData.SupplyDrops.Add(drop);
+                MapData.SupplyDrops.Add(drop);
                 _drops.Add(channelIndex, drop);
                 return;
             }

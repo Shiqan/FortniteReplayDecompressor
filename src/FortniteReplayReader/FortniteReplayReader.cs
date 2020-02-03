@@ -17,25 +17,31 @@ namespace FortniteReplayReader
 {
     public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
-        private readonly FortniteReplayBuilder Builder;
-        public ReplayReader(ILogger logger = null)
+        private FortniteReplayBuilder Builder;
+
+        public ReplayReader(ILogger logger = null) : base(logger)
         {
-            Replay = new FortniteReplay();
-            Builder = new FortniteReplayBuilder(Replay);
-            _logger = logger;
         }
 
         public FortniteReplay ReadReplay(string fileName, ParseMode mode = ParseMode.Minimal)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive, mode);
+
+            Builder = new FortniteReplayBuilder();
+            Replay = ReadReplay(archive, mode);
+
+            Builder.UpdateTeamData();
+            return Replay;
         }
 
         public FortniteReplay ReadReplay(Stream stream, ParseMode mode = ParseMode.Minimal)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive, mode);
+            Replay = ReadReplay(archive, mode);
+
+            Builder.UpdateTeamData();
+            return Replay;
         }
 
         private string _branch;

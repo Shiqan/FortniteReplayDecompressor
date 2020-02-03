@@ -19,16 +19,16 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class FortTeamPrivateInfo : INetFieldExportGroup
     {
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
-        public int RemoteRole { get; set; }
+        public int? RemoteRole { get; set; }
 
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
-        public int Role { get; set; }
+        public int? Role { get; set; }
 
         [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]
         public ActorGuid Owner { get; set; }
 
         [NetFieldExport("Value", RepLayoutCmdType.PropertyFloat)]
-        public float Value { get; set; }
+        public float? Value { get; set; }
 
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyNetId)]
         public string PlayerID { get; set; }
@@ -40,9 +40,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public FVector LastRepLocation { get; set; }
 
         [NetFieldExport("LastRepYaw", RepLayoutCmdType.PropertyFloat)]
-        public float LastRepYaw { get; set; }
+        public float? LastRepYaw { get; set; }
 
         [NetFieldExport("PawnStateMask", RepLayoutCmdType.Enum)]
-        public int PawnStateMask { get; set; }
+        public int? PawnStateMask { get; set; }
     }
 }

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Unreal.Core
 {
-    public abstract class ReplayReader<T> where T : Replay
+    public abstract class ReplayReader<T> where T : Replay, new ()
     {
         /// <summary>
         /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; 
@@ -77,8 +77,15 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
+        public ReplayReader(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         public virtual T ReadReplay(FArchive archive, ParseMode mode)
         {
+            Replay = new T();
+
             _parseMode = mode;
             GuidCache = new NetGuidCache();
             netFieldParser = new NetFieldParser(GuidCache, mode);

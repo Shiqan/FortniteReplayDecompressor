@@ -29,7 +29,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RotationOffset", RepLayoutCmdType.PropertyRotator)]
         public FRotator RotationOffset { get; set; }
 
-        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyUInt32)]
+        [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject)]
         public uint? AttachComponent { get; set; }
 
         [NetFieldExport("Owner", RepLayoutCmdType.PropertyObject)]

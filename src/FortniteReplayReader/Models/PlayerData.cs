@@ -5,11 +5,6 @@ namespace FortniteReplayReader.Models
 {
     public class PlayerData
     { 
-        public PlayerData()
-        {
-
-        }
-
         public PlayerData(FortPlayerState playerState)
         {
             EpicId = playerState.UniqueId;
@@ -17,10 +12,12 @@ namespace FortniteReplayReader.Models
             IsBot = playerState.bIsABot;
             PlayerNameCustomOverride = playerState.PlayerNameCustomOverride?.Text;
             IsGameSessionOwner = playerState.bIsGameSessionOwner;
+            PlayerName = playerState.PlayerNamePrivate;
             StreamerModeName = playerState.StreamerModeName?.Text;
             IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId;
             TeamIndex = playerState.TeamIndex;
             Level = playerState.Level;
+            SeasonLevelUIDisplay = playerState.SeasonLevelUIDisplay;
             Platform = playerState.Platform;
             HasFinishedLoading = playerState.bHasFinishedLoading;
             HasStartedPlaying = playerState.bHasStartedPlaying;
@@ -41,13 +38,17 @@ namespace FortniteReplayReader.Models
         public string EpicId { get; set; }
         public string BotId { get; set; }
         public bool? IsBot { get; set; }
+        public string PlayerName { get; set; }
         public string PlayerNameCustomOverride { get; set; }
         public string StreamerModeName { get; set; }
         public string Platform { get; set; }
         public int? Level { get; set; }
+        public uint? SeasonLevelUIDisplay { get; set; }
 
+        public int? PlayerNumber { get; set; }
         public int? TeamIndex { get; set; }
         public bool IsPartyLeader { get; set; }
+        public bool IsReplayOwner { get; set; }
         public bool? IsGameSessionOwner { get; set; }
         public bool? HasFinishedLoading { get; set; }
         public bool? HasStartedPlaying { get; set; }

@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportClassNetCache("FortBroadcastRemoteClientInfo_ClassNetCache", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportClassNetCache("FortBroadcastRemoteClientInfo_ClassNetCache", minimalParseMode: ParseMode.Ignore)]
     public class FortBroadcastRemoteClientInfoCache
     {
         [NetFieldExportRPC("ClientRemotePlayerAddMapMarker", "/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerAddMapMarker", isFunction: true)]

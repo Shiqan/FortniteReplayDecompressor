@@ -29,7 +29,7 @@ namespace FortniteReplayReader
             using var archive = new Unreal.Core.BinaryReader(stream);
 
             Builder = new FortniteReplayBuilder();
-            Replay = ReadReplay(archive, mode);
+            ReadReplay(archive, mode);
 
             Builder.UpdateTeamData();
             return Replay;

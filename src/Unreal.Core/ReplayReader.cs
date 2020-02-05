@@ -93,6 +93,7 @@ namespace Unreal.Core
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
+            
             GuidCache.Cleanup();
 
             return Replay;

@@ -136,6 +136,12 @@ namespace FortniteReplayReader
                 UpdateKillFeed(channelIndex, playerData, state);
             }
 
+            if (state.Ping > 0)
+            {
+                // workaround ?
+                playerData.IsReplayOwner = true;
+            }
+
             playerData.Placement ??= state.Place;
             playerData.TeamKills ??= state.TeamKillScore;
             playerData.Kills ??= state.KillScore;

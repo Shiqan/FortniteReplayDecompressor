@@ -42,7 +42,6 @@ namespace Unreal.Core
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
         private int packetIndex = 0;
-        private int externalDataIndex = 0;
         private int bunchIndex = 0;
 
         private int InPacketId;
@@ -483,33 +482,7 @@ namespace Unreal.Core
                 var netGuid = archive.ReadIntPacked();
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                var externalData = archive.ReadBytes(externalDataNumBytes);
-
-                // replayout setexternaldata
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L122
-                // FMemory::Memcpy(ExternalData.GetData(), Src, NumBytes);
-
-                // this is a bitreader...
-                //var bitReader = new BitReader(externalData);
-                //bitReader.ReadBytes(3); // always 19 FB 01 ?
-                //var size = bitReader.ReadUInt32();
-
-                // FCharacterSample
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/Components/CharacterMovementComponent.cpp#L7074
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h#L2656
-                //var location = bitReader.ReadPackedVector(10, 24);
-                //var velocity = bitReader.ReadPackedVector(10, 24);
-                //var acceleration = bitReader.ReadPackedVector(10, 24);
-                //var rotation = bitReader.ReadSerializeCompressed();
-                //var remoteViewPitch = bitReader.ReadByte();
-                //if (!bitReader.AtEnd())
-                //{
-                //    var time = bitReader.ReadSingle();
-                //}
-#if DEBUG
-                //Debug($"externaldata-{externalDataIndex}-{netGuid}", "externaldata", externalData);
-#endif
-                externalDataIndex++;
+                archive.SkipBytes(externalDataNumBytes);
             }
         }
 
@@ -1687,7 +1660,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="channelIndex"></param>
         /// <param name="exportGroup"></param>
-        public abstract void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup);
+        protected abstract void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
@@ -2117,14 +2090,14 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="channelIndex"></param>
         /// <param name="actor"></param>
-        public abstract void OnChannelOpened(uint channelIndex, NetworkGUID actor);
+        protected abstract void OnChannelOpened(uint channelIndex, NetworkGUID actor);
 
         /// <summary>
         /// Notifies when a channel is closed.
         /// </summary>
         /// <param name="channelIndex"></param>
         /// <param name="actor"></param>
-        public abstract void OnChannelClosed(uint channelIndex, NetworkGUID actor);
+        protected abstract void OnChannelClosed(uint channelIndex, NetworkGUID actor);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9

@@ -1,5 +1,10 @@
-﻿using FortniteReplayReader.Models;
+﻿using FortniteReplayReader.Contracts;
+using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.RPC;
+using FortniteReplayReader.Models.TelemetryEvents;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,10 +22,12 @@ namespace FortniteReplayReader
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
 
+        private IList<ITelemetryEvent> _events = new List<ITelemetryEvent>();
         private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
         private Dictionary<int?, TeamData> _teams = new Dictionary<int?, TeamData>();
         private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
+        private Dictionary<int, RebootVan> _rebootVans = new Dictionary<int, RebootVan>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
@@ -89,8 +96,8 @@ namespace FortniteReplayReader
             {
                 if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
                 {
-                    _teams[playerData.TeamIndex] = new TeamData() 
-                    { 
+                    _teams[playerData.TeamIndex] = new TeamData()
+                    {
                         TeamIndex = playerData.TeamIndex,
                         PlayerIds = new List<string>() { playerData.PlayerId },
                         Placement = playerData.Placement,
@@ -105,6 +112,52 @@ namespace FortniteReplayReader
                     teamData.PartyOwnerId = playerData.PlayerId;
                 }
             }
+        }
+
+        public void UpdateBatchedDamge(uint channelIndex, BatchedDamageCues damage)
+        {
+            if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannel))
+            {
+                return;
+            }
+
+            if (!_players.TryGetValue(stateChannel, out var playerData))
+            {
+                return;
+            }
+
+            var e = new DamageEvent
+            {
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                ShotPlayerId = playerData.Id,
+                Location = damage.Location,
+                Damage = damage.Magnitude,
+                Normal = damage.Normal,
+                IsCritical = damage.bIsCritical,
+                CriticalHitNonPlayer = damage.NonPlayerbIsCritical,
+                IsFatal = damage.bIsFatal,
+                FatalHitNonPlayer = damage.NonPlayerbIsFatal,
+                WeaponActivate = damage.bWeaponActivate,
+                IsBallistic = damage.bIsBallistic,
+                IsShield = damage.bIsShield,
+                IsShieldDestroyed = damage.bIsShieldDestroyed,
+            };
+
+            if (damage.HitActor < 0) return;
+
+            if (!_actorToChannel.TryGetValue(damage.HitActor.GetValueOrDefault(), out var hitActorStateChannel))
+            {
+                return;
+            }
+
+            if (!_players.TryGetValue(hitActorStateChannel, out var hitPlayerData))
+            {
+                // hitting non players not interesting?
+                return;
+            }
+            e.HitPlayerId = hitPlayerData.Id;
+
+            _events.Add(e);
         }
 
         public void UpdatePlayerState(uint channelIndex, FortPlayerState state)
@@ -138,7 +191,7 @@ namespace FortniteReplayReader
 
             if (state.Ping > 0)
             {
-                // workaround ?
+                // workaround
                 playerData.IsReplayOwner = true;
             }
 
@@ -297,6 +350,21 @@ namespace FortniteReplayReader
             if (supplyDrop.LandingLocation != null)
             {
                 drop.LandingLocation = supplyDrop.LandingLocation;
+            }
+        }
+
+        public void UpdateRebootVan(uint channelIndex, SpawnMachineRepData spawnMachine)
+        {
+            if (!_rebootVans.TryGetValue(spawnMachine.SpawnMachineRepDataHandle, out var rebootVan))
+            {
+                rebootVan = new RebootVan(spawnMachine);
+                MapData.RebootVans.Add(rebootVan);
+                _rebootVans.Add(spawnMachine.SpawnMachineRepDataHandle, rebootVan);
+                return;
+            }
+            else
+            {
+                return;
             }
         }
     }

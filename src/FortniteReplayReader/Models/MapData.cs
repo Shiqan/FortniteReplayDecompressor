@@ -9,7 +9,7 @@ namespace FortniteReplayReader.Models
         public IList<Llama> Llamas { get; set; } = new List<Llama>();
         public IList<SupplyDrop> SupplyDrops { get; set; } = new List<SupplyDrop>();
 
-        //public IEnumerable<RebootVan> RebootVans { get; set; }
+        public IList<RebootVan> RebootVans { get; set; } = new List<RebootVan>();
 
         //public FortPoiManager PoiManager { get; set; }
 

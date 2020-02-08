@@ -7,6 +7,7 @@ namespace FortniteReplayReader.Models
     { 
         public PlayerData(FortPlayerState playerState)
         {
+            Id = playerState.PlayerID;
             EpicId = playerState.UniqueId;
             BotId = playerState.BotUniqueId;
             IsBot = playerState.bIsABot;
@@ -34,6 +35,7 @@ namespace FortniteReplayReader.Models
             };
         }
 
+        public int? Id { get; set; }
         public string PlayerId => (IsBot == true) ? BotId : EpicId;
         public string EpicId { get; set; }
         public string BotId { get; set; }

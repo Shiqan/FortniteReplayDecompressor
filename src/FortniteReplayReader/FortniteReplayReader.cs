@@ -1,6 +1,7 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
 using Microsoft.Extensions.Logging;
@@ -63,7 +64,7 @@ namespace FortniteReplayReader
             }
         }
 
-        public override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
+        protected override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
         {
             if (actor != null)
             {
@@ -71,7 +72,7 @@ namespace FortniteReplayReader
             }
         }
 
-        public override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
+        protected override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
         {
             if (actor != null)
             {
@@ -79,7 +80,7 @@ namespace FortniteReplayReader
             }
         }
 
-        public override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
+        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
 
@@ -105,6 +106,7 @@ namespace FortniteReplayReader
                 case FortInventory inventory:
                     break;
                 case BatchedDamageCues damage:
+                    Builder.UpdateBatchedDamge(channelIndex, damage);
                     break;
                 case BroadcastExplosion explosione:
                     break;
@@ -113,6 +115,9 @@ namespace FortniteReplayReader
                     break;
                 case SupplyDropLlama llama:
                     Builder.UpdateLlama(channelIndex, llama);
+                    break;
+                case SpawnMachineRepData spawnMachine:
+                    Builder.UpdateRebootVan(channelIndex, spawnMachine);
                     break;
                 case Models.NetFieldExports.SupplyDrop drop:
                     Builder.UpdateSupplyDrop(channelIndex, drop);

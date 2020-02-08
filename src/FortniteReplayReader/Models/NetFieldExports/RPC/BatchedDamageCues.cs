@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.RPC
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", minimalParseMode: ParseMode.Full)]
     public class BatchedDamageCues : INetFieldExportGroup
     {
         [NetFieldExport("HitActor", RepLayoutCmdType.PropertyObject)]

@@ -1,5 +1,6 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.Events;
 using System;
 using System.IO;
 using Xunit;

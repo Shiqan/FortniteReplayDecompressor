@@ -6,7 +6,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportClassNetCache("PlayerPawn_Athena_C_ClassNetCache")]
+    [NetFieldExportClassNetCache("PlayerPawn_Athena_C_ClassNetCache", minimalParseMode: ParseMode.Full)]
     public class PlayerPawnCache
     {
         [NetFieldExportRPC("ClientObservedStats", "/Script/FortniteGame.FortClientObservedStat", enablePropertyChecksum: false)]

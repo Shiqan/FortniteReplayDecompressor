@@ -5,10 +5,10 @@ namespace FortniteReplayReader.Models
 {
     public class GameData
     {
-        public string? GameSessionId { get; set; }
+        public string GameSessionId { get; set; }
         public DateTime? UtcTimeStartedMatch { get; set; }
-        public string? MapInfo { get; set; }
-        public string? CurrentPlaylist { get; set; }
+        public string MapInfo { get; set; }
+        public string CurrentPlaylist { get; set; }
         public IEnumerable<string> AdditionalPlaylistLevels { get; set; }
         public IList<string> ActiveGameplayModifiers { get; set; } = new List<string>();
 

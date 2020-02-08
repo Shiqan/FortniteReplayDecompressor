@@ -1,10 +1,12 @@
-﻿using Unreal.Core.Contracts;
+﻿using Microsoft.Extensions.Logging;
+using Unreal.Core.Contracts;
+using Unreal.Core.Models;
 
 namespace Unreal.Core.Test.Mocks
 {
     public class MockReplayReader : ReplayReader<MockReplay>
     {
-        public MockReplayReader()
+        public MockReplayReader(ILogger logger = null) : base(logger)
         {
             Replay = new MockReplay();
         }
@@ -12,6 +14,16 @@ namespace Unreal.Core.Test.Mocks
         public MockReplay GetReplay()
         {
             return Replay;
+        }
+
+        protected override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
+        {
+            // pass
+        }
+
+        protected override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
+        {
+            // pass
         }
 
         protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)

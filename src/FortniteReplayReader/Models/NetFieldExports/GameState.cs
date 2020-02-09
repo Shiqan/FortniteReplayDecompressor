@@ -268,7 +268,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ActorGuid WinningPlayerState { get; set; }
 
         [NetFieldExport("WinningPlayerList", RepLayoutCmdType.DynamicArray)]
-        public ActorGuid[] WinningPlayerList { get; set; }
+        public byte[] WinningPlayerList { get; set; }
 
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningTeam { get; set; }
@@ -292,7 +292,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool? bIsLargeTeamGame { get; set; }
 
         [NetFieldExport("ActiveTeamNums", RepLayoutCmdType.DynamicArray)]
-        public byte[] ActiveTeamNums { get; set; }
+        public NetworkGUID[] ActiveTeamNums { get; set; }
 
         [NetFieldExport("AirCraftBehavior", RepLayoutCmdType.Enum)]
         public int? AirCraftBehavior { get; set; }

@@ -3,7 +3,7 @@ using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models.TelemetryEvents
 {
-    public class LlamaEvent : ITelemetryEvent
+    public class SupplyDropEvent : ITelemetryEvent
     {
         public float? ReplicatedWorldTimeSeconds { get; set; }
 

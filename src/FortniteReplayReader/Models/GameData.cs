@@ -22,5 +22,8 @@ namespace FortniteReplayReader.Models
 
         public float? AircraftStartTime { get; set; }
         public float? SafeZonesStartTime { get; set; }
+
+        public uint? WinningTeam { get; set; }
+        public IEnumerable<byte> WinningPlayerIds { get; set; }
     }
 }

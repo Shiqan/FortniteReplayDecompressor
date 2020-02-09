@@ -2,7 +2,7 @@
 
 namespace FortniteReplayReader.Models.TelemetryEvents
 {
-    public class SupplyDropEvent : ITelemetryEvent
+    public class LlamaEvent : ITelemetryEvent
     {
         public float? ReplicatedWorldTimeSeconds { get; set; }
     }

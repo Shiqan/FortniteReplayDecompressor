@@ -16,7 +16,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         //public FRepMovement FastSharedReplication { get; set; }
 
         [NetFieldExportRPC("NetMulticast_Athena_BatchedDamageCues", "/Script/FortniteGame.FortPawn:NetMulticast_Athena_BatchedDamageCues", isFunction: true)]
-        public BatchedDamageCues FastSharedReplication { get; set; }
+        public BatchedDamageCues DamageCues { get; set; }
 
         [NetFieldExportRPC("NetMulticast_InvokeGameplayCueAdded_WithParams", "/Script/FortniteGame.FortPawn:NetMulticast_InvokeGameplayCueAdded_WithParams", isFunction: true)]
         public GameplayCue InvokeGameplayCueAdded { get; set; }

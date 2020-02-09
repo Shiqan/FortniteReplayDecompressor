@@ -64,20 +64,26 @@ namespace FortniteReplayReader
 
             MapData.BattleBusFlightPaths ??= state.TeamFlightPaths?.Select(i => new BattleBus(i) { Skin = state.DefaultBattleBus?.Name });
 
-            if (state.TeamsLeft != null)
-            {
-                TeamsLeft = state.TeamsLeft;
-            }
-
-            if (state.SafeZonePhase != null)
-            {
-                SafeZonePhase = state.SafeZonePhase;
-            }
-
             if (state.ReplicatedWorldTimeSeconds != null)
             {
                 ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
             }
+
+            if (state.WinningPlayerList != null)
+            {
+                //GameData.WinningPlayerIds = state.WinningPlayerList.Select(i => i);
+                return;
+            }
+
+            var e = new GameStateEvent();
+            e.ReplicatedWorldTimeSeconds ??= ReplicatedWorldTimeSeconds;
+            e.TeamsLeft ??= state.TeamsLeft;
+            e.SafeZonePhase ??= state.SafeZonePhase;
+            e.PlayerBotsLeft ??= state.PlayerBotsLeft;
+            e.PlayersLeft ??= state.PlayersLeft;
+            e.GamePhase ??= state.GamePhase;
+            e.GameplayState ??= state.GameplayState;
+            _events.Add(e);
         }
 
         public void UpdatePlaylistInfo(PlaylistInfo playlist)
@@ -99,17 +105,19 @@ namespace FortniteReplayReader
                     _teams[playerData.TeamIndex] = new TeamData()
                     {
                         TeamIndex = playerData.TeamIndex,
-                        PlayerIds = new List<string>() { playerData.PlayerId },
+                        PlayerIds = new List<int?>() { playerData.Id },
+                        PlayerNames = new List<string>() { playerData.PlayerId },
                         Placement = playerData.Placement,
-                        PartyOwnerId = playerData.IsPartyLeader ? playerData.PlayerId : ""
+                        PartyOwnerId = playerData.IsPartyLeader ? playerData.Id : null
                     };
                     continue;
                 }
 
-                teamData.PlayerIds.Add(playerData.PlayerId);
+                teamData.PlayerIds.Add(playerData.Id);
+                teamData.PlayerNames.Add(playerData.PlayerId);
                 if (playerData.IsPartyLeader)
                 {
-                    teamData.PartyOwnerId = playerData.PlayerId;
+                    teamData.PartyOwnerId = playerData.Id;
                 }
             }
         }
@@ -255,23 +263,23 @@ namespace FortniteReplayReader
 
         public void UpdatePlayerPawn(uint channelIndex, PlayerPawn pawn)
         {
-            if (pawn.PlayerState == null)
+            if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannelIndex))
             {
-                return;
+                if (pawn.PlayerState == null) return;
+                
+                var actorId = pawn.PlayerState.Value;
+                if (_actorToChannel.TryGetValue(actorId, out stateChannelIndex))
+                {
+                    _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
+                }
+                else
+                {
+                    // no player state channel?
+                    return;
+                }
             }
 
-            var actorId = pawn.PlayerState.Value;
-            if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
-            {
-                _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
-            }
-            else
-            {
-                // no player state channel?
-                return;
-            }
-
-            var playerState = _players[_pawnChannelToStateChannel[channelIndex]];
+            var playerState = _players[stateChannelIndex];
 
             playerState.Cosmetics.Character ??= pawn.Character?.Name;
             playerState.Cosmetics.BannerColorId ??= pawn.BannerColorId;
@@ -286,6 +294,84 @@ namespace FortniteReplayReader
             playerState.Cosmetics.SkyDiveContrail ??= pawn.SkyDiveContrail?.Name;
             playerState.Cosmetics.Dances ??= pawn.Dances?.Select(i => i.Name);
             playerState.Cosmetics.ItemWraps ??= pawn.ItemWraps?.Select(i => i.Name);
+
+            var e = new PlayerMovementEvent()
+            {
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                ReplicatedMovement = pawn.ReplicatedMovement
+            };
+            e.bCanBeDamaged ??= pawn.bCanBeDamaged;
+            e.LocationOffset ??= pawn.LocationOffset;
+            e.RelativeScale3D ??= pawn.RelativeScale3D;
+            e.RotationOffset ??= pawn.RotationOffset;
+            e.RemoteViewPitch ??= pawn.RemoteViewPitch;
+            e.Location ??= pawn.Location;
+            e.Rotation ??= pawn.Rotation;
+            e.ReplayLastTransformUpdateTimeStamp ??= pawn.ReplayLastTransformUpdateTimeStamp;
+            e.ReplicatedMovementMode ??= pawn.ReplicatedMovementMode;
+            e.bIsCrouched ??= pawn.bIsCrouched;
+            e.Position ??= pawn.Position;
+            e.LinearVelocity ??= pawn.LinearVelocity;
+            e.CurrentMovementStyle ??= pawn.CurrentMovementStyle;
+            e.bIsDying ??= pawn.bIsDying;
+            e.CurrentWeapon ??= pawn.CurrentWeapon;
+            e.bIsInvulnerable ??= pawn.bIsInvulnerable;
+            e.bMovingEmote ??= pawn.bMovingEmote;
+            e.bWeaponActivated ??= pawn.bWeaponActivated;
+            e.bIsDBNO ??= pawn.bIsDBNO;
+            e.bWasDBNOOnDeath ??= pawn.bWasDBNOOnDeath;
+            e.bWeaponHolstered ??= pawn.bWeaponHolstered;
+            e.LastReplicatedEmoteExecuted ??= pawn.LastReplicatedEmoteExecuted;
+            e.ForwardAlpha ??= pawn.ForwardAlpha;
+            e.RightAlpha ??= pawn.RightAlpha;
+            e.TurnDelta ??= pawn.TurnDelta;
+            e.SteerAlpha ??= pawn.SteerAlpha;
+            e.GravityScale ??= pawn.GravityScale;
+            e.WorldLookDir ??= pawn.WorldLookDir;
+            e.bIsHonking ??= pawn.bIsHonking;
+            e.bIsJumping ??= pawn.bIsJumping;
+            e.bIsSprinting ??= pawn.bIsSprinting;
+            e.Vehicle ??= pawn.Vehicle;
+            e.VehicleApexZ ??= pawn.VehicleApexZ;
+            e.SeatIndex ??= pawn.SeatIndex;
+            e.bIsWaterJump ??= pawn.bIsWaterJump;
+            e.bIsWaterSprintBoost ??= pawn.bIsWaterSprintBoost;
+            e.bIsWaterSprintBoostPending ??= pawn.bIsWaterSprintBoostPending;
+            e.BuildingState ??= pawn.BuildingState;
+            e.bIsTargeting ??= pawn.bIsTargeting;
+            e.bIsPlayingEmote ??= pawn.bIsPlayingEmote;
+            e.bStartedInteractSearch ??= pawn.bStartedInteractSearch;
+            e.AccelerationPack ??= pawn.AccelerationPack;
+            e.AccelerationZPack ??= pawn.AccelerationZPack;
+            e.bIsWaitingForEmoteInteraction ??= pawn.bIsWaitingForEmoteInteraction;
+            e.GroupEmoteLookTarget ??= pawn.GroupEmoteLookTarget;
+            e.bIsSkydiving ??= pawn.bIsSkydiving;
+            e.bIsParachuteOpen ??= pawn.bIsParachuteOpen;
+            e.bIsSkydivingFromBus ??= pawn.bIsSkydivingFromBus;
+            e.bIsInAnyStorm ??= pawn.bIsInAnyStorm;
+            e.bIsSlopeSliding ??= pawn.bIsSlopeSliding;
+            e.bIsInsideSafeZone ??= pawn.bIsInsideSafeZone;
+            e.bIsOutsideSafeZone ??= pawn.bIsOutsideSafeZone;
+            e.Zipline ??= pawn.Zipline;
+            e.bIsZiplining ??= pawn.bIsZiplining;
+            e.bJumped ??= pawn.bJumped;
+            e.RemoteViewData32 ??= pawn.RemoteViewData32;
+            e.EntryTime ??= pawn.EntryTime;
+            e.WalkSpeed ??= pawn.WalkSpeed;
+            e.RunSpeed ??= pawn.RunSpeed;
+            e.CrouchedRunSpeed ??= pawn.CrouchedRunSpeed;
+            e.CrouchedSprintSpeed ??= pawn.CrouchedSprintSpeed;
+            e.WeaponActivated ??= pawn.WeaponActivated;
+            e.bIsInWaterVolume ??= pawn.bIsInWaterVolume;
+            e.DBNOHoister ??= pawn.DBNOHoister;
+            e.GravityFloorAltitude ??= pawn.GravityFloorAltitude;
+            e.GravityFloorWidth ??= pawn.GravityFloorWidth;
+            e.GravityFloorGravityScalar ??= pawn.GravityFloorGravityScalar;
+            e.FlySpeed ??= pawn.FlySpeed;
+            e.bIsSkydivingFromLaunchPad ??= pawn.bIsSkydivingFromLaunchPad;
+            e.bInGliderRedeploy ??= pawn.bInGliderRedeploy;
+            _events.Add(e);
+
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)

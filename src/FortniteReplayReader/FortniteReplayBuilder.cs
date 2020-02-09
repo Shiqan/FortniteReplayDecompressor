@@ -69,11 +69,8 @@ namespace FortniteReplayReader
                 ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
             }
 
-            if (state.WinningPlayerList != null)
-            {
-                //GameData.WinningPlayerIds = state.WinningPlayerList.Select(i => i);
-                return;
-            }
+            GameData.WinningPlayerIds ??= state.WinningPlayerList?.Select(i => i);
+            GameData.WinningTeam ??= state.WinningTeam;
 
             var e = new GameStateEvent();
             e.ReplicatedWorldTimeSeconds ??= ReplicatedWorldTimeSeconds;
@@ -266,7 +263,7 @@ namespace FortniteReplayReader
             if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannelIndex))
             {
                 if (pawn.PlayerState == null) return;
-                
+
                 var actorId = pawn.PlayerState.Value;
                 if (_actorToChannel.TryGetValue(actorId, out stateChannelIndex))
                 {

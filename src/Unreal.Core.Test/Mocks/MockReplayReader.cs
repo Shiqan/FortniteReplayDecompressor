@@ -9,6 +9,7 @@ namespace Unreal.Core.Test.Mocks
         public MockReplayReader(ILogger logger = null) : base(logger)
         {
             Replay = new MockReplay();
+            GuidCache = new NetGuidCache();
         }
 
         public MockReplay GetReplay()

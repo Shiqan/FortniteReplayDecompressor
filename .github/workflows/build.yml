@@ -17,6 +17,6 @@ jobs:
       with:
         dotnet-version: 3.1.100
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
     - name: Test
-      run: dotnet test --no-build --configuration Release
+      run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release

@@ -1,0 +1,22 @@
+name: Build
+
+on:
+  push:
+    branches: master
+    tags: '**'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Setup .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    - name: Build
+      run: dotnet build --configuration Release
+    - name: Test
+      run: dotnet test --no-build --configuration Release

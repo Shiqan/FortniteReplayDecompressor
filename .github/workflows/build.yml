@@ -19,4 +19,4 @@ jobs:
     - name: Build
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
     - name: Test
-      run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
+      run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release --filter FullyQualifiedName!=Unreal.Encryption.Test.OodleDecompressTest.DecompressTest

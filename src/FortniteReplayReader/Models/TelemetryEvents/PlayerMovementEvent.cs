@@ -1,4 +1,4 @@
-﻿using FortniteReplayReader.Contracts;
+﻿using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models.TelemetryEvents

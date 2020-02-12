@@ -9,7 +9,7 @@ namespace Unreal.Core.Models.Enums
     public enum ParseMode
     {
         /// <summary>
-        /// Parses only events.
+        /// Parses only the custom text based events.
         /// </summary>
         EventsOnly,
 
@@ -24,7 +24,7 @@ namespace Unreal.Core.Models.Enums
         Normal,
         
         /// <summary>
-        /// Parses events and all useful data, including damage events, weapons and RPC structs and functions.
+        /// Parses all available data.
         /// </summary>
         Full,
 
@@ -34,7 +34,7 @@ namespace Unreal.Core.Models.Enums
         Debug,
 
         /// <summary>
-        /// Ignore
+        /// Ignore all groups with this attribute.
         /// </summary>
         Ignore
     }

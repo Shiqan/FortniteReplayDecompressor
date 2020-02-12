@@ -88,6 +88,7 @@ namespace FortniteReplayReader
             {
                 case GameState state:
                     Builder.UpdateGameState(state);
+                    Builder.CreateGameStateEvent(state);
                     break;
                 case PlaylistInfo playlist:
                     Builder.UpdatePlaylistInfo(playlist);
@@ -100,6 +101,7 @@ namespace FortniteReplayReader
                     break;
                 case PlayerPawn pawn:
                     Builder.UpdatePlayerPawn(channelIndex, pawn);
+                    Builder.CreatePawnEvent(channelIndex, pawn);
                     break;
                 case FortPickup pickup:
                     break;
@@ -108,21 +110,26 @@ namespace FortniteReplayReader
                 case BatchedDamageCues damage:
                     Builder.UpdateBatchedDamge(channelIndex, damage);
                     break;
-                case BroadcastExplosion explosione:
-                    break;
+                //case BroadcastExplosion explosion:
+                //    Builder.UpdateExplosion(explosion);
+                //    break;
                 case SafeZoneIndicator safeZone:
                     Builder.UpdateSafeZones(safeZone);
                     break;
                 case SupplyDropLlama llama:
                     Builder.UpdateLlama(channelIndex, llama);
+                    Builder.CreateLlamaEvent(channelIndex, llama);
                     break;
                 case SpawnMachineRepData spawnMachine:
                     Builder.UpdateRebootVan(channelIndex, spawnMachine);
+                    Builder.CreateRebootVanEvent(channelIndex, spawnMachine);
                     break;
                 case Models.NetFieldExports.SupplyDrop drop:
                     Builder.UpdateSupplyDrop(channelIndex, drop);
+                    Builder.CreateSupplyDropEvent(channelIndex, drop);
                     break;
                 case FortPoiManager poiManager:
+                    //Builder.UpdatePoiManager(poiManager);
                     break;
             }
         }

@@ -91,7 +91,6 @@ namespace Unreal.Core
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
-
             
             GuidCache.Cleanup();
 
@@ -1398,7 +1397,7 @@ namespace Unreal.Core
                     _logger?.LogWarning($"Custom Property {fieldCache.Name} didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {cmdReader.LastBit}");
                 }
 
-                (export as IResolvable).Resolve(GuidCache);
+                (export as IResolvable)?.Resolve(GuidCache);
 
                 OnExportRead(channelIndex, export as INetFieldExportGroup);
 

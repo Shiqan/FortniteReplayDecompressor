@@ -1,12 +1,11 @@
-﻿using FortniteReplayReader.Contracts;
-using FortniteReplayReader.Models;
-using FortniteReplayReader.Models.Events;
+﻿using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
 using FortniteReplayReader.Models.TelemetryEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unreal.Core.Contracts;
 
 namespace FortniteReplayReader
 {
@@ -31,8 +30,6 @@ namespace FortniteReplayReader
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
-        private int? TeamsLeft = 100;
-        private int? SafeZonePhase = 0;
 
         public void AddActorChannel(uint channelIndex, uint guid)
         {
@@ -71,7 +68,10 @@ namespace FortniteReplayReader
 
             GameData.WinningPlayerIds ??= state.WinningPlayerList?.Select(i => i);
             GameData.WinningTeam ??= state.WinningTeam;
+        }
 
+        public void CreateGameStateEvent(GameState state)
+        {
             var e = new GameStateEvent();
             e.ReplicatedWorldTimeSeconds ??= ReplicatedWorldTimeSeconds;
             e.TeamsLeft ??= state.TeamsLeft;
@@ -148,7 +148,10 @@ namespace FortniteReplayReader
                 IsShieldDestroyed = damage.bIsShieldDestroyed,
             };
 
-            if (damage.HitActor < 0) return;
+            if (damage.HitActor < 0)
+            {
+                return;
+            }
 
             if (!_actorToChannel.TryGetValue(damage.HitActor.GetValueOrDefault(), out var hitActorStateChannel))
             {
@@ -215,13 +218,10 @@ namespace FortniteReplayReader
 
         public void UpdateKillFeed(uint channelIndex, PlayerData data, FortPlayerState state)
         {
-            var entry = new KillFeedEntry();
-
-            if (state.FinisherOrDowner == null)
+            var entry = new KillFeedEntry()
             {
-                // TODO
-                return;
-            }
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds
+            };
 
             if (state.RebootCounter != null)
             {
@@ -233,22 +233,17 @@ namespace FortniteReplayReader
                 entry.IsDowned = true;
             }
 
-            if (!_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out var actorChannelIndex))
+            if (_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out var actorChannelIndex))
             {
-                // TODO
-                return;
-            }
-
-            if (!_players.TryGetValue(actorChannelIndex, out var finisherOrDownerData))
-            {
-                return;
+                if (_players.TryGetValue(actorChannelIndex, out var finisherOrDownerData))
+                {
+                    entry.FinisherOrDowner = finisherOrDownerData.PlayerId;
+                    entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot == true;
+                }
             }
 
             entry.PlayerId = data.PlayerId;
             entry.PlayerIsBot = data.IsBot == true;
-            entry.FinisherOrDowner = finisherOrDownerData.PlayerId;
-            entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot == true;
-            entry.TimeSeconds = ReplicatedWorldTimeSeconds;
 
             entry.Distance ??= state.Distance;
             entry.DeathCause ??= state.DeathCause;
@@ -262,7 +257,10 @@ namespace FortniteReplayReader
         {
             if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannelIndex))
             {
-                if (pawn.PlayerState == null) return;
+                if (pawn.PlayerState == null)
+                {
+                    return;
+                }
 
                 var actorId = pawn.PlayerState.Value;
                 if (_actorToChannel.TryGetValue(actorId, out stateChannelIndex))
@@ -291,7 +289,10 @@ namespace FortniteReplayReader
             playerState.Cosmetics.SkyDiveContrail ??= pawn.SkyDiveContrail?.Name;
             playerState.Cosmetics.Dances ??= pawn.Dances?.Select(i => i.Name);
             playerState.Cosmetics.ItemWraps ??= pawn.ItemWraps?.Select(i => i.Name);
+        }
 
+        public void CreatePawnEvent(uint channelIndex, PlayerPawn pawn)
+        {
             var e = new PlayerMovementEvent()
             {
                 ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
@@ -368,7 +369,6 @@ namespace FortniteReplayReader
             e.bIsSkydivingFromLaunchPad ??= pawn.bIsSkydivingFromLaunchPad;
             e.bInGliderRedeploy ??= pawn.bInGliderRedeploy;
             _events.Add(e);
-
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)
@@ -401,6 +401,20 @@ namespace FortniteReplayReader
             {
                 llama.HasSpawnedPickups = true;
             }
+        }
+
+        public void CreateLlamaEvent(uint channelIndex, SupplyDropLlama supplyDropLlama)
+        {
+            var e = new LlamaEvent()
+            {
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                Id = channelIndex,
+                Looted = supplyDropLlama.Looted,
+                FinalDestination = supplyDropLlama.FinalDestination,
+                ReplicatedMovement = supplyDropLlama.ReplicatedMovement,
+                HasSpawnedPickups = supplyDropLlama.bHasSpawnedPickups,
+            };
+            _events.Add(e);
         }
 
         public void UpdateSupplyDrop(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
@@ -436,6 +450,23 @@ namespace FortniteReplayReader
             }
         }
 
+        public void CreateSupplyDropEvent(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
+        {
+            var e = new SupplyDropEvent()
+            {
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                Id = channelIndex,
+                ReplicatedMovement = supplyDrop.ReplicatedMovement,
+                BalloonPopped = supplyDrop.BalloonPopped,
+                HasSpawnedPickups = supplyDrop.bHasSpawnedPickups,
+                LandingLocation = supplyDrop.LandingLocation,
+                Opened = supplyDrop.Opened,
+                FallHeight = supplyDrop.FallHeight,
+                FallSpeed = supplyDrop.FallSpeed,
+            };
+            _events.Add(e);
+        }
+
         public void UpdateRebootVan(uint channelIndex, SpawnMachineRepData spawnMachine)
         {
             if (!_rebootVans.TryGetValue(spawnMachine.SpawnMachineRepDataHandle, out var rebootVan))
@@ -445,10 +476,36 @@ namespace FortniteReplayReader
                 _rebootVans.Add(spawnMachine.SpawnMachineRepDataHandle, rebootVan);
                 return;
             }
-            else
+        }
+
+        public void CreateRebootVanEvent(uint channelIndex, SpawnMachineRepData spawnMachine)
+        {
+            var e = new RebootVanEvent()
             {
-                return;
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                Id = spawnMachine.SpawnMachineRepDataHandle,
+                Location = spawnMachine.Location,
+                CooldownEndTime = spawnMachine.SpawnMachineCooldownEndTime,
+                CooldownStartTime = spawnMachine.SpawnMachineCooldownStartTime,
+                State = spawnMachine.SpawnMachineState
+            };
+            _events.Add(e);
+        }
+
+        public void UpdateExplosion(BroadcastExplosion explosion)
+        {
+            foreach (var actorId in explosion.HitActors)
+            {
+                if (_actorToChannel.TryGetValue(actorId, out var channelIndex))
+                {
+                    break;
+                }
             }
+        }
+
+        public void UpdatePoiManager(FortPoiManager poiManager)
+        {
+            throw new NotImplementedException();
         }
     }
 }

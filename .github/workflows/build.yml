@@ -19,9 +19,8 @@ jobs:
     - name: Build
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
     - name: Test
-      run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="opencover" /p:CoverletOutput="../../coverage/coverage.xml" --no-build --configuration Release --filter FullyQualifiedName!=Unreal.Encryption.Test.OodleDecompressTest.DecompressTest
+      run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../../coverage/lcov.info" --no-build --configuration Release --filter FullyQualifiedName!=Unreal.Encryption.Test.OodleDecompressTest.DecompressTest
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: "./coverage/coverage.xml"

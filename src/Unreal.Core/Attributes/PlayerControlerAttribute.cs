@@ -4,7 +4,8 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core.Attributes
 {
     /// <summary>
-    /// Attribute to map a class to the specified path. Used for generic property replication.
+    /// Attribute to mark PlayerControllers, which require an additional byte to be parsed in 
+    /// <see cref="ReplayReader{T}.ProcessBunch(Models.DataBunch)"/>
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public sealed class PlayerControllerAttribute : Attribute

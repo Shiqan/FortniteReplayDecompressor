@@ -8,6 +8,7 @@ using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Encryption;
 using System.Linq;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core
 {
@@ -554,7 +555,6 @@ namespace Unreal.Core
                 {
                     fieldExport.Name = StaticParseName(archive);
                 }
-
                 return fieldExport;
             }
 
@@ -835,7 +835,7 @@ namespace Unreal.Core
 
                     if (isExportingNetGUIDBunch)
                     {
-                        GuidCache.NetGuidToPathName[netGuid.Value] = GuidCache.RemoveAllPathPrefixes(pathName);
+                        GuidCache.NetGuidToPathName[netGuid.Value] = pathName.RemoveAllPathPrefixes();
                     }
 
                     return netGuid;
@@ -1903,43 +1903,43 @@ namespace Unreal.Core
                 bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
 
                 var chType = ChannelType.None;
-                var chName = "";
+                var chName = ChannelName.None;
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
                     var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
                     chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
-                    if (chType == ChannelType.Control)
+                    if (chType == ChannelType.Actor)
                     {
-                        chName = ChannelName.Control.ToString();
+                        chName = ChannelName.Actor;
+                    }
+                    else if (chType == ChannelType.Control)
+                    {
+                        chName = ChannelName.Control;
                     }
                     else if (chType == ChannelType.Voice)
                     {
-                        chName = ChannelName.Voice.ToString();
-                    }
-                    else if (chType == ChannelType.Actor)
-                    {
-                        chName = ChannelName.Actor.ToString();
+                        chName = ChannelName.Voice;
                     }
                 }
                 else
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                        chName = StaticParseName(bitReader);
+                        Enum.TryParse(StaticParseName(bitReader), out chName);
 
-                        if (chName.Equals(ChannelName.Control.ToString()))
+                        if (chName.Equals(ChannelName.Actor))
+                        {
+                            chType = ChannelType.Actor;
+                        }
+                        else if (chName.Equals(ChannelName.Control))
                         {
                             chType = ChannelType.Control;
                         }
-                        else if (chName.Equals(ChannelName.Voice.ToString()))
+                        else if (chName.Equals(ChannelName.Voice))
                         {
                             chType = ChannelType.Voice;
-                        }
-                        else if (chName.Equals(ChannelName.Actor.ToString()))
-                        {
-                            chType = ChannelType.Actor;
                         }
                     }
                 }
@@ -1993,7 +1993,7 @@ namespace Unreal.Core
                 // TODO figure out if IgnoringChannels is really needed?
                 if (channel && false)
                 {
-                    var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor.ToString()) && (!bunch.bPartial || bunch.bPartialInitial);
+                    var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
                     if (bNewlyOpenedActorChannel)
                     {
                         // GetActorGUIDFromOpenBunch(Bunch);
@@ -2108,6 +2108,7 @@ namespace Unreal.Core
         {
             if (!Replay.Info.IsCompressed)
             {
+                // if this if ever needed it should be refactored...
                 var uncompressed = new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,

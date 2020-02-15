@@ -16,19 +16,16 @@ namespace Unreal.Core
     /// </summary>
     public partial class NetFieldParser
     {
-        private readonly ParseMode Mode;
         private readonly NetGuidCache GuidCache;
         public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
 
         private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
         private Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private Dictionary<string, string> _functionToNetFieldGroup = new Dictionary<string, string>();
         private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
         private CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         public NetFieldParser(NetGuidCache cache, ParseMode mode)
         {
-            Mode = mode;
             GuidCache = cache;
 
             var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(i => i.GetTypes());

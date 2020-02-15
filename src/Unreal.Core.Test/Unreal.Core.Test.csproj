@@ -20,22 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="ExternalData\externaldata0.dump">
+    <None Update="DemoFrames\demopackets-0.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="ExternalData\externaldata1.dump">
+    <None Update="DemoFrames\demopackets-1.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="ExternalData\externaldata2.dump">
+    <None Update="DemoFrames\demopackets-2.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="ExternalData\externaldata3.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="ExternalData\externaldata4.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="ExternalData\externaldata5.dump">
+    <None Update="DemoFrames\demopackets-3.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="NetExportGuids\NetExportGuid0.dump">
@@ -57,21 +51,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="ReplayInfo\info1.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="StaticParseNames\staticparsename-0.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="StaticParseNames\staticparsename-1.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="StaticParseNames\staticparsename-2.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="StaticParseNames\staticparsename-3.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="StaticParseNames\staticparsename-bit-0.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

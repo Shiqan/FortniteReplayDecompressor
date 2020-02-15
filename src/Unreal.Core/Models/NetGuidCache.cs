@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
 {
@@ -56,63 +57,6 @@ namespace Unreal.Core.Models
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private NetFieldExportGroup _networkGameplayTagNodeIndex { get; set; }
-
-        public UObject GetObjectFromNetGUID(NetworkGUID netGuid, bool ignoreMustBeMapped)
-        {
-            if (!netGuid.IsValid())
-            {
-                return null;
-            }
-
-            if (!netGuid.IsDefault())
-            {
-                return null;
-            }
-
-            if (!ObjectLookup.TryGetValue(netGuid.Value, out var cacheObject))
-            {
-                return null;
-            }
-
-            if (cacheObject.IsBroken)
-            {
-                return null;
-            }
-
-            if (cacheObject.IsPending)
-            {
-                return null;
-            }
-
-            if (string.IsNullOrEmpty(cacheObject.PathName))
-            {
-                return null;
-            }
-
-            if (cacheObject.OuterGuid.IsValid())
-            {
-                if (!ObjectLookup.TryGetValue(cacheObject.OuterGuid.Value, out var outerCacheObject))
-                {
-                    return null;
-                }
-
-                if (outerCacheObject.IsBroken)
-                {
-                    cacheObject.IsBroken = true;
-
-                    return null;
-                }
-
-                var objOuter = GetObjectFromNetGUID(outerCacheObject.OuterGuid, ignoreMustBeMapped);
-
-                if (objOuter == null)
-                {
-                    return null;
-                }
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// Add a <see cref="NetFieldExportGroup"/> to the GuidCache.
@@ -177,7 +121,7 @@ namespace Unreal.Core.Models
 
                     if (!_cleanedPaths.TryGetValue(groupPathKvp.Value.PathNameIndex, out var groupPathFixed))
                     {
-                        groupPathFixed = RemoveAllPathPrefixes(groupPath);
+                        groupPathFixed = groupPath.RemoveAllPathPrefixes();
                         _cleanedPaths[groupPathKvp.Value.PathNameIndex] = groupPathFixed;
                     }
 
@@ -190,7 +134,7 @@ namespace Unreal.Core.Models
                     }
                 }
 
-                var cleanedPath = CleanPathSuffix(path);
+                var cleanedPath = path.CleanPathSuffix();
                 foreach (var groupPathKvp in NetFieldExportGroupMap)
                 {
                     var groupPath = groupPathKvp.Key;
@@ -228,7 +172,7 @@ namespace Unreal.Core.Models
 
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
             {
-                classNetCachePath = $"{RemoveAllPathPrefixes(group)}_ClassNetCache";
+                classNetCachePath = $"{group.RemoveAllPathPrefixes()}_ClassNetCache";
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 
@@ -267,28 +211,6 @@ namespace Unreal.Core.Models
         }
 
         /// <summary>
-        /// see UObjectBaseUtility
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public string RemoveAllPathPrefixes(string path)
-        {
-            for (var i = path.Length - 1; i >= 0; i--)
-            {
-                switch (path[i])
-                {
-                    case '.':
-                        return path.Substring(i + 1);
-                    case '/':
-                        return path;
-                }
-            }
-
-            path = RemovePathPrefix(path, "Default__");
-            return path;
-        }
-
-        /// <summary>
         /// Empty the NetGuidCache
         /// </summary>
         public void Cleanup()
@@ -302,36 +224,6 @@ namespace Unreal.Core.Models
             _archTypeToExportGroup.Clear();
             _cleanedPaths.Clear();
             _cleanedClassNetCache.Clear();
-        }
-
-        private string RemovePathPrefix(string path, string toRemove)
-        {
-            if (toRemove.Length > path.Length)
-            {
-                return path;
-            }
-
-            for (var i = 0; i < toRemove.Length; i++)
-            {
-                if (path[i] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(toRemove.Length);
-        }
-
-        private string CleanPathSuffix(string path)
-        {
-            for (int i = path.Length - 1; i >= 0; i--)
-            {
-                if (!char.IsDigit(path[i]) && path[i] != '_')
-                {
-                    return path.Substring(0, i + 1);
-                }
-            }
-            return path;
         }
     }
 }

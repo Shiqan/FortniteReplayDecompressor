@@ -6,32 +6,43 @@ namespace Unreal.Core.Test
 {
     public class StaticParseNameTest
     {
-        [Fact]
-        public void StaticParseNameBinaryTest()
+        [Theory]
+        [InlineData(new byte[] {
+            0x00, 0x06, 0x00, 0x00, 0x00, 0x4C, 0x65, 0x76,
+            0x65, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00
+        })]
+        [InlineData(new byte[] {
+            0x01, 0xAF, 0x02
+        })]
+        [InlineData(new byte[] {
+            0x00, 0xE9, 0xFF, 0xFF, 0xFF, 0x57, 0x00, 0x61,
+            0x00, 0x73, 0x00, 0x50, 0x00, 0x61, 0x00, 0x72,
+            0x00, 0x74, 0x00, 0x52, 0x00, 0x65, 0x00, 0x70,
+            0x00, 0x6C, 0x00, 0x69, 0x00, 0x63, 0x00, 0x61,
+            0x00, 0x74, 0x00, 0x65, 0x00, 0x64, 0x00, 0x46,
+            0x00, 0x6C, 0x00, 0x61, 0x00, 0x67, 0x00, 0x73,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        })]
+        public void StaticParseNameBinaryTest(byte[] rawData)
         {
-            for (var i = 0; i < 4; i++)
+            using var stream = new MemoryStream(rawData);
+            using var archive = new Unreal.Core.BinaryReader(stream)
             {
-                var data = $"StaticParseNames/staticparsename-{i}.dump";
-                using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                using var archive = new Unreal.Core.BinaryReader(stream)
-                {
-                    EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
-                };
-                var reader = new MockReplayReader();
-                reader.StaticParseName(archive);
-                Assert.True(archive.AtEnd());
-                Assert.False(archive.IsError);
-            }
+                EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
+            };
+            var reader = new MockReplayReader();
+            reader.StaticParseName(archive);
+            Assert.True(archive.AtEnd());
+            Assert.False(archive.IsError);
         }
 
-        [Fact]
-        public void StaticParseNameBitTest()
+        [Theory]
+        [InlineData(new byte[] {
+            0x99, 0xF1
+        })]
+        public void StaticParseNameBitTest(byte[] rawData)
         {
-            var data = "StaticParseNames/staticparsename-bit-0.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var ms = new MemoryStream();
-            stream.CopyTo(ms);
-            var archive = new Unreal.Core.BitReader(ms.ToArray())
+            var archive = new Unreal.Core.BitReader(rawData)
             {
                 EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
             };

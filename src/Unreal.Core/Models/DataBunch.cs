@@ -41,7 +41,7 @@ namespace Unreal.Core.Models
         // UE_DEPRECATED(4.22, "ChType deprecated in favor of ChName.")
         public ChannelType ChType { get; set; }
         // FName
-        public string ChName { get; set; }
+        public ChannelName ChName { get; set; }
         public int ChSequence { get; set; }
         public bool bOpen { get; set; }
         public bool bClose { get; set; }

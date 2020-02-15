@@ -10,12 +10,19 @@ namespace Unreal.Core.Models
     public class UChannel
     {
         private HashSet<string> _ignore = new HashSet<string>();
-        public string ChannelName { get; set; }
+        public ChannelName ChannelName { get; set; }
         public uint ChannelIndex { get; set; }
         public ChannelType ChannelType { get; set; }
 
-        public void IgnoreChannel(string group) => _ignore.Add(group);
-        public bool IsIgnoringChannel(string group) => _ignore.Contains(group);
+        public void IgnoreChannel(string group)
+        {
+            _ignore.Add(group);
+        }
+
+        public bool IsIgnoringChannel(string group)
+        {
+            return _ignore.Contains(group);
+        }
 
         public Actor Actor { get; set; }
         public uint? ArchetypeId => Actor?.Archetype?.Value;

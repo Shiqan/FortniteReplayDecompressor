@@ -239,7 +239,6 @@ namespace Unreal.Core.Models
                 }
 
                 var handles = new List<DebuggingHandle>();
-                var isExportHandles = false;
 
                 while (true)
                 {

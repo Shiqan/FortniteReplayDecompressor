@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortRegenHealthSet", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Script/FortniteGame.FortRegenHealthSet", minimalParseMode: ParseMode.Full)]
     public class HealthSet : INetFieldExportGroup
     {
         [NetFieldExportHandle(0, RepLayoutCmdType.PropertyFloat)]

@@ -39,6 +39,7 @@ namespace FortniteReplayReader
         public void RemoveChannel(uint channelIndex, uint guid)
         {
             _actorToChannel.Remove(guid);
+            _pawnChannelToStateChannel.Remove(channelIndex);
         }
 
         public void UpdateGameState(GameState state)
@@ -242,7 +243,7 @@ namespace FortniteReplayReader
                 }
             }
 
-            entry.PlayerId = data.PlayerId;
+            entry.PlayerId = data.Id;
             entry.PlayerIsBot = data.IsBot == true;
 
             entry.Distance ??= state.Distance;
@@ -371,6 +372,41 @@ namespace FortniteReplayReader
             _events.Add(e);
         }
 
+        public void CreatePickupEvent(uint channelIndex, FortPickup pickup)
+        {
+            if (ReplicatedWorldTimeSeconds <= 0) return;
+
+            if (pickup.TossState != null)
+            {
+                var e = new LootEvent
+                {
+                    ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                    Count = pickup.Count,
+                    ItemDefinition = pickup.ItemDefinition?.Name,
+                    Durability = pickup.Durability,
+                    LoadedAmmo = pickup.LoadedAmmo,
+                    A = pickup.A,
+                    B = pickup.B,
+                    C = pickup.C,
+                    D = pickup.D,
+                    CombineTarget = pickup.CombineTarget?.Name,
+                    PickupTarget = pickup.PickupTarget,
+                    ItemOwner = pickup.ItemOwner,
+                    LootInitialPosition = pickup.LootInitialPosition,
+                    LootFinalPosition = pickup.LootFinalPosition,
+                    FlyTime = pickup.FlyTime,
+                    StartDirection = pickup.StartDirection,
+                    FinalTossRestLocation = pickup.FinalTossRestLocation,
+                    TossState = pickup.TossState,
+                    OptionalOwnerID = pickup.OptionalOwnerID,
+                    IsPickedUp = pickup.bPickedUp,
+                    DroppedBy = pickup.PawnWhoDroppedPickup,
+                    OrderIndex = pickup.OrderIndex,
+                };
+                _events.Add(e);
+            }
+        }
+
         public void UpdateSafeZones(SafeZoneIndicator safeZone)
         {
             if (safeZone.SafeZoneStartShrinkTime <= 0 && safeZone.SafeZoneFinishShrinkTime <= 0)
@@ -490,6 +526,27 @@ namespace FortniteReplayReader
                 State = spawnMachine.SpawnMachineState
             };
             _events.Add(e);
+        }
+
+        public void CreateHealthEvent(uint channelIndex, HealthSet health)
+        {
+            if (_players.TryGetValue(channelIndex, out var playerData))
+            {
+                var e = new HealthEvent()
+                {
+                    ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                    PlayerId = playerData.Id,
+                    HealthBaseValue = health.HealthBaseValue,
+                    HealthCurrentValue = health.HealthCurrentValue,
+                    HealthMaxValue = health.HealthMaxValue,
+                    HealthUnclampedBaseValue = health.HealthUnclampedBaseValue,
+                    HealthUnclampedCurrentValue = health.HealthUnclampedCurrentValue,
+                    ShieldBaseValue = health.ShieldBaseValue,
+                    ShieldCurrentValue = health.ShieldCurrentValue,
+                    ShieldMaxValue = health.ShieldMaxValue
+                };
+                _events.Add(e);
+            }
         }
 
         public void UpdateExplosion(BroadcastExplosion explosion)

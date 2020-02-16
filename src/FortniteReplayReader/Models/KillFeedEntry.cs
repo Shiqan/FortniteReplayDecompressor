@@ -4,7 +4,7 @@ namespace FortniteReplayReader.Models
 {
     public class KillFeedEntry
     {
-        public string PlayerId { get; set; }
+        public int? PlayerId { get; set; }
         public bool PlayerIsBot { get; set; }
 
         public string FinisherOrDowner { get; set; }

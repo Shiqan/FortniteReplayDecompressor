@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Script/FortniteGame.FortPickupAthena")]
+    [NetFieldExportGroup("/Script/FortniteGame.FortPickupAthena", minimalParseMode: ParseMode.Normal)]
     public class FortPickup : INetFieldExportGroup
     {
         [NetFieldExport("bReplicateMovement", RepLayoutCmdType.PropertyBool)]
@@ -15,7 +15,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public object RemoteRole { get; set; }
 
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
-        public FRepMovement ReplicatedMovement { get; set; }
+        public FRepMovement? ReplicatedMovement { get; set; }
 
         [NetFieldExport("AttachParent", RepLayoutCmdType.Ignore)]
         public uint? AttachParent { get; set; }
@@ -90,7 +90,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? ItemOwner { get; set; }
 
         [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10)]
-        public FVector LootInitialPosition { get; set; }
+        public FVector? LootInitialPosition { get; set; }
 
         [NetFieldExport("LootFinalPosition", RepLayoutCmdType.PropertyVector10)]
         public FVector LootFinalPosition { get; set; }

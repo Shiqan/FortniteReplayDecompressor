@@ -104,11 +104,15 @@ namespace FortniteReplayReader
                     Builder.CreatePawnEvent(channelIndex, pawn);
                     break;
                 case FortPickup pickup:
+                    //Builder.CreatePickupEvent(channelIndex, pickup);
                     break;
                 case FortInventory inventory:
                     break;
                 case BatchedDamageCues damage:
                     Builder.UpdateBatchedDamge(channelIndex, damage);
+                    break;
+                case HealthSet healthSet:
+                    Builder.CreateHealthEvent(channelIndex, healthSet);
                     break;
                 //case BroadcastExplosion explosion:
                 //    Builder.UpdateExplosion(explosion);

@@ -132,9 +132,12 @@ namespace FortniteReplayReader
                     Builder.UpdateSupplyDrop(channelIndex, drop);
                     Builder.CreateSupplyDropEvent(channelIndex, drop);
                     break;
-                case FortPoiManager poiManager:
-                    //Builder.UpdatePoiManager(poiManager);
+                case FortPoiManager poimanager:
+                    Builder.UpdatePoiManager(poimanager);
                     break;
+                    //case GameplayCue gameplayCue:
+                    //    Builder.UpdateGameplayCue(channelIndex, gameplayCue);
+                    //    break;
             }
         }
 

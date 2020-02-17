@@ -549,20 +549,26 @@ namespace FortniteReplayReader
             }
         }
 
-        public void UpdateExplosion(BroadcastExplosion explosion)
-        {
-            foreach (var actorId in explosion.HitActors)
-            {
-                if (_actorToChannel.TryGetValue(actorId, out var channelIndex))
-                {
-                    break;
-                }
-            }
-        }
+        //public void UpdateExplosion(BroadcastExplosion explosion)
+        //{
+        //    // ¯\_(ツ)_/¯
+        //}
 
         public void UpdatePoiManager(FortPoiManager poiManager)
         {
-            throw new NotImplementedException();
+            MapData.GridCountX ??= poiManager.GridCountX;
+            MapData.GridCountY ??= poiManager.GridCountY;
+            MapData.WorldGridStart ??= poiManager.WorldGridStart;
+            MapData.WorldGridEnd ??= poiManager.WorldGridEnd;
+            MapData.WorldGridSpacing ??= poiManager.WorldGridSpacing;
+            MapData.WorldGridTotalSize ??= poiManager.WorldGridTotalSize;
+
+            // ignore PoiTagContainerTable since it is just a list of all POI...
         }
+
+        //public void UpdateGameplayCue(uint channelIndex, GameplayCue gameplayCue)
+        //{
+        //    // ¯\_(ツ)_/¯
+        //}
     }
 }

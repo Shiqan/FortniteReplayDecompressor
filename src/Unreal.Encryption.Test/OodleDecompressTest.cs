@@ -6,7 +6,7 @@ namespace Unreal.Encryption.Test
 {
     public class OodleDecompressTest
     {
-        [Fact]
+        [Fact(Skip = "requires oodle dll")]
         public void DecompressTest()
         {
             var data = @"CompressedChunk/compressed.dump";
@@ -20,7 +20,7 @@ namespace Unreal.Encryption.Test
             Assert.Equal(decompressedSize, result.Length);
         }
 
-        [Fact]
+        [Fact(Skip = "requires oodle dll")]
         public void DecompressThrows()
         {
             var data = @"CompressedChunk/compressed.dump";
@@ -29,7 +29,7 @@ namespace Unreal.Encryption.Test
             stream.CopyTo(ms);
             var compressedBuffer = ms.ToArray();
             var decompressedSize = 500000;
-            var compressedSize = 210000;
+            var compressedSize = 210703;
             Assert.Throws<OodleException>(() => Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize));
         }
     }

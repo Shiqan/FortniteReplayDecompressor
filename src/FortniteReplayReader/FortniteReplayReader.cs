@@ -107,6 +107,7 @@ namespace FortniteReplayReader
                     //Builder.CreatePickupEvent(channelIndex, pickup);
                     break;
                 case FortInventory inventory:
+                    Builder.UpdateInventory(channelIndex, inventory);
                     break;
                 case BatchedDamageCues damage:
                     Builder.UpdateBatchedDamge(channelIndex, damage);
@@ -280,7 +281,7 @@ namespace FortniteReplayReader
             catch (Exception ex)
             {
                 _logger?.LogError($"Error while parsing PlayerElimination at timestamp {info.StartTime}");
-                throw new PlayerEliminationException($"Error while parsing PlayerElimination at timestamp {info.StartTime}", ex);
+                throw new PlayerEliminationException($"Error while parsing PlayerElimination at timestamp {info?.StartTime}", ex);
             }
         }
 

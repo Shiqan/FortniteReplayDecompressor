@@ -29,6 +29,8 @@ namespace FortniteReplayReader
         private Dictionary<int, RebootVan> _rebootVans = new Dictionary<int, RebootVan>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
+        private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>();
+
         private float? ReplicatedWorldTimeSeconds = 0;
 
         public void AddActorChannel(uint channelIndex, uint guid)
@@ -404,6 +406,15 @@ namespace FortniteReplayReader
                     OrderIndex = pickup.OrderIndex,
                 };
                 _events.Add(e);
+            }
+        }
+
+        public void UpdateInventory(uint channelIndex, FortInventory inventory)
+        {
+            if (inventory.ReplayPawn > 0)
+            {
+                //Normal replays only have your inventory. Every time you die, there's a new player pawn.
+                _inventories.TryAdd(channelIndex, inventory);
             }
         }
 

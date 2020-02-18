@@ -45,7 +45,12 @@ namespace ConsoleReader
             var sw = new Stopwatch();
             sw.Start();
             var reader = new ReplayReader(logger);
-            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Debug);
+            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Normal);
+
+            foreach (FortniteReplayReader.Models.KillFeedEntry item in replay.KillFeed)
+            {
+                Console.WriteLine($"{item.PlayerId} {item.PlayerIsBot}");
+            }
             sw.Stop();
 
             Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");

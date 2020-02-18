@@ -33,6 +33,7 @@ namespace FortniteReplayReader
             ReadReplay(archive, mode);
 
             Builder.UpdateTeamData();
+            Replay.KillFeed = Builder.GetKillFeed();
             return Replay;
         }
 

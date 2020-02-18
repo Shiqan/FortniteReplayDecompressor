@@ -31,6 +31,11 @@ namespace FortniteReplayReader
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
+        public List<KillFeedEntry> GetKillFeed()
+        {
+            return KillFeed;
+        }
+
         public void AddActorChannel(uint channelIndex, uint guid)
         {
             _actorToChannel[guid] = channelIndex;

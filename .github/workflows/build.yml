@@ -19,7 +19,7 @@ jobs:
     - name: Build
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
     - name: Test
-      run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../../coverage/lcov.info" /p:Exclude="[Fortnite*]*.Models.*" --no-build --configuration Release
+      run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../../coverage/lcov.info" /p:Exclude="[Fortnite*]*.Models.*" --no-build --configuration Release --filter ClassName!=Unreal.Encryption.Test.OodleDecompressTest
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:

@@ -240,12 +240,14 @@ namespace FortniteReplayReader
             {
                 if (_players.TryGetValue(actorChannelIndex, out var finisherOrDownerData))
                 {
-                    entry.FinisherOrDowner = finisherOrDownerData.PlayerId;
+                    entry.FinisherOrDowner = finisherOrDownerData.Id;
+                    entry.FinisherOrDownerName = finisherOrDownerData.PlayerId;
                     entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot == true;
                 }
             }
 
             entry.PlayerId = data.Id;
+            entry.PlayerName = data.PlayerId;
             entry.PlayerIsBot = data.IsBot == true;
 
             entry.Distance ??= state.Distance;

@@ -29,7 +29,7 @@ namespace FortniteReplayReader
         private Dictionary<int, RebootVan> _rebootVans = new Dictionary<int, RebootVan>();
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
-        private Dictionary<uint, FortInventory> _inventories = new Dictionary<uint, FortInventory>();
+        private Dictionary<uint, Inventory> _inventories = new Dictionary<uint, Inventory>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
@@ -42,6 +42,19 @@ namespace FortniteReplayReader
         {
             _actorToChannel.Remove(guid);
             _pawnChannelToStateChannel.Remove(channelIndex);
+        }
+
+        private bool TryGetPlayerData(uint guid, out PlayerData playerData)
+        {
+            if (_actorToChannel.TryGetValue(guid, out var pawnChannel))
+            {
+                if (_pawnChannelToStateChannel.TryGetValue(pawnChannel, out var stateChannel))
+                {
+                    return _players.TryGetValue(stateChannel, out playerData);
+                }
+            }
+            playerData = null;
+            return false;
         }
 
         public void UpdateGameState(GameState state)
@@ -411,13 +424,53 @@ namespace FortniteReplayReader
             }
         }
 
-        public void UpdateInventory(uint channelIndex, FortInventory inventory)
+        public void UpdateInventory(uint channelIndex, FortInventory fortInventory)
         {
-            if (inventory.ReplayPawn > 0)
+            if (!_inventories.TryGetValue(channelIndex, out var inventory))
             {
-                //Normal replays only have your inventory. Every time you die, there's a new player pawn.
-                _inventories.TryAdd(channelIndex, inventory);
+                // TODO updates for unknown parent inventory !?
+                // TODO receive inventory for some random channel without replaypawn...?
+                if (!fortInventory.ReplayPawn.HasValue) return;
+
+                inventory = new Inventory()
+                {
+                    Id = channelIndex,
+                    ReplayPawn = fortInventory.ReplayPawn
+                };
+                _inventories[channelIndex] = inventory;
             }
+
+            if (fortInventory.ReplayPawn > 0)
+            {
+                inventory.ReplayPawn = fortInventory.ReplayPawn;
+            }
+
+            if (!inventory.PlayerId.HasValue)
+            {
+                if (TryGetPlayerData(inventory.ReplayPawn.GetValueOrDefault(), out var playerData))
+                {
+                    inventory.PlayerId = playerData.Id;
+                    inventory.PlayerName = playerData.PlayerId;
+                    playerData.InventoryId = inventory.Id;
+                }
+            }
+
+            if (!fortInventory.A.HasValue) return;
+
+            var inventoryItem = new InventoryItem()
+            {
+                Count = fortInventory.Count,
+                ItemDefinition = fortInventory.ItemDefinition?.Name,
+                OrderIndex = fortInventory.OrderIndex,
+                Durability = fortInventory.Durability,
+                Level = fortInventory.Level,
+                LoadedAmmo = fortInventory.LoadedAmmo,
+                A = fortInventory.A,
+                B = fortInventory.B,
+                C = fortInventory.C,
+                D = fortInventory.D
+            };
+            inventory.Items.Add(inventoryItem);
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)

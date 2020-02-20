@@ -47,6 +47,8 @@ namespace FortniteReplayReader.Models
         public int? Level { get; set; }
         public uint? SeasonLevelUIDisplay { get; set; }
 
+        public uint? InventoryId { get; set; }
+
         public int? PlayerNumber { get; set; }
         public int? TeamIndex { get; set; }
         public bool IsPartyLeader { get; set; }

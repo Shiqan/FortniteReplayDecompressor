@@ -25,6 +25,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
     [NetFieldExportGroup("/Game/Athena/PlayerPawn_Athena.PlayerPawn_Athena_C", minimalParseMode: ParseMode.Minimal)]
     public class PlayerPawn : INetFieldExportGroup
     {
+        [NetFieldExport("Owner", RepLayoutCmdType.Property)]
+        public ActorGuid Owner { get; set; }
+
         [NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
         public bool? bHidden { get; set; }
 
@@ -384,6 +387,12 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("RepAnimMontageStartSection", RepLayoutCmdType.PropertyInt)]
         public int? RepAnimMontageStartSection { get; set; }
+
+        [NetFieldExport("ReplayRepAnimMontageInfo", RepLayoutCmdType.Ignore)]
+        public FGameplayAbilityRepAnimMontage ReplayRepAnimMontageInfo { get; set; }
+
+        [NetFieldExport("RepAnimMontageInfo", RepLayoutCmdType.Ignore)]
+        public FGameplayAbilityRepAnimMontage RepAnimMontageInfo { get; set; }
 
         [NetFieldExport("SimulatedProxyGameplayCues", RepLayoutCmdType.Enum)]
         public int? SimulatedProxyGameplayCues { get; set; }

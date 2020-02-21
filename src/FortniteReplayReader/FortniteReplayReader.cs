@@ -8,9 +8,11 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
+using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -167,36 +169,38 @@ namespace FortniteReplayReader
 
             _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
 
+            using var decryptedArchive = DecryptBuffer(archive, info.SizeInBytes);
+
             // Every event seems to start with some unknown int
             if (info.Group == ReplayEventTypes.PLAYER_ELIMINATION)
             {
-                var elimination = ParseElimination(archive, info);
+                var elimination = ParseElimination(decryptedArchive, info);
                 Replay.Eliminations.Add(elimination);
                 return;
             }
 
             else if (info.Metadata == ReplayEventTypes.MATCH_STATS)
             {
-                Replay.Stats = ParseMatchStats(archive, info);
+                Replay.Stats = ParseMatchStats(decryptedArchive, info);
                 return;
             }
 
             else if (info.Metadata == ReplayEventTypes.TEAM_STATS)
             {
-                Replay.TeamStats = ParseTeamStats(archive, info);
+                Replay.TeamStats = ParseTeamStats(decryptedArchive, info);
                 return;
             }
 
             else if (info.Metadata == ReplayEventTypes.ENCRYPTION_KEY)
             {
-                ParseEncryptionKeyEvent(archive, info);
+                ParseEncryptionKeyEvent(decryptedArchive, info);
                 return;
             }
 
             _logger?.LogInformation($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
             if (IsDebugMode)
             {
-                //throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+                throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
             }
         }
 
@@ -301,6 +305,38 @@ namespace FortniteReplayReader
             // 0x11
             var size = archive.ReadByte();
             return archive.ReadGUID(size);
+        }
+
+        protected override Unreal.Core.BinaryReader DecryptBuffer(FArchive archive, int size)
+        {
+            if (!Replay.Info.IsEncrypted)
+            {
+                return archive as Unreal.Core.BinaryReader;
+            }
+
+            var key = Replay.Info.EncryptionKey;
+            var encryptedBytes = archive.ReadBytes(size);
+
+            using var rDel = new RijndaelManaged
+            {
+                KeySize = (key.Length * 8),
+                Key = key,
+                Mode = CipherMode.ECB,
+                Padding = PaddingMode.PKCS7
+            };
+
+            using var cryptoTransform = rDel.CreateDecryptor();
+            var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
+
+            var decrypted = new Unreal.Core.BinaryReader(new MemoryStream(decryptedArray))
+            {
+                EngineNetworkVersion = archive.EngineNetworkVersion,
+                NetworkVersion = archive.NetworkVersion,
+                ReplayHeaderFlags = archive.ReplayHeaderFlags,
+                ReplayVersion = archive.ReplayVersion
+            };
+
+            return decrypted;
         }
     }
 }

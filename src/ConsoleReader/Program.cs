@@ -31,8 +31,9 @@ namespace ConsoleReader
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";
             //var replayFile = "Replays/season11.11.replay";
-            var replayFile = "Replays/season11.31.replay";
+            //var replayFile = "Replays/season11.31.replay";
             //var replayFile = "Replays/season11.replay";
+            var replayFile = "Replays/season12.replay";
             //var replayFile = "Replays/collectPickup.replay";
             //var replayFile = "Replays/UnsavedReplay-2018.10.06-22.00.32.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.04.05-20.22.58.replay";
@@ -41,6 +42,7 @@ namespace ConsoleReader
             //var replayFile = "Replays/UnsavedReplay-2019.06.30-20.39.37.replay";
             //var replayFile = "Replays/UnsavedReplay-2019.09.12-21.39.37.replay";
             //var replayFile = "Replays/00769AB3D5F45A5ED7B01553227A8A82E07CC592.replay";
+            //var replayFile = "Replays/987185F586AECFB6CC39EA1D4BCC8467.replay";
 
             var sw = new Stopwatch();
             sw.Start();

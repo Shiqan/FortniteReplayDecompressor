@@ -15,6 +15,8 @@ namespace Unreal.Core.Models
         public long TotalDataSizeInBytes { get; set; }
         public bool IsLive { get; set; }
         public bool IsCompressed { get; set; }
+        public bool IsEncrypted { get; set; }
+        public byte[] EncryptionKey { get; set; }
         public ReplayVersionHistory FileVersion { get; set; }
     }
 }

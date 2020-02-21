@@ -90,7 +90,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? ItemOwner { get; set; }
 
         [NetFieldExport("LootInitialPosition", RepLayoutCmdType.PropertyVector10)]
-        public FVector? LootInitialPosition { get; set; }
+        public FVector LootInitialPosition { get; set; }
 
         [NetFieldExport("LootFinalPosition", RepLayoutCmdType.PropertyVector10)]
         public FVector LootFinalPosition { get; set; }

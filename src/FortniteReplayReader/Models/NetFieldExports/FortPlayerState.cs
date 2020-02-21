@@ -133,6 +133,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bThankedBusDriver", RepLayoutCmdType.PropertyBool)]
         public bool? bThankedBusDriver { get; set; }
+        
+        [NetFieldExport("bDidNotThankBusDriver", RepLayoutCmdType.PropertyBool)]
+        public bool? bDidNotThankBusDriver { get; set; }
 
         [NetFieldExport("TeamKillScore", RepLayoutCmdType.PropertyUInt32)]
         public uint? TeamKillScore { get; set; }
@@ -220,5 +223,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId)]
         public string BotUniqueId { get; set; }
+
+        [NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector DeathLocation { get; set; }
     }
 }

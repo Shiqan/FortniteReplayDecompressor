@@ -16,5 +16,7 @@ Special thanks to [AlpaGit](https://github.com/AlpaGit) for seeing the bits I di
 
 Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) for his amazing work on the NetFieldParser (among other things).
 
+Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) because he deserves to be mentioned twice.
+
 ## License
 Licensed under the [MIT License](LICENSE).

@@ -28,7 +28,10 @@ seq:
     if: file_version.to_i > version_history::recorded_timestamp.to_i
   - id: compressed
     type: u4
-    if: file_version.to_i > version_history::compression.to_i
+    if: file_version.to_i > version_history::compression.to_i  
+  - id: encrypted
+    type: u4
+    if: file_version.to_i > version_history::encrypted.to_i
   - id: chunk_header
     type: chunk
   - id: chunk
@@ -131,7 +134,8 @@ enums:
     3: recorded_timestamp
     4: stream_chunk_times
     5: friendly_name_encoding
-    6: new_version
+    6: encrypted
+    7: new_version
   network_version_history:
     1: initial
     2: absolute_time

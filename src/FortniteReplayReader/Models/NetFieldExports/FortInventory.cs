@@ -78,6 +78,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Handle", RepLayoutCmdType.PropertyInt)]
         public int? Handle { get; set; }
 
+        [NetFieldExport("WrapOverride", RepLayoutCmdType.PropertyUInt32)]
+        public uint? WrapOverride { get; set; }
+
         [NetFieldExport("AlterationInstances", RepLayoutCmdType.Ignore)]
         public DebuggingObject[] AlterationInstances { get; set; }
 

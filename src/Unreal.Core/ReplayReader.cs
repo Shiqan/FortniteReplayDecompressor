@@ -284,7 +284,7 @@ namespace Unreal.Core
         public virtual void ReadReplayData(FArchive archive)
         {
             var info = new ReplayDataInfo();
-            if (archive.ReplayVersion >= ReplayVersionHistory.StreamChunkTimes)
+            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_STREAM_CHUNK_TIMES)
             {
                 info.Start = archive.ReadUInt32();
                 info.End = archive.ReadUInt32();
@@ -295,7 +295,14 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            using var binaryArchive = Decompress(archive, (int)info.Length);
+            var memorySizeInBytes = (int) info.Length;
+            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_ENCRYPTION)
+            {
+                memorySizeInBytes = archive.ReadInt32();
+            }
+
+            using var decrypted = DecryptBuffer(archive, (int) info.Length);
+            using var binaryArchive = Decompress(decrypted, memorySizeInBytes);
             while (!binaryArchive.AtEnd())
             {
                 var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
@@ -421,14 +428,33 @@ namespace Unreal.Core
                 IsLive = archive.ReadUInt32AsBoolean()
             };
 
-            if (fileVersion >= ReplayVersionHistory.RecordedTimestamp)
+            if (fileVersion >= ReplayVersionHistory.HISTORY_RECORDED_TIMESTAMP)
             {
                 info.Timestamp = DateTime.FromBinary(archive.ReadInt64());
             }
 
-            if (fileVersion >= ReplayVersionHistory.Compression)
+            if (fileVersion >= ReplayVersionHistory.HISTORY_COMPRESSION)
             {
                 info.IsCompressed = archive.ReadUInt32AsBoolean();
+            }
+
+            if (fileVersion >= ReplayVersionHistory.HISTORY_ENCRYPTION)
+            {
+                info.IsEncrypted = archive.ReadUInt32AsBoolean();
+                var size = archive.ReadUInt32();
+                info.EncryptionKey = archive.ReadBytes(size);
+            }
+
+            if (!info.IsLive && info.IsEncrypted && (info.EncryptionKey.Length == 0))
+            {
+                _logger?.LogError("ReadReplayInfo: Completed replay is marked encrypted but has no key!");
+                throw new InvalidReplayException("Completed replay is marked encrypted but has no key!");
+            }
+
+            if (info.IsLive && info.IsEncrypted)
+            {
+                _logger?.LogError("ReadReplayInfo: Replay is marked encrypted and but not yet marked as completed!");
+                throw new InvalidReplayException("Replay is marked encrypted and but not yet marked as completed!");
             }
 
             Replay.Info = info;
@@ -2084,6 +2110,7 @@ namespace Unreal.Core
             }
         }
 
+
         /// <summary>
         /// Notifies when a new actor channel is created.
         /// </summary>
@@ -2099,40 +2126,63 @@ namespace Unreal.Core
         protected abstract void OnChannelClosed(uint channelIndex, NetworkGUID actor);
 
         /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
+        /// Chunks can be encrypted with the <see cref="ReplayInfo.EncryptionKey"/>. If the replay is encrypted this method needs to be implemented.
+        /// see https://github.com/EpicGames/UnrealEngine/blob/12dbd9877379223a839e59ceb92131a7e400aae5/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L475
         /// </summary>
-        /// <param name="offset"></param>
+        /// <param name="archive"></param>
+        /// <param name="size"></param>
         /// <returns></returns>
-        private Core.BinaryReader Decompress(FArchive archive, int size)
+        protected virtual Core.BinaryReader DecryptBuffer(FArchive archive, int size)
         {
-            if (!Replay.Info.IsCompressed)
+            if (!Replay.Info.IsEncrypted)
             {
-                // if this if ever needed it should be refactored...
-                var uncompressed = new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                return new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
                     ReplayHeaderFlags = Replay.Header.Flags,
                     ReplayVersion = Replay.Info.FileVersion
                 };
-                return uncompressed;
+            }
+
+            _logger?.LogError("Replay is marked as encrypted. Make sure to implement this method to decrypt the chunks.");
+            throw new NotImplementedException("Replay is marked as encrypted. Make sure to implement this method to decrypt the chunks.");
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
+        /// </summary>
+        /// <param name="archive"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        protected virtual Core.BinaryReader Decompress(FArchive archive, int size)
+        {
+            if (!Replay.Info.IsCompressed)
+            {
+                // TODO a disposable FArchive to avoid reading the entire archive for no reason...
+                return new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                {
+                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                    NetworkVersion = Replay.Header.NetworkVersion,
+                    ReplayHeaderFlags = Replay.Header.Flags,
+                    ReplayVersion = Replay.Info.FileVersion
+                };
             }
 
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize);
-            var decompressed = new Core.BinaryReader(new MemoryStream(output))
+            
+            _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
+            return new Core.BinaryReader(new MemoryStream(output))
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                 NetworkVersion = Replay.Header.NetworkVersion,
                 ReplayHeaderFlags = Replay.Header.Flags,
                 ReplayVersion = Replay.Info.FileVersion
             };
-
-            _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
-            return decompressed;
         }
     }
 }

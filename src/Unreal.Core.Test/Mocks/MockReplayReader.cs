@@ -12,6 +12,11 @@ namespace Unreal.Core.Test.Mocks
             GuidCache = new NetGuidCache();
         }
 
+        public void SetReplay(MockReplay replay)
+        {
+            Replay = replay;
+        }
+
         public MockReplay GetReplay()
         {
             return Replay;

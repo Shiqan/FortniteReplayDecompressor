@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AthenaTeamStats\**" />
+    <EmbeddedResource Remove="AthenaTeamStats\**" />
+    <None Remove="AthenaTeamStats\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="2.8.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -17,75 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="AthenaMatchStats\" />
-    <Folder Include="AthenaTeamStats\" />
-    <Folder Include="Replays\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="AthenaMatchStats\matchstats0.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AthenaMatchStats\matchstats1.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AthenaMatchStats\matchstats2.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AthenaTeamStats\teamstats0.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AthenaTeamStats\teamstats1.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season11-bot.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season11.11.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season11.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season4.0.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season4.2.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season4.3.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season5.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season6.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season7.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season8.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="PlayerElims\season9.dump">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\UnsavedReplay-2018.10.06-22.00.32.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\UnsavedReplay-2018.10.17-20.22.26.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\UnsavedReplay-2018.10.17-20.33.41.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\UnsavedReplay-2019.05.22-16.58.41.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

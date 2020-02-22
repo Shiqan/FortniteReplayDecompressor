@@ -8,34 +8,24 @@ namespace FortniteReplayReader.Test
 {
     public class AthenaTeamStatsTest
     {
-        [Fact]
-        public void AthenaTeamStats0Test()
+        [Theory]
+        [InlineData(new byte[] {
+            0x00, 0x00, 0x00, 0x00, 0x23, 0x00, 0x00, 0x00, 0x60, 0x00, 0x00, 0x00
+        }, 35u, 96u)]
+        [InlineData(new byte[] {
+            0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x63, 0x00, 0x00, 0x00
+        }, 2u, 99u)]
+        public void ParseAthenaTeamStatsTest(byte[] rawData, uint position, uint totalPlayers)
         {
-            var data = $"AthenaTeamStats/teamstats0.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var stream = new MemoryStream(rawData);
             using var archive = new Unreal.Core.BinaryReader(stream);
             var reader = new ReplayReader();
             var result = reader.ParseTeamStats(archive, null);
 
             Assert.True(archive.AtEnd());
             Assert.False(archive.IsError);
-            Assert.Equal(35u, result.Position);
-            Assert.Equal(96u, result.TotalPlayers);
-        }
-
-        [Fact]
-        public void AthenaTeamStats1Test()
-        {
-            var data = $"AthenaTeamStats/teamstats1.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new ReplayReader();
-            var result = reader.ParseTeamStats(archive, null);
-
-            Assert.True(archive.AtEnd());
-            Assert.False(archive.IsError);
-            Assert.Equal(2u, result.Position);
-            Assert.Equal(99u, result.TotalPlayers);
+            Assert.Equal(position, result.Position);
+            Assert.Equal(totalPlayers, result.TotalPlayers);
         }
     }
 }

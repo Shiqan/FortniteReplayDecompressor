@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Test
             Assert.Equal(expected.Eliminations, actual.Eliminations);
             Assert.Equal(expected.Assists, actual.Assists);
             Assert.Equal(expected.Revives, actual.Revives);
-            Assert.Equal(expected.Accuracy, (float) Math.Round(actual.Accuracy * 100));
+            Assert.Equal(expected.Accuracy, (float)Math.Round(actual.Accuracy * 100));
             Assert.Equal(expected.MaterialsUsed, actual.MaterialsUsed);
             Assert.Equal(expected.MaterialsGathered, actual.MaterialsGathered);
             Assert.Equal(expected.DamageTaken, actual.DamageTaken);
@@ -22,14 +22,19 @@ namespace FortniteReplayReader.Test
             Assert.Equal(expected.OtherDamage, actual.OtherDamage);
             Assert.Equal(expected.DamageToPlayers, actual.DamageToPlayers);
             Assert.Equal(expected.DamageToStructures, actual.DamageToStructures);
-            Assert.Equal(expected.TotalTraveled, (uint) actual.TotalTraveled.CentimetersToDistance());
+            Assert.Equal(expected.TotalTraveled, (uint)actual.TotalTraveled.CentimetersToDistance());
         }
 
         [Fact]
         public void TestAthenaMatchStats0()
         {
-            var data = $"AthenaMatchStats/matchstats0.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            byte[] rawData = {
+                0x00, 0x00, 0x00, 0x00, 0xF1, 0xF0, 0x70, 0x3E, 0x02, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x3A, 0x01, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x52, 0x01, 0x00, 0x00, 0x02, 0x04, 0x00, 0x00,
+                0x1C, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x00, 0xA5, 0x3D, 0x00, 0x00
+            };
+            using var stream = new MemoryStream(rawData);
             using var archive = new Unreal.Core.BinaryReader(stream);
             var reader = new ReplayReader();
             var result = reader.ParseMatchStats(archive, null);
@@ -60,8 +65,14 @@ namespace FortniteReplayReader.Test
         [Fact]
         public void TestAthenaMatchStats1()
         {
-            var data = $"AthenaMatchStats/matchstats1.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            byte[] rawData = {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0xDD, 0x00, 0x00, 0x00, 0xDE, 0x00, 0x00, 0x00,
+                0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEA, 0x14, 0x00, 0x00
+            };
+
+            using var stream = new MemoryStream(rawData);
             using var archive = new Unreal.Core.BinaryReader(stream);
             var reader = new ReplayReader();
             var result = reader.ParseMatchStats(archive, null);
@@ -90,8 +101,14 @@ namespace FortniteReplayReader.Test
         [Fact]
         public void TestAthenaMatchStats2()
         {
-            var data = $"AthenaMatchStats/matchstats2.dump";
-            using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            byte[] rawData =
+            {
+                0x00, 0x00, 0x00, 0x00, 0x47, 0x6E, 0x64, 0x3E, 0x04, 0x00, 0x00, 0x00,
+                0x03, 0x00, 0x00, 0x00, 0xF1, 0x02, 0x00, 0x00, 0x77, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x47, 0x03, 0x00, 0x00, 0xF0, 0xA9, 0x00, 0x00,
+                0x0F, 0x08, 0x00, 0x00, 0xC6, 0x02, 0x00, 0x00, 0x90, 0xAB, 0x05, 0x00
+            };
+            using var stream = new MemoryStream(rawData);
             using var archive = new Unreal.Core.BinaryReader(stream);
             var reader = new ReplayReader();
             var result = reader.ParseMatchStats(archive, null);

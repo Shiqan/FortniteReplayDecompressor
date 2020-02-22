@@ -311,7 +311,13 @@ namespace FortniteReplayReader
         {
             if (!Replay.Info.IsEncrypted)
             {
-                return archive as Unreal.Core.BinaryReader;
+                return new Unreal.Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                {
+                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                    NetworkVersion = Replay.Header.NetworkVersion,
+                    ReplayHeaderFlags = Replay.Header.Flags,
+                    ReplayVersion = Replay.Info.FileVersion
+                };
             }
 
             var key = Replay.Info.EncryptionKey;

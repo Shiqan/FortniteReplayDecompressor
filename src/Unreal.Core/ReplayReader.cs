@@ -572,7 +572,7 @@ namespace Unreal.Core
                     fieldExport.Name = archive.ReadFString();
                     fieldExport.Type = archive.ReadFString();
                 }
-                else if (Replay.Header.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
+                else if (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZE_FIX)
                 {
                     // FName
                     fieldExport.Name = archive.ReadFString();
@@ -608,7 +608,6 @@ namespace Unreal.Core
                     group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
                 }
             }
-
             return group;
         }
 

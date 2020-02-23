@@ -1,9 +1,6 @@
-﻿using FortniteReplayReader;
-using FortniteReplayReader.Models;
+﻿using FortniteReplayReader.Models;
 using Microsoft.Extensions.Logging;
-using System;
 using Unreal.Core;
-using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -18,7 +15,7 @@ namespace FortniteReplayReader.Test.Mocks
 
         public void SetMode(ParseMode mode)
         {
-            this._parseMode = mode;
+            _parseMode = mode;
         }
 
         public void SetReplay(FortniteReplay replay)

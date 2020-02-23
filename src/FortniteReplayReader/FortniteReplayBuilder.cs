@@ -314,8 +314,8 @@ namespace FortniteReplayReader
             var e = new PlayerMovementEvent()
             {
                 ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                ReplicatedMovement = pawn.ReplicatedMovement
             };
+            e.ReplicatedMovement ??= pawn.ReplicatedMovement;
             e.bCanBeDamaged ??= pawn.bCanBeDamaged;
             e.LocationOffset ??= pawn.LocationOffset;
             e.RelativeScale3D ??= pawn.RelativeScale3D;

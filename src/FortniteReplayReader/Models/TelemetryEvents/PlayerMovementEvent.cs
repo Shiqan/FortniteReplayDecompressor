@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models.TelemetryEvents
         public float? ReplicatedWorldTimeSeconds { get; set; }
 
         public bool? bCanBeDamaged { get; set; }
-        public FRepMovement ReplicatedMovement { get; set; }
+        public FRepMovement? ReplicatedMovement { get; set; }
         public FVector LocationOffset { get; set; }
         public FVector RelativeScale3D { get; set; }
         public FRotator RotationOffset { get; set; }

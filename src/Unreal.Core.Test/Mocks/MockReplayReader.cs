@@ -22,16 +22,6 @@ namespace Unreal.Core.Test.Mocks
             return Replay;
         }
 
-        protected override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
-        {
-            // pass
-        }
-
-        protected override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
-        {
-            // pass
-        }
-
         protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             // pass

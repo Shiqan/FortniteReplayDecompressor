@@ -82,6 +82,11 @@ namespace FortniteReplayReader
             }
         }
 
+        protected override void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update)
+        {
+            // pass
+        }
+
         protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
             _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");

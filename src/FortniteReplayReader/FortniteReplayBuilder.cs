@@ -2,7 +2,6 @@
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
 using FortniteReplayReader.Models.TelemetryEvents;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unreal.Core.Contracts;
@@ -44,7 +43,7 @@ namespace FortniteReplayReader
             _pawnChannelToStateChannel.Remove(channelIndex);
         }
 
-        private bool TryGetPlayerData(uint guid, out PlayerData playerData)
+        private bool TryGetPlayerDataFromActor(uint guid, out PlayerData playerData)
         {
             if (_actorToChannel.TryGetValue(guid, out var pawnChannel))
             {
@@ -52,6 +51,16 @@ namespace FortniteReplayReader
                 {
                     return _players.TryGetValue(stateChannel, out playerData);
                 }
+            }
+            playerData = null;
+            return false;
+        }
+        
+        private bool TryGetPlayerDataFromPawn(uint pawn, out PlayerData playerData)
+        {
+            if (_pawnChannelToStateChannel.TryGetValue(pawn, out var stateChannel))
+            {
+                return _players.TryGetValue(stateChannel, out playerData);
             }
             playerData = null;
             return false;
@@ -137,12 +146,7 @@ namespace FortniteReplayReader
 
         public void UpdateBatchedDamge(uint channelIndex, BatchedDamageCues damage)
         {
-            if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannel))
-            {
-                return;
-            }
-
-            if (!_players.TryGetValue(stateChannel, out var playerData))
+            if (!TryGetPlayerDataFromPawn(channelIndex, out var playerData))
             {
                 return;
             }
@@ -225,6 +229,7 @@ namespace FortniteReplayReader
             playerData.HasThankedBusDriver ??= state.bThankedBusDriver;
 
             playerData.DeathCause ??= state.DeathCause;
+            playerData.DeathLocation ??= state.DeathLocation;
             playerData.DeathCircumstance ??= state.DeathCircumstance;
             playerData.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
 
@@ -265,6 +270,7 @@ namespace FortniteReplayReader
 
             entry.Distance ??= state.Distance;
             entry.DeathCause ??= state.DeathCause;
+            entry.DeathLocation ??= state.DeathLocation;
             entry.DeathCircumstance ??= state.DeathCircumstance;
             entry.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
 
@@ -391,7 +397,10 @@ namespace FortniteReplayReader
 
         public void CreatePickupEvent(uint channelIndex, FortPickup pickup)
         {
-            if (ReplicatedWorldTimeSeconds <= 0) return;
+            if (ReplicatedWorldTimeSeconds <= 0)
+            {
+                return;
+            }
 
             if (pickup.TossState != null)
             {
@@ -430,7 +439,10 @@ namespace FortniteReplayReader
             {
                 // TODO updates for unknown parent inventory !?
                 // TODO receive inventory for some random channel without replaypawn...?
-                if (!fortInventory.ReplayPawn.HasValue) return;
+                if (!fortInventory.ReplayPawn.HasValue)
+                {
+                    return;
+                }
 
                 inventory = new Inventory()
                 {
@@ -447,7 +459,7 @@ namespace FortniteReplayReader
 
             if (!inventory.PlayerId.HasValue)
             {
-                if (TryGetPlayerData(inventory.ReplayPawn.GetValueOrDefault(), out var playerData))
+                if (TryGetPlayerDataFromActor(inventory.ReplayPawn.GetValueOrDefault(), out var playerData))
                 {
                     inventory.PlayerId = playerData.Id;
                     inventory.PlayerName = playerData.PlayerId;
@@ -455,7 +467,10 @@ namespace FortniteReplayReader
                 }
             }
 
-            if (!fortInventory.A.HasValue) return;
+            if (!fortInventory.A.HasValue)
+            {
+                return;
+            }
 
             var inventoryItem = new InventoryItem()
             {

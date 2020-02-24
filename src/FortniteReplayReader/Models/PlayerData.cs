@@ -1,10 +1,11 @@
 ﻿using FortniteReplayReader.Models.NetFieldExports;
 using System.Collections.Generic;
+using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models
 {
     public class PlayerData
-    { 
+    {
         public PlayerData(FortPlayerState playerState)
         {
             Id = playerState.PlayerID;
@@ -67,6 +68,7 @@ namespace FortniteReplayReader.Models
         public int? DeathCause { get; set; }
         public int? DeathCircumstance { get; set; }
         public IEnumerable<string> DeathTags { get; set; }
+        public FVector DeathLocation { get; set; }
 
         public bool? HasEverSkydivedFromBus { get; set; }
         public bool? HasEverSkydivedFromBusAndLanded { get; set; }

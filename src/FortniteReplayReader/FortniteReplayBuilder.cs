@@ -122,6 +122,8 @@ namespace FortniteReplayReader
         {
             foreach (var playerData in _players.Values)
             {
+                if (playerData?.TeamIndex == null) return;
+
                 if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
                 {
                     _teams[playerData.TeamIndex] = new TeamData()

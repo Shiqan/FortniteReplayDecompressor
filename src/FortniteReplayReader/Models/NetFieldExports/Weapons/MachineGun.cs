@@ -36,4 +36,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
     public class LightMachineGun : BaseWeapon
     {
     }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_MidasDrum_Athena.B_Assault_MidasDrum_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class MidasDrumGun : BaseWeapon
+    {
+    }
 }

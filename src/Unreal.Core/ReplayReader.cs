@@ -1345,7 +1345,7 @@ namespace Unreal.Core
                         else
                         {
                             var group = GuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
-                            if (netFieldParser.WillReadType(group.PathName))
+                            if (!netFieldParser.WillReadType(group.PathName))
                             {
                                 continue;
                             }
@@ -1396,7 +1396,8 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// 
+        /// We didnt really know how certain properties were parsed, so we mark those with <see cref="NetFieldParser.ClassNetCachePropertyInfo.IsCustomStruct"/>
+        /// and we deserialize and/or resolve them 'manually' here.
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="fieldCache"></param>
@@ -1555,6 +1556,15 @@ namespace Unreal.Core
             {
                 _logger?.LogInformation($"Not reading type {group.PathName}");
                 Channels[channelIndex].IgnoreChannel(group.PathName);
+
+#if DEBUG
+                Debug("not-reading-groups", group.PathName);
+                foreach (var field in group.NetFieldExports)
+                {
+                    if (field == null) continue;
+                    Debug("not-reading-groups", $"\t\t{field.Name}");
+                }
+#endif
 
                 return false;
             }

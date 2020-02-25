@@ -9,7 +9,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
     public class AutoAssaultRifle : BaseWeapon
     {
     }
-    
+
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_BurstBullpup_Athena.B_Assault_BurstBullpup_Athena_C", minimalParseMode: ParseMode.Debug)]
     public class BurstAssaultRifle : BaseWeapon
     {
@@ -17,6 +17,16 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
 
     [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_BurstBullpup_Athena_HighTier.B_Assault_BurstBullpup_Athena_HighTier_C", minimalParseMode: ParseMode.Debug)]
     public class HighTierBurstAssaultRifle : BaseWeapon
+    {
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Heavy_Athena.B_Assault_Heavy_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class HeavyAssaultRifle : BaseWeapon
+    {
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Rifles/Blueprints/Assault/B_Assault_Auto_Zoom_SR_Child_Athena.B_Assault_Auto_Zoom_SR_Child_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class AutoZoomRifle : BaseWeapon
     {
     }
 }

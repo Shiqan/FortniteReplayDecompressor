@@ -14,4 +14,29 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
         [NetFieldExport("ContextTrapItemDefinition", RepLayoutCmdType.Property)]
         public ItemDefinition ContextTrapItemDefinition { get; set; }
     }
+
+    [NetFieldExportGroup("/Game/Athena/Items/Traps/Launchpad/BluePrint/Trap_Floor_Player_Launch_Pad.Trap_Floor_Player_Launch_Pad_C", minimalParseMode: ParseMode.Debug)]
+    public class LaunchPad : INetFieldExportGroup
+    {
+        [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
+        public int? RemoteRole { get; set; }
+
+        [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
+        public int? Role { get; set; }
+
+        [NetFieldExport("OwnerPersistentID", RepLayoutCmdType.PropertyUInt32)]
+        public uint OwnerPersistentID { get; set; }
+
+        [NetFieldExport("bPlayerPlaced", RepLayoutCmdType.PropertyBool)]
+        public bool? bPlayerPlaced { get; set; }
+
+        [NetFieldExport("TeamIndex", RepLayoutCmdType.Enum)]
+        public int? TeamIndex { get; set; }
+
+        [NetFieldExport("TrapData", RepLayoutCmdType.Property)]
+        public ItemDefinition TrapData { get; set; }
+
+        [NetFieldExport("AttachedTo", RepLayoutCmdType.PropertyInt)]
+        public int? AttachedTo { get; set; }
+    }
 }

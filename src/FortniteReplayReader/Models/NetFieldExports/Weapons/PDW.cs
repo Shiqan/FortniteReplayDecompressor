@@ -14,4 +14,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
     public class HighTierPWD : BaseWeapon
     {
     }
+
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Pistols/Blueprints/B_Pistol_RapidFireSMG_Athena.B_Pistol_RapidFireSMG_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class RapidFireSMG : BaseWeapon
+    {
+    }
 }

@@ -6,6 +6,11 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
     [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_TnTinaBow_Athena.B_TnTinaBow_Athena_C", minimalParseMode: ParseMode.Debug)]
     public class Crossbow : BaseWeapon
     {
+        [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.PropertyUInt16)]
+        public ushort? ChargeStatusPack { get; set; }
+
+        [NetFieldExport("bIsChargingWeapon", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsChargingWeapon { get; set; }
     }
 
     // /Game/Weapons/FORT_Crossbows/Blueprints/B_Prj_Arrow_ExplodeOnImpact_Athena_TnTina.B_Prj_Arrow_ExplodeOnImpact_Athena_TnTina_C

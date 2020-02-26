@@ -9,4 +9,9 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
     public class AmmoBox : BaseContainer, INetFieldExportGroup
     {
     }
+
+    [NetFieldExportGroup("/Game/Building/ActorBlueprints/Containers/Tiered_Short_Ammo_3_Parent.Tiered_Short_Ammo_3_Parent_C", minimalParseMode: ParseMode.Debug)]
+    public class ShortAmmoBox : BaseContainer, INetFieldExportGroup
+    {
+    }
 }

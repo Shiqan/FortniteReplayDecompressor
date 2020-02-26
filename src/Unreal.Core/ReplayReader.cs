@@ -452,8 +452,8 @@ namespace Unreal.Core
 
             if (info.IsLive && info.IsEncrypted)
             {
-                _logger?.LogError("ReadReplayInfo: Replay is marked encrypted and but not yet marked as completed!");
-                throw new InvalidReplayException("Replay is marked encrypted and but not yet marked as completed!");
+                _logger?.LogError("ReadReplayInfo: Replay is marked encrypted but not yet marked as completed!");
+                throw new InvalidReplayException("Replay is marked encrypted but not yet marked as completed!");
             }
 
             Replay.Info = info;

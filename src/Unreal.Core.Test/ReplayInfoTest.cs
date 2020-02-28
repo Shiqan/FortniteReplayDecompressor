@@ -73,7 +73,7 @@ namespace Unreal.Core.Test
             var reader = new MockReplayReader();
 
             var exception = Assert.Throws<InvalidReplayException>(() => reader.ReadReplayInfo(archive));
-            Assert.Equal("Replay is marked encrypted and but not yet marked as completed!", exception.Message);
+            Assert.Equal("Replay is marked encrypted but not yet marked as completed!", exception.Message);
         }
 
         [Fact]

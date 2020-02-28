@@ -1,10 +1,9 @@
-﻿using System.IO;
-using Unreal.Core.Test.Mocks;
+using System.IO;
 using Xunit;
 
 namespace Unreal.Core.Test
 {
-    public class StaticParseNameTest
+    public class BinaryReaderTest
     {
         [Theory]
         [InlineData(new byte[] {
@@ -23,33 +22,15 @@ namespace Unreal.Core.Test
             0x00, 0x6C, 0x00, 0x61, 0x00, 0x67, 0x00, 0x73,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         })]
-        public void StaticParseNameBinaryTest(byte[] rawData)
+        public void StaticParseNameTest(byte[] rawData)
         {
             using var stream = new MemoryStream(rawData);
-            using var archive = new Unreal.Core.BinaryReader(stream)
+            using var archive = new BinaryReader(stream)
             {
                 EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
             };
-            var reader = new MockReplayReader();
-            reader.StaticParseName(archive);
+            archive.ReadFName();
             Assert.True(archive.AtEnd());
-            Assert.False(archive.IsError);
-        }
-
-        [Theory]
-        [InlineData(new byte[] {
-            0x99, 0xF1
-        })]
-        public void StaticParseNameBitTest(byte[] rawData)
-        {
-            var archive = new Unreal.Core.BitReader(rawData)
-            {
-                EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
-            };
-            var reader = new MockReplayReader();
-            var name = reader.StaticParseName(archive);
-            Assert.Equal(9, archive.Position);
-            Assert.Equal("Actor", name);
             Assert.False(archive.IsError);
         }
     }

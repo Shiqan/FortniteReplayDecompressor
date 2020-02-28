@@ -16,8 +16,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
         [NetFieldExport("Role", RepLayoutCmdType.Ignore)]
         public int? Role { get; set; }
 
-        [NetFieldExport("Owner", RepLayoutCmdType.Ignore)]
-        public uint? Owner { get; set; }
+        [NetFieldExport("Owner", RepLayoutCmdType.Property)]
+        public ActorGuid Owner { get; set; }
 
         [NetFieldExport("Instigator", RepLayoutCmdType.PropertyObject)]
         public uint? Instigator { get; set; }

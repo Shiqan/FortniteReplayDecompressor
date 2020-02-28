@@ -42,26 +42,7 @@ namespace Unreal.Core
 
         public string SerializePropertyName()
         {
-            var isHardcoded = ReadBit();
-            if (isHardcoded)
-            {
-                uint nameIndex;
-                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = ReadIntPacked();
-                }
-
-                return ((UnrealNames)nameIndex).ToString();
-            }
-
-            var inString = ReadFString();
-            var inNumber = ReadInt32();
-
-            return inString;
+            return ReadFName();
         }
 
         public string SerializePropertyString()

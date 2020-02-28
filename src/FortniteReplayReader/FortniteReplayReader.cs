@@ -4,6 +4,7 @@ using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
+using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
@@ -146,6 +147,9 @@ namespace FortniteReplayReader
                     //case GameplayCue gameplayCue:
                     //    Builder.UpdateGameplayCue(channelIndex, gameplayCue);
                     //    break;
+                case BaseWeapon weapon:
+                    Builder.UpdateWeapon(channelIndex, weapon);
+                    break;
             }
         }
 

@@ -74,6 +74,7 @@ namespace Unreal.Core
         public abstract long ReadInt64();
         public abstract float ReadSingle();
         public abstract string ReadFString();
+        public abstract string ReadFName();
         public abstract string ReadGUID();
         public abstract string ReadGUID(int size);
         public abstract uint ReadIntPacked();

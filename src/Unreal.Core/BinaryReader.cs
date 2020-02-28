@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
@@ -183,6 +184,46 @@ namespace Unreal.Core
             }
 
             return value.Trim(new[] { ' ', '\0' });
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
+        /// </summary>
+        public override string ReadFName()
+        {
+            var isHardcoded = ReadBoolean();
+            if (isHardcoded)
+            {
+                uint nameIndex;
+                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    nameIndex = ReadUInt32();
+                }
+                else
+                {
+                    nameIndex = ReadIntPacked();
+                }
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
+                // hard coded names in "UnrealNames.inl"
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
+                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
+                // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
+                return ((UnrealNames)nameIndex).ToString();
+            }
+
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
+            // MAX_NETWORKED_HARDCODED_NAME = 410
+
+            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
+            // NAME_SIZE = 1024
+
+            // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
+            // InName.GetPlainNameString();
+            // InName.GetNumber();
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+            return inString;
         }
 
         /// <summary>

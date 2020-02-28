@@ -277,6 +277,30 @@ namespace Unreal.Core
             return value.Trim(new[] { ' ', '\0' });
         }
 
+        public override string ReadFName()
+        {
+            var isHardcoded = ReadBit();
+            if (isHardcoded)
+            {
+                uint nameIndex;
+                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
+                {
+                    nameIndex = ReadUInt32();
+                }
+                else
+                {
+                    nameIndex = ReadIntPacked();
+                }
+
+                return ((UnrealNames)nameIndex).ToString();
+            }
+
+            var inString = ReadFString();
+            var inNumber = ReadInt32();
+
+            return inString;
+        }
+
         public override string ReadGUID()
         {
             return ReadBytesToString(16);
@@ -310,7 +334,7 @@ namespace Unreal.Core
         public override short ReadInt16()
         {
             var value = ReadBytes(2);
-            return IsError ? (short) 0 : BitConverter.ToInt16(value);
+            return IsError ? (short)0 : BitConverter.ToInt16(value);
         }
 
         public override int ReadInt32()
@@ -568,7 +592,7 @@ namespace Unreal.Core
         {
             Seek(numbits, SeekOrigin.Current);
         }
-        
+
         public override void SkipBits(uint numbits)
         {
             SkipBits((int)numbits);

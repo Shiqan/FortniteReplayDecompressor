@@ -125,5 +125,21 @@ namespace Unreal.Core.Test
             Assert.Equal(0u, reader.ReadSerializedInt(2));
             Assert.Equal(1, reader.Position);
         }
+
+        [Theory]
+        [InlineData(new byte[] {
+            0x99, 0xF1
+        })]
+        public void StaticParseNameTest(byte[] rawData)
+        {
+            var archive = new BitReader(rawData)
+            {
+                EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT
+            };
+            var name = archive.ReadFName();
+            Assert.Equal(9, archive.Position);
+            Assert.Equal("Actor", name);
+            Assert.False(archive.IsError);
+        }
     }
 }

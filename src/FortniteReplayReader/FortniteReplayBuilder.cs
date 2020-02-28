@@ -1,6 +1,7 @@
 ﻿using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
+using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using FortniteReplayReader.Models.TelemetryEvents;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace FortniteReplayReader
         private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
 
         private Dictionary<uint, Inventory> _inventories = new Dictionary<uint, Inventory>();
+        private Dictionary<uint, WeaponData> _weapons = new Dictionary<uint, WeaponData>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
@@ -488,6 +490,34 @@ namespace FortniteReplayReader
                 D = fortInventory.D
             };
             inventory.Items.Add(inventoryItem);
+        }
+
+        public void UpdateWeapon(uint channelIndex, BaseWeapon weapon)
+        {
+            if (!_weapons.TryGetValue(channelIndex, out var newWeapon))
+            {
+                newWeapon = new WeaponData();
+                _weapons[channelIndex] = newWeapon;
+            }
+
+            newWeapon.bIsEquippingWeapon ??= weapon.bIsEquippingWeapon;
+            newWeapon.bIsReloadingWeapon ??= weapon.bIsReloadingWeapon;
+            newWeapon.WeaponLevel ??= weapon.WeaponLevel;
+            newWeapon.AmmoCount ??= weapon.AmmoCount;
+            newWeapon.LastFireTimeVerified ??= weapon.LastFireTimeVerified;
+            newWeapon.A ??= weapon.A;
+            newWeapon.B ??= weapon.B;
+            newWeapon.C ??= weapon.C;
+            newWeapon.D ??= weapon.D;
+            newWeapon.WeaponName = weapon.WeaponData?.Name;
+
+            if (weapon.Owner?.Value != null)
+            {
+                if (TryGetPlayerDataFromActor(weapon.Owner.Value, out var playerData))
+                {
+                    newWeapon.PlayerId = playerData.Id;
+                }
+            }
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)

@@ -1482,7 +1482,7 @@ namespace Unreal.Core
                 var elementIndex = reader.ReadInt32();
 
                 // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
-                ReceiveProperties(reader, group, channelIndex, out var export, !enablePropertyChecksum);
+                ReceiveProperties(reader, group, channelIndex, out var export, !enablePropertyChecksum, netDeltaUpdate: true);
 
                 OnNetDeltaRead(channelIndex, new NetDeltaUpdate
                 {
@@ -1500,7 +1500,7 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
         /// <param name="archive"></param>
-        public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup exportGroup, bool enablePropertyChecksum = true)
+        public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
         {
             TotalGroupsRead++;
             exportGroup = default;
@@ -1625,7 +1625,7 @@ namespace Unreal.Core
                 }
             }
 
-            if (hasdata)
+            if (!netDeltaUpdate && hasdata)
             {
                 OnExportRead(channelIndex, exportGroup);
             }

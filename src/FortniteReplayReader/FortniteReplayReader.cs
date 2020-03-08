@@ -42,7 +42,9 @@ namespace FortniteReplayReader
         public FortniteReplay ReadReplay(Stream stream, ParseMode mode = ParseMode.Minimal)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
-            Replay = ReadReplay(archive, mode);
+
+            Builder = new FortniteReplayBuilder();
+            ReadReplay(archive, mode);
 
             Builder.UpdateTeamData();
             return Replay;
@@ -85,13 +87,26 @@ namespace FortniteReplayReader
 
         protected override void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update)
         {
-            // pass
+            switch (update.Export)
+            {
+                case ActiveGameplayModifier modifier:
+                    Builder.UpdateGameplayModifiers(modifier);
+                    break;
+                case FortPickup pickup:
+                    //Builder.CreatePickupEvent(channelIndex, pickup);
+                    break;
+                case FortInventory inventory:
+                    Builder.UpdateInventory(channelIndex, inventory);
+                    break;
+                case SpawnMachineRepData spawnMachine:
+                    Builder.UpdateRebootVan(channelIndex, spawnMachine);
+                    Builder.CreateRebootVanEvent(channelIndex, spawnMachine);
+                    break;
+            }
         }
 
         protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
         {
-            _logger?.LogDebug($"Received data for group {exportGroup.GetType().Name}");
-
             switch (exportGroup)
             {
                 case GameState state:
@@ -100,9 +115,6 @@ namespace FortniteReplayReader
                     break;
                 case PlaylistInfo playlist:
                     Builder.UpdatePlaylistInfo(playlist);
-                    break;
-                case ActiveGameplayModifier modifier:
-                    Builder.UpdateGameplayModifiers(modifier);
                     break;
                 case FortPlayerState state:
                     Builder.UpdatePlayerState(channelIndex, state);
@@ -132,10 +144,6 @@ namespace FortniteReplayReader
                 case SupplyDropLlama llama:
                     Builder.UpdateLlama(channelIndex, llama);
                     Builder.CreateLlamaEvent(channelIndex, llama);
-                    break;
-                case SpawnMachineRepData spawnMachine:
-                    Builder.UpdateRebootVan(channelIndex, spawnMachine);
-                    Builder.CreateRebootVanEvent(channelIndex, spawnMachine);
                     break;
                 case Models.NetFieldExports.SupplyDrop drop:
                     Builder.UpdateSupplyDrop(channelIndex, drop);

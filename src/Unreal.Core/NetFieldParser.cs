@@ -24,11 +24,17 @@ namespace Unreal.Core
         private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
         private CompiledLinqCache _linqCache = new CompiledLinqCache();
 
-        public NetFieldParser(NetGuidCache cache, ParseMode mode)
+        /// <summary>
+        /// Create a NetFieldParser, which will load all <see cref="NetFieldExportGroup"/> in the <see cref="AppDomain.CurrentDomain"/>.
+        /// </summary>
+        /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
+        /// <param name="mode"></param>
+        /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
+        public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
         {
             GuidCache = cache;
 
-            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(i => i.GetTypes());
+            var types = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.Contains(assemblyNameFilter)).SelectMany(i => i.GetTypes());
             var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (var type in netFields)

@@ -9,6 +9,14 @@ namespace Unreal.Core.Test
     [NetFieldExportGroup("group1", minimalParseMode: ParseMode.Minimal)]
     public class NetFieldGroup1 : INetFieldExportGroup
     {
+        [NetFieldExport("bField", RepLayoutCmdType.PropertyBool)]
+        public bool bField { get; set; }
+
+        [NetFieldExport("ItemDefinitionField", RepLayoutCmdType.Property)]
+        public ItemDefinition ItemDefinitionField { get; set; }
+
+        [NetFieldExport("VectorField", RepLayoutCmdType.PropertyVector)]
+        public FVector VectorField { get; set; }
     }
 
     [NetFieldExportGroup("group2", minimalParseMode: ParseMode.Full)]
@@ -144,6 +152,96 @@ namespace Unreal.Core.Test
 
             result = parser.TryGetClassNetCacheProperty("doesnotexist", "classnetcache3", out info);
             Assert.False(result);
+        }
+
+        [Fact]
+        public void ReadBooleanFieldTest()
+        {
+            var reader = new NetBitReader(new bool[] { true });
+            var export = new NetFieldExport()
+            {
+                Handle = 0,
+                Name = "bField"
+
+            };
+            var group = new NetFieldExportGroup()
+            {
+                PathName = "group1",
+                NetFieldExportsLength = 1,
+                NetFieldExports = new NetFieldExport[] { export },
+                PathNameIndex = 1
+            };
+
+            var guidCache = new NetGuidCache();
+            var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+
+            var data = parser.CreateType(group.PathName);
+            parser.ReadField(data, export, export.Handle, group, reader);
+            Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
+            Assert.True(((NetFieldGroup1)data).bField);
+        }
+
+        [Fact]
+        public void ReadGuidFieldTest()
+        {
+            var reader = new NetBitReader(new byte[] { 0x87, 0x04 });
+            var export = new NetFieldExport()
+            {
+                Handle = 0,
+                Name = "ItemDefinitionField"
+            };
+
+            var group = new NetFieldExportGroup()
+            {
+                PathName = "group1",
+                NetFieldExportsLength = 1,
+                NetFieldExports = new NetFieldExport[] { export },
+                PathNameIndex = 1
+            };
+
+            var guidCache = new NetGuidCache();
+            var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+
+            var data = parser.CreateType(group.PathName);
+            parser.ReadField(data, export, export.Handle, group, reader);
+            Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
+            Assert.True(((NetFieldGroup1)data).ItemDefinitionField.IsValid());
+            Assert.Equal(323u, ((NetFieldGroup1)data).ItemDefinitionField.Value);
+        }
+
+        [Fact]
+        public void ReadVectorFieldTest()
+        {
+            var reader = new NetBitReader(new byte[] { 0x01, 0x0B, 0xC7, 0x47, 0x8A, 0x26, 0xA7, 0xC7, 0x00, 0x80, 0x71, 0xC5 }, 96)
+            {
+                NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
+                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_ENGINENETVERSION_LATEST // 15
+            };
+
+            var export = new NetFieldExport()
+            {
+                Handle = 0,
+                Name = "VectorField"
+            };
+
+            var group = new NetFieldExportGroup()
+            {
+                PathName = "group1",
+                NetFieldExportsLength = 1,
+                NetFieldExports = new NetFieldExport[] { export },
+                PathNameIndex = 1
+            };
+
+            var guidCache = new NetGuidCache();
+            var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+
+            var data = parser.CreateType(group.PathName);
+            parser.ReadField(data, export, export.Handle, group, reader);
+            Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
+            Assert.Equal(-3864, ((NetFieldGroup1)data).VectorField.Z);
         }
     }
 }

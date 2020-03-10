@@ -16,32 +16,27 @@ namespace Unreal.Core
     {
         private BitArray Bits { get; set; }
 
-        /// <summary>
-        /// Position in current BitArray. Set with <see cref="Seek(int, SeekOrigin)"/>
-        /// </summary>
         public override int Position { get; protected set; }
 
-        /// <summary>
-        /// Last used bit Position in current BitArray. Used to avoid reading trailing zeros to fill last byte.
-        /// </summary>
         public int LastBit { get; private set; }
 
-        /// <summary>
-        /// For pushing and popping FBitReaderMark positions.
-        /// </summary>
-        public int MarkPosition { get; private set; }
+        public override int MarkPosition { get; protected set; }
 
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
         /// <param name="input">The input bytes.</param>
-        /// <exception cref="System.ArgumentException">The stream does not support reading, is null, or is already closed.</exception>
         public BitReader(byte[] input)
         {
             Bits = new BitArray(input);
             LastBit = Bits.Length;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the BitReader class based on the specified bytes.
+        /// </summary>
+        /// <param name="input">The input bool[].</param>
+        /// <param name="bitCount">Set last bit position.</param>
         public BitReader(byte[] input, int bitCount)
         {
             Bits = new BitArray(input);
@@ -52,23 +47,24 @@ namespace Unreal.Core
         /// Initializes a new instance of the BitReader class based on the specified bool[].
         /// </summary>
         /// <param name="input">The input bool[].</param>
-
         public BitReader(bool[] input)
         {
             Bits = new BitArray(input);
             LastBit = Bits.Length;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the BitReader class based on the specified bool[].
+        /// </summary>
+        /// <param name="input">The input bool[].</param>
+        /// <param name="bitCount">Set last bit position.</param>
         public BitReader(bool[] input, int bitCount)
         {
             Bits = new BitArray(input);
             LastBit = bitCount;
         }
 
-        /// <summary>
-        /// Returns whether <see cref="Position"/> in current <see cref="Bits"/> is greater than the lenght of the current <see cref="Bits"/>.
-        /// </summary>
-        /// <returns>true, if <see cref="Position"/> is greater than lenght, false otherwise</returns>
+
         public override bool AtEnd()
         {
             return Position >= LastBit || Position >= Bits.Length;
@@ -79,21 +75,11 @@ namespace Unreal.Core
             return Position + count <= LastBit || Position + count <= Bits.Length;
         }
 
-        /// <summary>
-        /// Returns the bit at <see cref="Position"/> and does not advance the <see cref="Position"/> by one bit.
-        /// </summary>
-        /// <returns>The value of the bit at position index.</returns>
-        /// <seealso cref="ReadBit"/>
         public override bool PeekBit()
         {
             return Bits[Position];
         }
 
-        /// <summary>
-        /// Returns the bit at <see cref="Position"/> and advances the <see cref="Position"/> by one bit.
-        /// </summary>
-        /// <returns>The value of the bit at position index.</returns>
-        /// <seealso cref="PeekBit"/>
         public override bool ReadBit()
         {
             if (AtEnd() || IsError)
@@ -109,12 +95,7 @@ namespace Unreal.Core
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
-        /// </summary>
-        /// <param name="bits">The number of bits to read.</param>
-        /// <returns>int</returns>
-        public int ReadBitsToInt(int bitCount)
+        public override int ReadBitsToInt(int bitCount)
         {
             var result = new byte();
             for (var i = 0; i < bitCount; i++)
@@ -132,11 +113,6 @@ namespace Unreal.Core
             return (int)result;
         }
 
-        /// <summary>
-        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
-        /// </summary>
-        /// <param name="bits">The number of bits to read.</param>
-        /// <returns>bool[]</returns>
         public override bool[] ReadBits(int bitCount)
         {
             if (!CanRead(bitCount))
@@ -157,31 +133,16 @@ namespace Unreal.Core
             return result;
         }
 
-        /// <summary>
-        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
-        /// </summary>
-        /// <param name="bits">The number of bits to read.</param>
-        /// <returns>bool[]</returns>
         public override bool[] ReadBits(uint bitCount)
         {
             return ReadBits((int)bitCount);
         }
 
-        /// <summary>
-        /// Returns the bit at <see cref="Position"/> and advances the <see cref="Position"/> by one bit.
-        /// </summary>
-        /// <returns>The value of the bit at position index.</returns>
-        /// <seealso cref="ReadBit"/>
-        /// <exception cref="IndexOutOfRangeException"></exception>
         public override bool ReadBoolean()
         {
             return ReadBit();
         }
 
-        /// <summary>
-        /// Returns the byte at <see cref="Position"/>
-        /// </summary>
-        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
         public override byte PeekByte()
         {
             var result = ReadByte();
@@ -190,10 +151,6 @@ namespace Unreal.Core
             return result;
         }
 
-        /// <summary>
-        /// Returns the byte at <see cref="Position"/> and advances the <see cref="Position"/> by 8 bits.
-        /// </summary>
-        /// <returns>The value of the byte at <see cref="Position"/> index.</returns>
         public override byte ReadByte()
         {
             var result = new byte();
@@ -245,10 +202,6 @@ namespace Unreal.Core
             return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
         }
 
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
-        /// </summary>
-        /// <returns>string</returns>
         public override string ReadFString()
         {
             var length = ReadInt32();
@@ -311,12 +264,6 @@ namespace Unreal.Core
             return ReadBytesToString(size);
         }
 
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69
-        /// </summary>
-        /// <param name="maxValue"></param>
-        /// <returns>uint</returns>
-        /// <exception cref="OverflowException"></exception>
         public override uint ReadSerializedInt(int maxValue)
         {
             uint value = 0;
@@ -354,11 +301,6 @@ namespace Unreal.Core
             return IsError ? 0 : BitConverter.ToInt64(value);
         }
 
-        /// <summary>
-        /// Retuns uint
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
-        /// </summary>
-        /// <returns>uint</returns>
         public override uint ReadIntPacked()
         {
             int BitsUsed = (int)Position % 8;
@@ -406,19 +348,11 @@ namespace Unreal.Core
             return value;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public override FVector ReadVector()
         {
             return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }
 
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
-        /// </summary>
-        /// <returns>Vector</returns>
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
         {
             var bits = ReadSerializedInt(maxBits);
@@ -447,11 +381,6 @@ namespace Unreal.Core
             return new FVector(x, y, z);
         }
 
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
-        /// </summary>
-        /// <returns></returns>
         public override FRotator ReadRotation()
         {
             float pitch = 0;
@@ -481,11 +410,6 @@ namespace Unreal.Core
             return new FRotator(pitch, yaw, roll);
         }
 
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L79
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/Rotator.h#L654
-        /// </summary>
-        /// <returns></returns>
         public override FRotator ReadRotationShort()
         {
             float pitch = 0;
@@ -555,12 +479,6 @@ namespace Unreal.Core
             return BitConverter.ToUInt64(ReadBytes(8));
         }
 
-        /// <summary>
-        /// Sets <see cref="Position"/> within current BitArray.
-        /// </summary>
-        /// <param name="offset">The offset relative to the <paramref name="seekOrigin"/>.</param>
-        /// <param name="seekOrigin">A value of type <see cref="SeekOrigin"/> indicating the reference point used to obtain the new position.</param>
-        /// <returns></returns>
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
             if (offset < 0 || offset > Bits.Length || (seekOrigin == SeekOrigin.Current && offset + Position > Bits.Length))
@@ -598,38 +516,22 @@ namespace Unreal.Core
             SkipBits((int)numbits);
         }
 
-        /// <summary>
-        /// Save Position to <see cref="MarkPosition"/> so we can reset back to this point.
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228
-        /// </summary>
         public override void Mark()
         {
             MarkPosition = Position;
         }
 
-        /// <summary>
-        /// Set Position back to <see cref="MarkPosition"/>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L228
-        /// </summary>
         public override void Pop()
         {
             // TODO: pop makes it sound like a list...
             Position = MarkPosition;
         }
 
-        /// <summary>
-        /// Get number of bits left, including any bits after <see cref="LastBit"/>.
-        /// </summary>
-        /// <returns></returns>
         public override int GetBitsLeft()
         {
             return Bits.Length - Position;
         }
 
-        /// <summary>
-        /// Append bool array to this archive.
-        /// </summary>
-        /// <param name="data"></param>
         public override void AppendDataFromChecked(bool[] data)
         {
             LastBit += data.Length;

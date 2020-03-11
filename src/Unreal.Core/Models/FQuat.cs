@@ -2,7 +2,9 @@
 
 namespace Unreal.Core.Models
 {
-
+    /// <summary>
+    /// 
+    /// </summary>
     public class FQuat : IProperty
     {
         public float X { get; private set; }

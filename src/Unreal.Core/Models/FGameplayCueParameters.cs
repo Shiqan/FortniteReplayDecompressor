@@ -115,13 +115,13 @@ namespace Unreal.Core.Models
             const byte NUM_LEVEL_BITS = 5; // need to bump this up to support 20 levels for AbilityLevel
             // const byte MAX_LEVEL = (1 << NUM_LEVEL_BITS) - 1;
 
-            var RepBits = reader.ReadBitsToInt((int) RepFlag.REP_MAX);
+            var RepBits = reader.ReadBitsToInt((int)RepFlag.REP_MAX);
 
             // Tag containers serialize empty containers with 1 bit, so no need to serialize this in the RepBits field.
             AggregatedSourceTags.Serialize(reader);
             AggregatedTargetTags.Serialize(reader);
 
-            if ((RepBits & (1 << (int) RepFlag.REP_NormalizedMagnitude)) > 0)
+            if ((RepBits & (1 << (int)RepFlag.REP_NormalizedMagnitude)) > 0)
             {
                 NormalizedMagnitude = reader.ReadSingle();
             }

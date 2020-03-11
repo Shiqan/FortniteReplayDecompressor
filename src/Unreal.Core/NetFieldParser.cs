@@ -196,17 +196,6 @@ namespace Unreal.Core
             return false;
         }
 
-
-        public virtual void Debug(string filename, string directory, byte[] data)
-        {
-            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            File.WriteAllBytes($"{directory}/{filename}.dump", data);
-        }
-
         /// <summary>
         /// Tries to read the property and update the value accordingly.
         /// </summary>
@@ -217,11 +206,6 @@ namespace Unreal.Core
         /// <param name="netBitReader"></param>
         public void ReadField(object obj, NetFieldExport export, uint handle, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
-            if (export.Name == "Location")
-            {
-                Debug($"ReadField-{export.Name}-{netBitReader.LastBit}", "fields", netBitReader.ReadBytes(Math.Max((int)Math.Ceiling(netBitReader.GetBitsLeft() / 8.0), 1)));
-            }
-
             if (!_netFieldGroups.TryGetValue(exportGroup.PathName, out var netGroupInfo))
             {
                 return;

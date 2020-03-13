@@ -32,8 +32,8 @@ namespace ConsoleReader
             //var replayFile = "Replays/season6.10.replay";
             //var replayFile = "Replays/season11.11.replay";
             //var replayFile = "Replays/season11.31.replay";
-            //var replayFile = "Replays/season11.replay";
-            var replayFile = "Replays/season12.replay";
+            var replayFile = "Replays/season11.replay";
+            //var replayFile = "Replays/season12.replay";
             //var replayFile = "Replays/collectPickup.replay";
 
             var sw = new Stopwatch();

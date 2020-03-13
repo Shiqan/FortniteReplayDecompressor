@@ -5,9 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\..\oodle\oo2core_5_win64.dll" Link="oo2core_5_win64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
   </ItemGroup>
 
 </Project>

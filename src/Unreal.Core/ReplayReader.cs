@@ -2139,7 +2139,7 @@ namespace Unreal.Core
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
-            var output = Oodle.DecompressReplayData(compressedBuffer, compressedSize, decompressedSize);
+            var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
 
             _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
             return new Core.BinaryReader(new MemoryStream(output))

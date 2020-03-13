@@ -19,4 +19,4 @@ Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) for his amazing work o
 Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) because he deserves to be mentioned twice.
 
 ## License
-Licensed under the [MIT License](LICENSE).
+Licensed under the [GNU GENERAL PUBLIC LICENSE](LICENSE).

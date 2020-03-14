@@ -8,8 +8,7 @@ So yes, we can parse your replays, zero cost (it's free) and fully extensible.
 
 You cannot get the library yet, but it will be available on Nuget "soon". 
 
-Until then you'll have to get the source code from Github. Once you have the code locally, you need to do just one little thing: add the `oo2core_5_win64.dll` (or your OS specific file extension) to the project.
-You can find it in the Fornite installation directory.
+Until then you'll have to get the source code from Github.
 
 ## First example
 

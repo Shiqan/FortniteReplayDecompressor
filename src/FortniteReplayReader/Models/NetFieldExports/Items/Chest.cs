@@ -32,8 +32,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
 
         [NetFieldExport("Quantity", RepLayoutCmdType.Property)]
         public DebuggingObject Quantity { get; set; }
-    }    
-    
+    }
+
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Containers/Tiered_Chest_Athena_FactionChest_NoLocks.Tiered_Chest_Athena_FactionChest_NoLocks_C", minimalParseMode: ParseMode.Debug)]
     public class FactionChest : BaseContainer
     {

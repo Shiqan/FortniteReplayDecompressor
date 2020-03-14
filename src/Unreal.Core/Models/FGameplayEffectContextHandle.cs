@@ -48,6 +48,7 @@ namespace Unreal.Core.Models
         public bool bHasWorldOrigin { get; private set; }
 
         /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L311
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L177
         /// </summary>
         /// <param name="reader"></param>
@@ -90,7 +91,7 @@ namespace Unreal.Core.Models
                 }
                 if ((RepBits & (1 << 5)) > 0)
                 {
-                    new FHitResult(reader);
+                    HitResult = new FHitResult(reader);
                 }
                 if ((RepBits & (1 << 6)) > 0)
                 {

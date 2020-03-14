@@ -1,7 +1,6 @@
 ﻿using FastMember;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using Unreal.Core.Attributes;
@@ -346,7 +345,7 @@ namespace Unreal.Core
             var arrayIndexes = netBitReader.ReadIntPacked();
 
             var elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
-            var isPrimitveType = _primitiveTypeLayout.TryGetValue(elementType, out var replayout);
+            var isPrimitveType = _primitiveTypeLayout.TryGetValue(elementType, out var replayout) || typeof(IProperty).IsAssignableFrom(elementType);
 
             if (replayout == RepLayoutCmdType.Ignore)
             {

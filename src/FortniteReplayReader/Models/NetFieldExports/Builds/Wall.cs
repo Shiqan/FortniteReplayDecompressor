@@ -23,6 +23,11 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_DoorSide.PBWA_W1_DoorSide_C", minimalParseMode: ParseMode.Debug)]
     public class WoodDoorSideWall : BaseBuild
     {
+        [NetFieldExport("bDoorOpen", RepLayoutCmdType.PropertyBool)]
+        public bool? bDoorOpen { get; set; }        
+        
+        [NetFieldExport("DoorDesiredRotOffset", RepLayoutCmdType.PropertyRotator)]
+        public FRotator DoorDesiredRotOffset { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Player/Wood/L1/PBWA_W1_DoorC.PBWA_W1_DoorC_C", minimalParseMode: ParseMode.Debug)]

@@ -1,28 +1,25 @@
 ﻿using BenchmarkDotNet.Attributes;
 using FortniteReplayReader.Models;
-using Microsoft.Extensions.Logging;
 using System.IO;
-using Unreal.Core.Models.Enums;
 
 namespace BenchmarkReader
 {
     public class BenchmarkReplayReader : FortniteReplayReader.ReplayReader
     {
-        public BenchmarkReplayReader(ILogger logger = null)
+        public BenchmarkReplayReader()
         {
             Replay = new FortniteReplay();
-            _logger = logger;
         }
 
         [Benchmark]
-        [Arguments("Replays/season6.10.replay", ParseMode.Normal)]
-        [Arguments("Replays/season11.replay", ParseMode.Normal)]
-        [Arguments("Replays/season12.replay", ParseMode.Normal)]
-        public new FortniteReplay ReadReplay(string fileName, ParseMode mode = ParseMode.Minimal)
+        [Arguments("Replays/season6.10.replay")]
+        [Arguments("Replays/season11.replay")]
+        [Arguments("Replays/season12.replay")]
+        public new FortniteReplay ReadReplay(string fileName)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var archive = new Unreal.Core.BinaryReader(stream);
-            return ReadReplay(archive, mode);
+            return ReadReplay(archive);
         }
     }
 }

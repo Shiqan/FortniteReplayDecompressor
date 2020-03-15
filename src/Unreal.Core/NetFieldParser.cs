@@ -34,7 +34,7 @@ namespace Unreal.Core
         {
             GuidCache = cache;
 
-            var types = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.Contains(assemblyNameFilter)).SelectMany(i => i.GetTypes());
+            var types = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.Contains(assemblyNameFilter) || a.FullName.Contains("Unreal.Core")).SelectMany(i => i.GetTypes());
             var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (var type in netFields)
@@ -103,7 +103,6 @@ namespace Unreal.Core
             }
 
             _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
-
         }
 
         private void AddNetFieldInfo(Type type, NetFieldGroupInfo info)
@@ -345,7 +344,7 @@ namespace Unreal.Core
             var arrayIndexes = netBitReader.ReadIntPacked();
 
             var elementType = fieldInfo.PropertyInfo.PropertyType.GetElementType();
-            var isPrimitveType = _primitiveTypeLayout.TryGetValue(elementType, out var replayout) || typeof(IProperty).IsAssignableFrom(elementType);
+            var isPrimitveType = _primitiveTypeLayout.TryGetValue(elementType, out var replayout);
 
             if (replayout == RepLayoutCmdType.Ignore)
             {

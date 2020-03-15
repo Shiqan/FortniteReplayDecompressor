@@ -1,4 +1,6 @@
-﻿using Unreal.Core;
+﻿using System;
+using System.IO;
+using Unreal.Core;
 using Unreal.Core.Contracts;
 
 namespace FortniteReplayReader.Models.NetFieldExports

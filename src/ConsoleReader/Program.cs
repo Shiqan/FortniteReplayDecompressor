@@ -38,8 +38,8 @@ namespace ConsoleReader
 
             var sw = new Stopwatch();
             sw.Start();
-            var reader = new ReplayReader(logger);
-            var replay = reader.ReadReplay(replayFile, Unreal.Core.Models.Enums.ParseMode.Debug);
+            var reader = new ReplayReader(logger, Unreal.Core.Models.Enums.ParseMode.Debug);
+            var replay = reader.ReadReplay(replayFile);
             sw.Stop();
 
             Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");

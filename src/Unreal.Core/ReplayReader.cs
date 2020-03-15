@@ -39,6 +39,9 @@ namespace Unreal.Core
         protected ParseMode _parseMode;
         protected bool IsDebugMode => _parseMode == ParseMode.Debug;
 
+        public NetGuidCache _netGuidCache;
+        public NetFieldParser _netFieldParser;
+
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
         private int packetIndex = 0;
@@ -63,9 +66,6 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        public NetGuidCache GuidCache;
-        public NetFieldParser netFieldParser;
-
         public int NullHandles { get; private set; }
         public int TotalErrors { get; private set; }
         public int TotalPropertiesRead { get; private set; }
@@ -76,23 +76,23 @@ namespace Unreal.Core
         public int TotalMappedGUIDs { get; private set; }
         public int FailedToRead { get; private set; }
 
-        public ReplayReader(ILogger logger)
+        public ReplayReader(ILogger logger, ParseMode mode)
         {
             _logger = logger;
+            _parseMode = mode;
+
+            _netGuidCache = new NetGuidCache();
+            _netFieldParser = new NetFieldParser(_netGuidCache, mode);
         }
 
-        public virtual T ReadReplay(FArchive archive, ParseMode mode)
+        public virtual T ReadReplay(FArchive archive)
         {
             Replay = new T();
-
-            _parseMode = mode;
-            GuidCache = new NetGuidCache();
-            netFieldParser = new NetFieldParser(GuidCache, mode);
 
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
-            GuidCache.Cleanup();
+            _netGuidCache.Cleanup();
 
             return Replay;
         }
@@ -178,15 +178,15 @@ namespace Unreal.Core
                     Flags = binaryArchive.ReadByte()
                 };
 
-                GuidCache.ObjectLookup[guid] = cacheObject;
+                _netGuidCache.ObjectLookup[guid] = cacheObject;
             }
 
             // SerializeNetFieldExportGroupMap 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
 
             // Clear all of our mappings, since we're starting over
-            GuidCache.NetFieldExportGroupMap.Clear();
-            GuidCache.NetFieldExportGroupIndexToGroup.Clear();
+            _netGuidCache.NetFieldExportGroupMap.Clear();
+            _netGuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
             var numNetFieldExportGroups = binaryArchive.ReadUInt32();
             for (var i = 0; i < numNetFieldExportGroups; i++)
@@ -194,7 +194,7 @@ namespace Unreal.Core
                 var group = ReadNetFieldExportGroupMap(binaryArchive);
 
                 // Add the export group to the map
-                GuidCache.AddToExportGroupMap(group.PathName, group);
+                _netGuidCache.AddToExportGroupMap(group.PathName, group);
             }
 
             // SerializeDemoFrameFromQueuedDemoPackets
@@ -611,7 +611,7 @@ namespace Unreal.Core
                     var pathName = archive.ReadFString();
                     var numExports = archive.ReadIntPacked();
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (!_netGuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
                     {
                         group = new NetFieldExportGroup
                         {
@@ -621,14 +621,14 @@ namespace Unreal.Core
                         };
 
                         group.NetFieldExports = new NetFieldExport[numExports];
-                        GuidCache.AddToExportGroupMap(pathName, group);
+                        _netGuidCache.AddToExportGroupMap(pathName, group);
                     }
                     //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
                     //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
                 }
                 else
                 {
-                    group = GuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
+                    group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
                 var netField = ReadNetFieldExport(archive);
@@ -745,7 +745,7 @@ namespace Unreal.Core
                     var pathName = bitArchive.ReadFString();
                     var numExports = bitArchive.ReadUInt32();
 
-                    if (!GuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                    if (!_netGuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
                     {
                         group = new NetFieldExportGroup
                         {
@@ -755,12 +755,12 @@ namespace Unreal.Core
                         };
 
                         group.NetFieldExports = new NetFieldExport[numExports];
-                        GuidCache.AddToExportGroupMap(pathName, group);
+                        _netGuidCache.AddToExportGroupMap(pathName, group);
                     }
                 }
                 else
                 {
-                    group = GuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
+                    group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
                 var netField = ReadNetFieldExport(bitArchive);
@@ -818,7 +818,7 @@ namespace Unreal.Core
 
                     if (isExportingNetGUIDBunch)
                     {
-                        GuidCache.NetGuidToPathName[netGuid.Value] = pathName.RemoveAllPathPrefixes();
+                        _netGuidCache.NetGuidToPathName[netGuid.Value] = pathName.RemoveAllPathPrefixes();
                     }
 
                     return netGuid;
@@ -1163,9 +1163,9 @@ namespace Unreal.Core
 
                 // OnActorChannelOpen
                 // see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338
-                if (GuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
+                if (_netGuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
                 {
-                    if (netFieldParser.PlayerControllerGroups.Contains(path))
+                    if (_netFieldParser.PlayerControllerGroups.Contains(path))
                     {
                         var netPlayerIndex = bunch.Archive.ReadByte();
                     }
@@ -1218,7 +1218,7 @@ namespace Unreal.Core
         /// <param name="archive"></param>
         public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint repObject, bool bHasRepLayout)
         {
-            var netFieldExportGroup = GuidCache.GetNetFieldExportGroup(repObject);
+            var netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
 
             //Mainly props. If needed, add them in
             if (netFieldExportGroup == null)
@@ -1246,7 +1246,7 @@ namespace Unreal.Core
                 return true;
             }
 
-            if (!GuidCache.TryGetClassNetCache(netFieldExportGroup?.PathName, out var classNetCache))
+            if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup?.PathName, out var classNetCache))
             {
                 _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
                 return false;
@@ -1274,17 +1274,17 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (!netFieldParser.WillReadClassNetCache(classNetCache.PathName))
+                if (!_netFieldParser.WillReadClassNetCache(classNetCache.PathName))
                 {
                     continue;
                 }
 
-                if (netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var classNetProperty))
+                if (_netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var classNetProperty))
                 {
                     if (classNetProperty.IsFunction)
                     {
                         // Handle function call
-                        var functionGroup = GuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                        var functionGroup = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
                         if (!ReceivedRPC(reader, functionGroup, bunch.ChIndex))
                         {
                             return false;
@@ -1303,8 +1303,8 @@ namespace Unreal.Core
                         }
                         else
                         {
-                            var group = GuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
-                            if (!netFieldParser.WillReadType(group.PathName))
+                            var group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                            if (!_netFieldParser.WillReadType(group.PathName))
                             {
                                 continue;
                             }
@@ -1345,7 +1345,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!Channels[channelIndex].IsIgnoringChannel(netFieldExportGroup.PathName) && netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
+            if (!Channels[channelIndex].IsIgnoringChannel(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
             {
                 _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
                 return false;
@@ -1364,7 +1364,7 @@ namespace Unreal.Core
         /// <returns></returns>
         public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldParser.ClassNetCachePropertyInfo fieldCache, uint channelIndex)
         {
-            var export = netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
+            var export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
             if (export != null)
             {
                 var cmdReader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft())) // TODO
@@ -1386,7 +1386,7 @@ namespace Unreal.Core
                     _logger?.LogWarning($"Custom Property {fieldCache.Name} didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {cmdReader.LastBit}");
                 }
 
-                (export as IResolvable)?.Resolve(GuidCache);
+                (export as IResolvable)?.Resolve(_netGuidCache);
 
                 OnExportRead(channelIndex, export as INetFieldExportGroup);
 
@@ -1511,7 +1511,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!netFieldParser.WillReadType(group.PathName))
+            if (!_netFieldParser.WillReadType(group.PathName))
             {
                 _logger?.LogInformation($"Not reading type {group.PathName}");
                 Channels[channelIndex].IgnoreChannel(group.PathName);
@@ -1534,7 +1534,7 @@ namespace Unreal.Core
             }
 
             _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
-            exportGroup = netFieldParser.CreateType(group?.PathName);
+            exportGroup = _netFieldParser.CreateType(group?.PathName);
             var hasdata = false;
 
             while (true)
@@ -1590,7 +1590,7 @@ namespace Unreal.Core
                         NetworkVersion = archive.NetworkVersion
                     };
 
-                    netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader);
+                    _netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader);
                     if (cmdReader.IsError)
                     {
                         PropertyError++;

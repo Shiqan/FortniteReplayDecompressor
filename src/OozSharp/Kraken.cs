@@ -22,10 +22,16 @@ using System;
 namespace OozSharp
 {
     /// <summary>
-    /// 
+    /// Oodle Kraken decompression
     /// </summary>
     public unsafe class Kraken
     {
+        /// <summary>
+        /// Decompression for the <paramref name="compressedInput"/>.
+        /// </summary>
+        /// <param name="compressedInput"></param>
+        /// <param name="uncompressedSize"></param>
+        /// <returns>Decompressed byte[]</returns>
         public byte[] Decompress(byte[] compressedInput, int uncompressedSize)
         {
             var decoder = new KrakenDecoder();
@@ -66,12 +72,12 @@ namespace OozSharp
             var sourceEnd = source + sourceBytesleft;
             if ((destinationOffset & 0x3FFFF) == 0)
             {
-                decoder.Header = ParseHeader(source);
+                decoder.Header = new KrakenHeader(source);
 
                 source += 2;
             }
 
-            //Only need Mermaid for Fortnite
+            // Only need Mermaid for Fortnite
             //"Oodle initializing compressor with Mermaid, level Normal, SpaceSpeed tradeoff 256"
             var isKrakenDecoder = decoder.Header.DecoderType == DecoderTypes.Mermaid;
             var destinationBytesLeft = Math.Min(isKrakenDecoder ? 0x40000 : 0x4000, remainingDestinationBytes);
@@ -97,8 +103,7 @@ namespace OozSharp
 
             if (isKrakenDecoder)
             {
-                quantumHeader = ParseQuantumHeader(source, decoder.Header.UseChecksums, out var bytesRead);
-
+                quantumHeader = new KrakenQuantumHeader(source, decoder.Header.UseChecksums, out var bytesRead);
                 source += bytesRead;
             }
             else
@@ -193,74 +198,6 @@ namespace OozSharp
         private uint GetCrc(byte* source, uint compressedSize)
         {
             throw new NotImplementedException();
-        }
-
-        private KrackenHeader ParseHeader(byte* source)
-        {
-            var header = new KrackenHeader();
-            var firstByte = source[0];
-            var secondByte = source[1];
-
-            if ((firstByte & 0xF) == 0xC)
-            {
-                if (((firstByte >> 4) & 3) != 0)
-                {
-                    throw new DecoderException($"Failed to decode header. ((source[0] >> 4) & 3) != 0");
-                }
-
-                header.RestartDecoder = ((firstByte >> 7) & 0x1) == 0x01;
-                header.Uncompressed = ((firstByte >> 6) & 0x1) == 0x01;
-
-                header.DecoderType = (DecoderTypes)(secondByte & 0x7F);
-                header.UseChecksums = ((secondByte >> 7) & 0x1) == 0x01;
-
-                return header;
-            }
-
-            throw new DecoderException($"Failed to decode header. (source[0] & 0xF) != 0xC");
-        }
-
-        private KrakenQuantumHeader ParseQuantumHeader(byte* source, bool useChecksums, out int bytesRead)
-        {
-            var quantumHeader = new KrakenQuantumHeader();
-
-            var v = (uint)((source[0] << 16) | (source[1] << 8) | source[2]);
-            var size = v & 0x3FFFF;
-
-            if (size != 0x3FFFF)
-            {
-                quantumHeader.CompressedSize = size + 1;
-                quantumHeader.Flag1 = (byte)((v >> 18) & 1);
-                quantumHeader.Flag2 = (byte)((v >> 19) & 1);
-
-                if (useChecksums)
-                {
-                    quantumHeader.Checksum = (uint)((source[3] << 16) | (source[4] << 8) | source[5]);
-
-                    bytesRead = 6;
-                }
-                else
-                {
-                    bytesRead = 3;
-                }
-
-                return quantumHeader;
-            }
-
-            v >>= 18;
-
-            if (v == 1)
-            {
-                quantumHeader.Checksum = source[3];
-                quantumHeader.CompressedSize = 0;
-                quantumHeader.WholeMatchDistance = 0;
-
-                bytesRead = 4;
-
-                return quantumHeader;
-            }
-
-            throw new DecoderException($"Failed to parse KrakenQuantumHeader");
         }
 
         private int DecodeBytes(byte** output, byte* source, byte* sourceEnd, int* decodedSize, uint outputSize, bool forceMemmove, byte* scratch, byte* scratchEnd)

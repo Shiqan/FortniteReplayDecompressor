@@ -23,28 +23,22 @@ namespace FortniteReplayReader
     {
         private FortniteReplayBuilder Builder;
 
-        public ReplayReader(ILogger logger = null) : base(logger)
+        public ReplayReader(ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(logger, parseMode)
         {
         }
 
-        public FortniteReplay ReadReplay(string fileName, ParseMode mode = ParseMode.Minimal)
+        public FortniteReplay ReadReplay(string fileName)
         {
             using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var archive = new Unreal.Core.BinaryReader(stream);
-
-            Builder = new FortniteReplayBuilder();
-            ReadReplay(archive, mode);
-
-            Builder.UpdateTeamData();
-            return Replay;
+            return ReadReplay(stream);
         }
 
-        public FortniteReplay ReadReplay(Stream stream, ParseMode mode = ParseMode.Minimal)
+        public FortniteReplay ReadReplay(Stream stream)
         {
             using var archive = new Unreal.Core.BinaryReader(stream);
 
             Builder = new FortniteReplayBuilder();
-            ReadReplay(archive, mode);
+            ReadReplay(archive);
 
             Builder.UpdateTeamData();
             return Replay;

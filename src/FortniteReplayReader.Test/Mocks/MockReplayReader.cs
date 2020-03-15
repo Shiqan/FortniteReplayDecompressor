@@ -1,5 +1,4 @@
 ﻿using FortniteReplayReader.Models;
-using Microsoft.Extensions.Logging;
 using Unreal.Core;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -8,9 +7,9 @@ namespace FortniteReplayReader.Test.Mocks
 {
     public class MockReplayReader : ReplayReader
     {
-        public MockReplayReader(ILogger logger = null) : base(logger)
+        public MockReplayReader() : base()
         {
-            GuidCache = new NetGuidCache();
+            _netGuidCache = new NetGuidCache();
         }
 
         public void SetMode(ParseMode mode)

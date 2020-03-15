@@ -1,15 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Test.Mocks
 {
     public class MockReplayReader : ReplayReader<MockReplay>
     {
-        public MockReplayReader(ILogger logger = null) : base(logger)
+        public MockReplayReader(ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(logger, parseMode)
         {
             Replay = new MockReplay();
-            GuidCache = new NetGuidCache();
+            _netGuidCache = new NetGuidCache();
         }
 
         public void SetReplay(MockReplay replay)

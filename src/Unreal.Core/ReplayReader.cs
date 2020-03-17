@@ -66,16 +66,6 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        public int NullHandles { get; private set; }
-        public int TotalErrors { get; private set; }
-        public int TotalPropertiesRead { get; private set; }
-        public int TotalGroupsRead { get; private set; }
-        public int TotalFailedBunches { get; private set; }
-        public int TotalFailedReplicatorReceives { get; private set; }
-        public int PropertyError { get; private set; }
-        public int TotalMappedGUIDs { get; private set; }
-        public int FailedToRead { get; private set; }
-
         public ReplayReader(ILogger logger, ParseMode mode)
         {
             _logger = logger;
@@ -1191,8 +1181,6 @@ namespace Unreal.Core
 
                 if (bunch.Archive.IsError)
                 {
-                    TotalFailedBunches++;
-
                     _logger?.LogWarning($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. bunch: {bunchIndex}");
                     break;
                 }
@@ -1205,7 +1193,6 @@ namespace Unreal.Core
 
                 if (!ReceivedReplicatorBunch(bunch, reader, repObject, bHasRepLayout))
                 {
-                    TotalFailedReplicatorReceives++;
                     _logger?.LogInformation("UActorChannel::ProcessBunch: Replicator.ReceivedBunch returned false");
                     continue;
                 }
@@ -1376,13 +1363,11 @@ namespace Unreal.Core
 
                 if (cmdReader.IsError)
                 {
-                    PropertyError++;
                     _logger?.LogWarning($"Custom Property {fieldCache.Name} caused error when reading (bits: {cmdReader.LastBit})");
                 }
 
                 if (!cmdReader.AtEnd())
                 {
-                    FailedToRead++;
                     _logger?.LogWarning($"Custom Property {fieldCache.Name} didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {cmdReader.LastBit}");
                 }
 
@@ -1502,7 +1487,6 @@ namespace Unreal.Core
         /// <param name="archive"></param>
         public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, out INetFieldExportGroup exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
         {
-            TotalGroupsRead++;
             exportGroup = default;
 
             if (Channels[channelIndex].IsIgnoringChannel(group.PathName))
@@ -1566,8 +1550,6 @@ namespace Unreal.Core
 
                 if (export == null)
                 {
-                    NullHandles++;
-
                     _logger?.LogWarning($"Couldnt find handle {handle} for group {group.PathName}, numbits is {numBits}");
                     archive.SkipBits(numBits);
                     continue;
@@ -1593,7 +1575,6 @@ namespace Unreal.Core
                     _netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader);
                     if (cmdReader.IsError)
                     {
-                        PropertyError++;
                         _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
@@ -1605,7 +1586,6 @@ namespace Unreal.Core
 
                     if (!cmdReader.AtEnd())
                     {
-                        FailedToRead++;
                         _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
@@ -1618,10 +1598,6 @@ namespace Unreal.Core
                 catch (Exception ex)
                 {
                     _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
-                }
-                finally
-                {
-                    TotalPropertiesRead++;
                 }
             }
 

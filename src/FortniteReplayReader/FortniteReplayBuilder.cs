@@ -2,7 +2,6 @@
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.RPC;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
-using FortniteReplayReader.Models.TelemetryEvents;
 using System.Collections.Generic;
 using System.Linq;
 using Unreal.Core.Contracts;
@@ -21,7 +20,6 @@ namespace FortniteReplayReader
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
         private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
 
-        private IList<ITelemetryEvent> _events = new List<ITelemetryEvent>();
         private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
         private Dictionary<int?, TeamData> _teams = new Dictionary<int?, TeamData>();
@@ -43,6 +41,17 @@ namespace FortniteReplayReader
         {
             _actorToChannel.Remove(guid);
             _pawnChannelToStateChannel.Remove(channelIndex);
+        }
+
+        public FortniteReplay Build(FortniteReplay replay)
+        {
+            UpdateTeamData();
+            replay.GameData = GameData;
+            replay.MapData = MapData;
+            replay.KillFeed = KillFeed;
+            replay.TeamData = _teams.Values;
+            replay.PlayerData = _players.Values;
+            return replay;
         }
 
         private bool TryGetPlayerDataFromActor(uint guid, out PlayerData playerData)
@@ -97,19 +106,6 @@ namespace FortniteReplayReader
             GameData.WinningTeam ??= state.WinningTeam;
         }
 
-        public void CreateGameStateEvent(GameState state)
-        {
-            var e = new GameStateEvent();
-            e.ReplicatedWorldTimeSeconds ??= ReplicatedWorldTimeSeconds;
-            e.TeamsLeft ??= state.TeamsLeft;
-            e.SafeZonePhase ??= state.SafeZonePhase;
-            e.PlayerBotsLeft ??= state.PlayerBotsLeft;
-            e.PlayersLeft ??= state.PlayersLeft;
-            e.GamePhase ??= state.GamePhase;
-            e.GameplayState ??= state.GameplayState;
-            _events.Add(e);
-        }
-
         public void UpdatePlaylistInfo(PlaylistInfo playlist)
         {
             GameData.CurrentPlaylist ??= playlist.Name;
@@ -146,50 +142,6 @@ namespace FortniteReplayReader
                     teamData.PartyOwnerId = playerData.Id;
                 }
             }
-        }
-
-        public void UpdateBatchedDamge(uint channelIndex, BatchedDamageCues damage)
-        {
-            if (!TryGetPlayerDataFromPawn(channelIndex, out var playerData))
-            {
-                return;
-            }
-
-            var e = new DamageEvent
-            {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                ShotPlayerId = playerData.Id,
-                Location = damage.Location,
-                Damage = damage.Magnitude,
-                Normal = damage.Normal,
-                IsCritical = damage.bIsCritical,
-                CriticalHitNonPlayer = damage.NonPlayerbIsCritical,
-                IsFatal = damage.bIsFatal,
-                FatalHitNonPlayer = damage.NonPlayerbIsFatal,
-                WeaponActivate = damage.bWeaponActivate,
-                IsBallistic = damage.bIsBallistic,
-                IsShield = damage.bIsShield,
-                IsShieldDestroyed = damage.bIsShieldDestroyed,
-            };
-
-            if (damage.HitActor < 0)
-            {
-                return;
-            }
-
-            if (!_actorToChannel.TryGetValue(damage.HitActor.GetValueOrDefault(), out var hitActorStateChannel))
-            {
-                return;
-            }
-
-            if (!_players.TryGetValue(hitActorStateChannel, out var hitPlayerData))
-            {
-                // hitting non players not interesting?
-                return;
-            }
-            e.HitPlayerId = hitPlayerData.Id;
-
-            _events.Add(e);
         }
 
         public void UpdatePlayerState(uint channelIndex, FortPlayerState state)
@@ -319,124 +271,6 @@ namespace FortniteReplayReader
             playerState.Cosmetics.ItemWraps ??= pawn.ItemWraps?.Select(i => i.Name);
         }
 
-        public void CreatePawnEvent(uint channelIndex, PlayerPawn pawn)
-        {
-            var e = new PlayerMovementEvent()
-            {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-            };
-            e.ReplicatedMovement ??= pawn.ReplicatedMovement;
-            e.bCanBeDamaged ??= pawn.bCanBeDamaged;
-            e.LocationOffset ??= pawn.LocationOffset;
-            e.RelativeScale3D ??= pawn.RelativeScale3D;
-            e.RotationOffset ??= pawn.RotationOffset;
-            e.RemoteViewPitch ??= pawn.RemoteViewPitch;
-            e.Location ??= pawn.Location;
-            e.Rotation ??= pawn.Rotation;
-            e.ReplayLastTransformUpdateTimeStamp ??= pawn.ReplayLastTransformUpdateTimeStamp;
-            e.ReplicatedMovementMode ??= pawn.ReplicatedMovementMode;
-            e.bIsCrouched ??= pawn.bIsCrouched;
-            e.Position ??= pawn.Position;
-            e.LinearVelocity ??= pawn.LinearVelocity;
-            e.CurrentMovementStyle ??= pawn.CurrentMovementStyle;
-            e.bIsDying ??= pawn.bIsDying;
-            e.CurrentWeapon ??= pawn.CurrentWeapon;
-            e.bIsInvulnerable ??= pawn.bIsInvulnerable;
-            e.bMovingEmote ??= pawn.bMovingEmote;
-            e.bWeaponActivated ??= pawn.bWeaponActivated;
-            e.bIsDBNO ??= pawn.bIsDBNO;
-            e.bWasDBNOOnDeath ??= pawn.bWasDBNOOnDeath;
-            e.bWeaponHolstered ??= pawn.bWeaponHolstered;
-            e.LastReplicatedEmoteExecuted ??= pawn.LastReplicatedEmoteExecuted;
-            e.ForwardAlpha ??= pawn.ForwardAlpha;
-            e.RightAlpha ??= pawn.RightAlpha;
-            e.TurnDelta ??= pawn.TurnDelta;
-            e.SteerAlpha ??= pawn.SteerAlpha;
-            e.GravityScale ??= pawn.GravityScale;
-            e.WorldLookDir ??= pawn.WorldLookDir;
-            e.bIsHonking ??= pawn.bIsHonking;
-            e.bIsJumping ??= pawn.bIsJumping;
-            e.bIsSprinting ??= pawn.bIsSprinting;
-            e.Vehicle ??= pawn.Vehicle;
-            e.VehicleApexZ ??= pawn.VehicleApexZ;
-            e.SeatIndex ??= pawn.SeatIndex;
-            e.bIsWaterJump ??= pawn.bIsWaterJump;
-            e.bIsWaterSprintBoost ??= pawn.bIsWaterSprintBoost;
-            e.bIsWaterSprintBoostPending ??= pawn.bIsWaterSprintBoostPending;
-            e.BuildingState ??= pawn.BuildingState;
-            e.bIsTargeting ??= pawn.bIsTargeting;
-            e.bIsPlayingEmote ??= pawn.bIsPlayingEmote;
-            e.bStartedInteractSearch ??= pawn.bStartedInteractSearch;
-            e.AccelerationPack ??= pawn.AccelerationPack;
-            e.AccelerationZPack ??= pawn.AccelerationZPack;
-            e.bIsWaitingForEmoteInteraction ??= pawn.bIsWaitingForEmoteInteraction;
-            e.GroupEmoteLookTarget ??= pawn.GroupEmoteLookTarget;
-            e.bIsSkydiving ??= pawn.bIsSkydiving;
-            e.bIsParachuteOpen ??= pawn.bIsParachuteOpen;
-            e.bIsSkydivingFromBus ??= pawn.bIsSkydivingFromBus;
-            e.bIsInAnyStorm ??= pawn.bIsInAnyStorm;
-            e.bIsSlopeSliding ??= pawn.bIsSlopeSliding;
-            e.bIsInsideSafeZone ??= pawn.bIsInsideSafeZone;
-            e.bIsOutsideSafeZone ??= pawn.bIsOutsideSafeZone;
-            e.Zipline ??= pawn.Zipline;
-            e.bIsZiplining ??= pawn.bIsZiplining;
-            e.bJumped ??= pawn.bJumped;
-            e.RemoteViewData32 ??= pawn.RemoteViewData32;
-            e.EntryTime ??= pawn.EntryTime;
-            e.WalkSpeed ??= pawn.WalkSpeed;
-            e.RunSpeed ??= pawn.RunSpeed;
-            e.CrouchedRunSpeed ??= pawn.CrouchedRunSpeed;
-            e.CrouchedSprintSpeed ??= pawn.CrouchedSprintSpeed;
-            e.WeaponActivated ??= pawn.WeaponActivated;
-            e.bIsInWaterVolume ??= pawn.bIsInWaterVolume;
-            e.DBNOHoister ??= pawn.DBNOHoister;
-            e.GravityFloorAltitude ??= pawn.GravityFloorAltitude;
-            e.GravityFloorWidth ??= pawn.GravityFloorWidth;
-            e.GravityFloorGravityScalar ??= pawn.GravityFloorGravityScalar;
-            e.FlySpeed ??= pawn.FlySpeed;
-            e.bIsSkydivingFromLaunchPad ??= pawn.bIsSkydivingFromLaunchPad;
-            e.bInGliderRedeploy ??= pawn.bInGliderRedeploy;
-            _events.Add(e);
-        }
-
-        public void CreatePickupEvent(uint channelIndex, FortPickup pickup)
-        {
-            if (ReplicatedWorldTimeSeconds <= 0)
-            {
-                return;
-            }
-
-            if (pickup.TossState != null)
-            {
-                var e = new LootEvent
-                {
-                    ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                    Count = pickup.Count,
-                    ItemDefinition = pickup.ItemDefinition?.Name,
-                    Durability = pickup.Durability,
-                    LoadedAmmo = pickup.LoadedAmmo,
-                    A = pickup.A,
-                    B = pickup.B,
-                    C = pickup.C,
-                    D = pickup.D,
-                    CombineTarget = pickup.CombineTarget?.Name,
-                    PickupTarget = pickup.PickupTarget,
-                    ItemOwner = pickup.ItemOwner,
-                    LootInitialPosition = pickup.LootInitialPosition,
-                    LootFinalPosition = pickup.LootFinalPosition,
-                    FlyTime = pickup.FlyTime,
-                    StartDirection = pickup.StartDirection,
-                    FinalTossRestLocation = pickup.FinalTossRestLocation,
-                    TossState = pickup.TossState,
-                    OptionalOwnerID = pickup.OptionalOwnerID,
-                    IsPickedUp = pickup.bPickedUp,
-                    DroppedBy = pickup.PawnWhoDroppedPickup,
-                    OrderIndex = pickup.OrderIndex,
-                };
-                _events.Add(e);
-            }
-        }
-
         public void UpdateInventory(uint channelIndex, FortInventory fortInventory)
         {
             if (!_inventories.TryGetValue(channelIndex, out var inventory))
@@ -552,20 +386,6 @@ namespace FortniteReplayReader
             }
         }
 
-        public void CreateLlamaEvent(uint channelIndex, SupplyDropLlama supplyDropLlama)
-        {
-            var e = new LlamaEvent()
-            {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                Id = channelIndex,
-                Looted = supplyDropLlama.Looted,
-                FinalDestination = supplyDropLlama.FinalDestination,
-                ReplicatedMovement = supplyDropLlama.ReplicatedMovement,
-                HasSpawnedPickups = supplyDropLlama.bHasSpawnedPickups,
-            };
-            _events.Add(e);
-        }
-
         public void UpdateSupplyDrop(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
         {
             if (!_drops.TryGetValue(channelIndex, out var drop))
@@ -599,23 +419,6 @@ namespace FortniteReplayReader
             }
         }
 
-        public void CreateSupplyDropEvent(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
-        {
-            var e = new SupplyDropEvent()
-            {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                Id = channelIndex,
-                ReplicatedMovement = supplyDrop.ReplicatedMovement,
-                BalloonPopped = supplyDrop.BalloonPopped,
-                HasSpawnedPickups = supplyDrop.bHasSpawnedPickups,
-                LandingLocation = supplyDrop.LandingLocation,
-                Opened = supplyDrop.Opened,
-                FallHeight = supplyDrop.FallHeight,
-                FallSpeed = supplyDrop.FallSpeed,
-            };
-            _events.Add(e);
-        }
-
         public void UpdateRebootVan(uint channelIndex, SpawnMachineRepData spawnMachine)
         {
             if (!_rebootVans.TryGetValue(spawnMachine.SpawnMachineRepDataHandle, out var rebootVan))
@@ -624,41 +427,6 @@ namespace FortniteReplayReader
                 MapData.RebootVans.Add(rebootVan);
                 _rebootVans.Add(spawnMachine.SpawnMachineRepDataHandle, rebootVan);
                 return;
-            }
-        }
-
-        public void CreateRebootVanEvent(uint channelIndex, SpawnMachineRepData spawnMachine)
-        {
-            var e = new RebootVanEvent()
-            {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                Id = spawnMachine.SpawnMachineRepDataHandle,
-                Location = spawnMachine.Location,
-                CooldownEndTime = spawnMachine.SpawnMachineCooldownEndTime,
-                CooldownStartTime = spawnMachine.SpawnMachineCooldownStartTime,
-                State = spawnMachine.SpawnMachineState
-            };
-            _events.Add(e);
-        }
-
-        public void CreateHealthEvent(uint channelIndex, HealthSet health)
-        {
-            if (_players.TryGetValue(channelIndex, out var playerData))
-            {
-                var e = new HealthEvent()
-                {
-                    ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
-                    PlayerId = playerData.Id,
-                    HealthBaseValue = health.HealthBaseValue,
-                    HealthCurrentValue = health.HealthCurrentValue,
-                    HealthMaxValue = health.HealthMaxValue,
-                    HealthUnclampedBaseValue = health.HealthUnclampedBaseValue,
-                    HealthUnclampedCurrentValue = health.HealthUnclampedCurrentValue,
-                    ShieldBaseValue = health.ShieldBaseValue,
-                    ShieldCurrentValue = health.ShieldCurrentValue,
-                    ShieldMaxValue = health.ShieldMaxValue
-                };
-                _events.Add(e);
             }
         }
 

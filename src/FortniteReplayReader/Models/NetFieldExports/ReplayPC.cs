@@ -5,7 +5,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportGroup("/Game/Spectating/BP_ReplayPC_Athena.BP_ReplayPC_Athena_C", minimalParseMode: ParseMode.Debug)]
+    [NetFieldExportGroup("/Game/Spectating/BP_ReplayPC_Athena.BP_ReplayPC_Athena_C", minimalParseMode: ParseMode.Minimal)]
     [PlayerController("BP_ReplayPC_Athena_C")]
     public class ReplayPC : INetFieldExportGroup
     {

@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
-    [NetFieldExportSubGroup("/Script/FortniteGame.FortPickupAthena")]
+    [NetFieldExportSubGroup("/Script/FortniteGame.FortPickupAthena", minimalParseMode: ParseMode.Ignore)]
     public class FortItemEntryStateValue
     {
         [NetFieldExport("StateType", RepLayoutCmdType.Enum)]

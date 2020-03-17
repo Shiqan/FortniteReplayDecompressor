@@ -24,8 +24,8 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
     public class WoodDoorSideWall : BaseBuild
     {
         [NetFieldExport("bDoorOpen", RepLayoutCmdType.PropertyBool)]
-        public bool? bDoorOpen { get; set; }        
-        
+        public bool? bDoorOpen { get; set; }
+
         [NetFieldExport("DoorDesiredRotOffset", RepLayoutCmdType.PropertyRotator)]
         public FRotator DoorDesiredRotOffset { get; set; }
     }

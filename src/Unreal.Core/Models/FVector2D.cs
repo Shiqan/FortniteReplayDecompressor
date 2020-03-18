@@ -20,5 +20,21 @@
         {
             return $"X: {X}, Y: {Y}";
         }
+
+        public static bool operator ==(FVector2D v1, FVector2D v2)
+        {
+            return v1?.X == v2?.X && v1?.Y == v2?.Y;
+        }
+
+        public static bool operator !=(FVector2D v1, FVector2D v2)
+        {
+            return v1?.X != v2?.X || v1?.Y != v2?.Y;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as FVector2D;
+            return X == other?.X && Y == other?.Y;
+        }
     }
 }

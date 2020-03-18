@@ -19,8 +19,8 @@ namespace FortniteReplayReader.Models
 
         public uint Id { get; set; }
         public bool HasSpawnedPickups { get; set; }
-        public bool Opened { get; set; }
-        public float? OpenedTime { get; set; }
+        public bool Looted { get; set; }
+        public float? LootedTime { get; set; }
         public bool BalloonPopped { get; set; }
         public float? BalloonPoppedTime { get; set; }
         public float FallSpeed { get; set; }

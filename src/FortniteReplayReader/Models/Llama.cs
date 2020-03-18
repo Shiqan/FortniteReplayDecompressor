@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Models
         {
             Id = channelIndex;
             Looted = drop.Looted;
-            FinalDestination = drop.FinalDestination;
+            LandingLocation = drop.FinalDestination;
             Location = drop.ReplicatedMovement?.Location;
             HasSpawnedPickups = drop.bHasSpawnedPickups;
         }
@@ -24,6 +24,6 @@ namespace FortniteReplayReader.Models
         public bool HasSpawnedPickups { get; set; }
         public bool Looted { get; set; }
         public float? LootedTime { get; set; }
-        public FVector FinalDestination { get; set; }
+        public FVector LandingLocation { get; set; }
     }
 }

@@ -398,8 +398,8 @@ namespace FortniteReplayReader
 
             if (supplyDrop.Opened)
             {
-                drop.Opened = true;
-                drop.OpenedTime = ReplicatedWorldTimeSeconds;
+                drop.Looted = true;
+                drop.LootedTime = ReplicatedWorldTimeSeconds;
             }
 
             if (supplyDrop.BalloonPopped)

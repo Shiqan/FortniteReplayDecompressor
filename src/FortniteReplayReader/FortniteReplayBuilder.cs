@@ -1,10 +1,8 @@
 ﻿using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
-using FortniteReplayReader.Models.NetFieldExports.RPC;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using System.Collections.Generic;
 using System.Linq;
-using Unreal.Core.Contracts;
 
 namespace FortniteReplayReader
 {
@@ -66,7 +64,7 @@ namespace FortniteReplayReader
             playerData = null;
             return false;
         }
-        
+
         private bool TryGetPlayerDataFromPawn(uint pawn, out PlayerData playerData)
         {
             if (_pawnChannelToStateChannel.TryGetValue(pawn, out var stateChannel))
@@ -120,7 +118,10 @@ namespace FortniteReplayReader
         {
             foreach (var playerData in _players.Values)
             {
-                if (playerData?.TeamIndex == null) return;
+                if (playerData?.TeamIndex == null)
+                {
+                    return;
+                }
 
                 if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
                 {

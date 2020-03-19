@@ -162,7 +162,7 @@ namespace FortniteReplayReader.Test
             {
                 GridCountX = 1,
                 GridCountY = 2,
-                WorldGridStart = new FVector2D(1,2),
+                WorldGridStart = new FVector2D(1, 2),
                 WorldGridEnd = new FVector2D(3, 4),
                 WorldGridSpacing = new FVector2D(4, 5),
                 WorldGridTotalSize = new FVector2D(6, 7)
@@ -176,6 +176,233 @@ namespace FortniteReplayReader.Test
             Assert.Equal(manager.WorldGridEnd, replay.MapData.WorldGridEnd);
             Assert.Equal(manager.WorldGridSpacing, replay.MapData.WorldGridSpacing);
             Assert.Equal(manager.WorldGridTotalSize, replay.MapData.WorldGridTotalSize);
+        }
+
+        [Fact]
+        public void PlayerStateTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+            Assert.Equal(1, replay.PlayerData.First().Id);
+            Assert.Equal("abc-123", replay.PlayerData.First().PlayerId);
+            Assert.Equal("bandolier", replay.PlayerData.First().Cosmetics.HeroType);
+        }
+
+        [Fact]
+        public void PlayerStateMarksReplayOwnerTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+            Assert.Equal(1, replay.PlayerData.First().Id);
+            Assert.Equal("abc-123", replay.PlayerData.First().PlayerId);
+            Assert.Equal("bandolier", replay.PlayerData.First().Cosmetics.HeroType);
+
+            state = new FortPlayerState()
+            {
+                Ping = 1,
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+
+            Assert.Contains(replay.PlayerData, i => i.IsReplayOwner);
+        }
+
+        [Fact]
+        public void PlayerStateHandlesBotsTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "",
+                BotUniqueId = "NotABot",
+                bIsABot = true,
+                TeamIndex = 2,
+                HeroType = new ItemDefinition() { Name = "default" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+            Assert.Equal(1, replay.PlayerData.First().Id);
+            Assert.Equal("NotABot", replay.PlayerData.First().PlayerId);
+            Assert.Equal("default", replay.PlayerData.First().Cosmetics.HeroType);
+        }
+
+        [Fact]
+        public void PlayerStateSkipsSpectatorsTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                bOnlySpectator = true
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+            Assert.Empty(replay.PlayerData);
+        }
+
+        [Fact]
+        public void PlayerStateUpdateKillFeedTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+
+            state = new FortPlayerState()
+            {
+                DeathCause = 1
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+            Assert.NotEmpty(replay.KillFeed);
+            Assert.Equal(1, replay.KillFeed.First().PlayerId);
+        }
+
+        [Fact]
+        public void PlayerPawnTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.AddActorChannel(1, 100);
+
+            var pawn = new PlayerPawn()
+            {
+                PlayerState = 100,
+                Pickaxe = new ItemDefinition() { Name = "raiders revenge" }
+            };
+            builder.UpdatePlayerPawn(2, pawn);
+            builder.Build(replay);
+
+            Assert.Equal("raiders revenge", replay.PlayerData.First().Cosmetics.Pickaxe);
+        }
+
+        [Fact]
+        public void PlayerPawnDontAddWhenMissingPlayerStateTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.AddActorChannel(1, 100);
+
+            var pawn = new PlayerPawn()
+            {
+                Pickaxe = new ItemDefinition() { Name = "raiders revenge" }
+            };
+            builder.UpdatePlayerPawn(2, pawn);
+            builder.Build(replay);
+
+            Assert.Null(replay.PlayerData.First().Cosmetics.Pickaxe);
+        }
+
+        [Fact]
+        public void PlayerPawnDontAddWhenMissingChannelTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+
+            var pawn = new PlayerPawn()
+            {
+                PlayerState = 100,
+                Pickaxe = new ItemDefinition() { Name = "raiders revenge" }
+            };
+            builder.UpdatePlayerPawn(2, pawn);
+            builder.Build(replay);
+
+            Assert.Null(replay.PlayerData.First().Cosmetics.Pickaxe);
+        }
+
+        [Fact]
+        public void TeamDataTest()
+        {
+            void CreatePlayer(uint channel, int id, int team)
+            {
+                builder.UpdatePlayerState(channel, new FortPlayerState()
+                {
+                    PlayerID = id,
+                    UniqueId = $"player{id}",
+                    BotUniqueId = "",
+                    bIsABot = false,
+                    TeamIndex = team
+                });
+            }
+
+            CreatePlayer(1, 1, 1);
+            CreatePlayer(2, 2, 1);
+            CreatePlayer(3, 3, 2);
+            CreatePlayer(4, 4, 2);
+            CreatePlayer(5, 5, 3);
+
+            builder.UpdatePlayerState(6, new FortPlayerState()
+            {
+                PlayerID = 6,
+                UniqueId = $"player{6}",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 3,
+                PartyOwnerUniqueId = "player6"
+            });
+
+            builder.UpdatePlayerState(1, new FortPlayerState()
+            {
+                Place = 1
+            });
+
+            builder.Build(replay);
+
+            Assert.Equal(3, replay.TeamData.Count());
+            Assert.Equal(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds.Count());
+            Assert.Contains(1, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
+            Assert.Contains(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
+            Assert.Contains(5, replay.TeamData.First(i => i.TeamIndex == 3).PlayerIds);
+            Assert.Equal(6, replay.TeamData.First(i => i.TeamIndex == 3).PartyOwnerId);
+            Assert.Equal(1, replay.TeamData.First(i => i.TeamIndex == 1).Placement);
         }
     }
 }

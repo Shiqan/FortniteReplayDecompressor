@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Test
         [Theory]
         [InlineData(new byte[] { 0x5F, 0xA2, 0x00, 0x00, 0x00, 0x00, 0x00 }, 49,
             NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
-            EngineNetworkVersionHistory.HISTORY_ENGINENETVERSION_LATEST, // TODO upload to proper version once it is known (15)...
+            EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME,
             2635u)] // replay 11.31
         [InlineData(new byte[] { 0xDF, 0x3B, 0x00, 0x00, 0x00, 0x00, 0x00 }, 49,
             NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,

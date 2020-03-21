@@ -1,14 +1,13 @@
 ﻿using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.Enums;
 using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
-using FortniteReplayReader.Models.NetFieldExports.RPC;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unreal.Core;
@@ -134,9 +133,9 @@ namespace FortniteReplayReader
                 case FortPoiManager poimanager:
                     Builder.UpdatePoiManager(poimanager);
                     break;
-                    //case GameplayCue gameplayCue:
-                    //    Builder.UpdateGameplayCue(channelIndex, gameplayCue);
-                    //    break;
+                //case GameplayCue gameplayCue:
+                //    Builder.UpdateGameplayCue(channelIndex, gameplayCue);
+                //    break;
                 case BaseWeapon weapon:
                     Builder.UpdateWeapon(channelIndex, weapon);
                     break;
@@ -290,18 +289,16 @@ namespace FortniteReplayReader
 
         public virtual string ParsePlayer(FArchive archive)
         {
-            // TODO player type enum
-            var botIndicator = archive.ReadByte();
-            if (botIndicator == 0x03)
+            var botIndicator = archive.ReadByteAsEnum<PlayerTypes>();
+            if (botIndicator == PlayerTypes.BOT)
             {
                 return "Bot";
             }
-            else if (botIndicator == 0x10)
+            else if (botIndicator == PlayerTypes.NAMED_BOT)
             {
                 return archive.ReadFString();
             }
 
-            // 0x11
             var size = archive.ReadByte();
             return archive.ReadGUID(size);
         }

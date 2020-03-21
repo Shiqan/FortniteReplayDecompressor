@@ -355,9 +355,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ItemDefinition[] TrackedCosmetics { get; set; }
 
         [NetFieldExport("VariantUsageByCosmetic", RepLayoutCmdType.DynamicArray)]
-        public int[] VariantUsageByCosmetic { get; set; }
+        public ItemDefinition[] VariantUsageByCosmetic { get; set; }
 
         [NetFieldExport("PrioritizedCosmeticIndices", RepLayoutCmdType.DynamicArray)]
-        public int[] PrioritizedCosmeticIndices { get; set; }
+        public ItemDefinition[] PrioritizedCosmeticIndices { get; set; }
     }
 }

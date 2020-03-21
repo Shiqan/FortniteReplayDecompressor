@@ -42,7 +42,7 @@ namespace Unreal.Core.Test
         }
 
         [Fact]
-        public void ReadReplayInfoThrows1Test()
+        public void ReadReplayInfoThrowsOnWrongMagicTest()
         {
             byte[] rawData = {
                 0x7F, 0xE2, 0xA2, 0x10, 0x06, 0x00, 0x00, 0x00, 0x62, 0xD6, 0x01, 0x00
@@ -56,7 +56,7 @@ namespace Unreal.Core.Test
         }
 
         [Fact]
-        public void ReadReplayInfoThrows2Test()
+        public void ReadReplayInfoThrowsOnLiveAndNotCompletedTest()
         {
             byte[] rawData = {
                 0x7F, 0xE2, 0xA2, 0x1C, 0x06, 0x00, 0x00, 0x00, 0x62, 0xD6, 0x01, 0x00,
@@ -77,7 +77,7 @@ namespace Unreal.Core.Test
         }
 
         [Fact]
-        public void ReadReplayInfoThrows3Test()
+        public void ReadReplayInfoThrowsOnCompletedButNoKeyTest()
         {
             byte[] rawData = {
                 0x7F, 0xE2, 0xA2, 0x1C, 0x06, 0x00, 0x00, 0x00, 0x62, 0xD6, 0x01, 0x00,

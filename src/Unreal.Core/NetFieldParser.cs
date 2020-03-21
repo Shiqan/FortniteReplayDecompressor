@@ -304,11 +304,10 @@ namespace Unreal.Core
                     break;
                 // TODO Auto generation fix to handle 1-8 bits
                 case RepLayoutCmdType.PropertyByte:
-                    data = (byte)netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadByte();
                     break;
-                // TODO Auto generation fix to handle 1-32 bits.
                 case RepLayoutCmdType.PropertyInt:
-                    data = netBitReader.ReadBitsToInt(netBitReader.GetBitsLeft());
+                    data = netBitReader.ReadInt32();
                     break;
                 case RepLayoutCmdType.PropertyInt16:
                     data = netBitReader.ReadInt16();

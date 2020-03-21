@@ -625,7 +625,6 @@ namespace Unreal.Core
                 if (group != null)
                 {
                     group.NetFieldExports[netField.Handle] = netField;
-                    // TODO preserve compatibility flag ?
                 }
                 else
                 {
@@ -700,8 +699,8 @@ namespace Unreal.Core
             {
                 if (archive.HasLevelStreamingFixes())
                 {
-                    // TODO is this relevant?
-                    var seenLevelIndex = archive.ReadIntPacked();
+                    // var seenLevelIndex = 
+                    archive.ReadIntPacked();
                 }
 
                 var packet = ReadPacket(archive);
@@ -1050,22 +1049,6 @@ namespace Unreal.Core
                 }
             }
 
-            //if (!actor && bunch.bOpen)
-            //{
-            //    // FBitReaderMark
-            //    // Take a sneak peak at the actor guid so we have a copy of it now
-            //    bunch.Archive.Mark();
-            //    var actorGuid = bunch.Archive.ReadIntPacked();
-            //    bunch.Archive.Pop();
-
-            //    // TODO set channel actor here??
-            //    // we can now map guid to channel, even if all the bunches get queued
-            //    //if (Connection->InternalAck)
-            //    //{
-            //    //    Connection->NotifyActorNetGUID(this);
-            //    //}
-            //}
-
             ProcessBunch(bunch);
         }
 
@@ -1354,7 +1337,7 @@ namespace Unreal.Core
             var export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
             if (export != null)
             {
-                var cmdReader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft())) // TODO
+                var cmdReader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
                 {
                     EngineNetworkVersion = reader.EngineNetworkVersion,
                     NetworkVersion = reader.NetworkVersion
@@ -1724,7 +1707,6 @@ namespace Unreal.Core
                 bObjectDeleted = true;
             }
 
-            // TODO figure this out
             return classNetGUID.Value;
         }
 
@@ -1938,7 +1920,6 @@ namespace Unreal.Core
                 // In that case, we can generally ignore these bunches.
                 // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
                 // bIgnoreAlreadyOpenedChannels always true?  https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4393
-                // TODO figure out if IgnoringChannels is really needed?
                 if (channel && false)
                 {
                     var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);

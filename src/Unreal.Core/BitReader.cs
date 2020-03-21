@@ -523,7 +523,6 @@ namespace Unreal.Core
 
         public override void Pop()
         {
-            // TODO: pop makes it sound like a list...
             Position = MarkPosition;
         }
 

@@ -4,16 +4,44 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>FortniteReplayReader</AssemblyName>
     <RootNamespace>FortniteReplayReader</RootNamespace>
+    <Authors>Shiqan</Authors>
+    <Company />
+    <Description>Fortnite Replay parser</Description>
+    <Copyright>Copyright © 2020 Shiqan</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Shiqan/FortniteReplayDecompressor</PackageProjectUrl>
+    <PackageTags>Fortnite, Unreal Engine, Replay, Replay Reader</PackageTags>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
+    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Contracts\" />
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
-  
+
+  <!-- https://stackoverflow.com/questions/40396161/include-all-dependencies-using-dotnet-pack -->
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <!-- Filter out unnecessary files -->
+      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+    </ItemGroup>
+
+    <!-- Print batches for debug purposes -->
+    <Message Text="Batch for .nupkg: ReferenceCopyLocalPaths = @(_ReferenceCopyLocalPaths), ReferenceCopyLocalPaths.DestinationSubDirectory = %(_ReferenceCopyLocalPaths.DestinationSubDirectory) Filename = %(_ReferenceCopyLocalPaths.Filename) Extension = %(_ReferenceCopyLocalPaths.Extension)" Importance="High" Condition="'@(_ReferenceCopyLocalPaths)' != ''" />
+
+    <ItemGroup>
+      <!-- Add file to package with consideration of sub folder. If empty, the root folder is chosen. -->
+      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+    </ItemGroup>
+  </Target>
+
 </Project>

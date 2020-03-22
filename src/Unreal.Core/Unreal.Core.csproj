@@ -10,7 +10,23 @@
   </ItemGroup> 
 
   <ItemGroup>
-    <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
+    <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- https://stackoverflow.com/questions/40396161/include-all-dependencies-using-dotnet-pack -->
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <!-- Filter out unnecessary files -->
+      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+    </ItemGroup>
+
+    <!-- Print batches for debug purposes -->
+    <Message Text="Batch for .nupkg: ReferenceCopyLocalPaths = @(_ReferenceCopyLocalPaths), ReferenceCopyLocalPaths.DestinationSubDirectory = %(_ReferenceCopyLocalPaths.DestinationSubDirectory) Filename = %(_ReferenceCopyLocalPaths.Filename) Extension = %(_ReferenceCopyLocalPaths.Extension)" Importance="High" Condition="'@(_ReferenceCopyLocalPaths)' != ''" />
+
+    <ItemGroup>
+      <!-- Add file to package with consideration of sub folder. If empty, the root folder is chosen. -->
+      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+    </ItemGroup>
+  </Target>
 
 </Project>

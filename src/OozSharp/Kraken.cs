@@ -1,6 +1,6 @@
 ﻿/*
 === Kraken Decompressor for Windows ===
-Convetred to C# for Fortnite by SL-x-TnT, original source code available at https://github.com/powzix/ooz.
+Converted to C# for Fortnite by SL-x-TnT, original source code available at https://github.com/powzix/ooz.
 
 Copyright (C) 2016, Powzix
 This program is free software: you can redistribute it and/or modify

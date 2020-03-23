@@ -1,0 +1,41 @@
+name: Publish Master
+
+on:
+  push:
+    branches: 
+        - master
+        - develop
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Setup .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    - name: Build
+      run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
+    - name: Test
+      run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
+    - name: Get branch name
+      id: vars
+      run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}    
+    - name: Set suffix for develop release
+      id: beta
+      if: ${{ steps.vars.outputs.short_ref }} == 'develop'
+      run: echo ::set-output name=suffix::build${GITHUB_RUN_ID}
+    - name: Bump version and push tag
+      id: versioning
+      uses: anothrNick/github-tag-action@1.17.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        WITH_V: true
+    - name: Pack
+      run: dotnet pack .\src\FortniteReplayReader\FortniteReplayReader.csproj -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
+    - name: Publish
+      run: dotnet nuget push .\src\FortniteReplayReader\bin\Release.FortniteReplayReader-${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
+      
+      

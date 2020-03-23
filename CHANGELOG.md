@@ -6,10 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2020-01-01
+## [1.0.0] - 2020-03-29
 ### Added
-- This CHANGELOG file to hopefully serve as an evolving example of a
-  standardized open source project CHANGELOG.
+- Unreal: Full support for Unreal Engine 4 replay parsing, written in .net core 3.1 with support for both Windows and Linux.
+- Fortnite: Retrieve game data, player data, team data and some additional map information such as llama and supply drop locations.
+- Fortnite: Knocks, eliminations and revives available in killfeed.
+
 
 [Unreleased]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/v0.0.1
+[1.0.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/v1.0.0

@@ -34,8 +34,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: true
     - name: Pack
-      run: dotnet pack .\src\FortniteReplayReader\FortniteReplayReader.csproj -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
+      run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
     - name: Publish
-      run: dotnet nuget push .\src\FortniteReplayReader\bin\Release.FortniteReplayReader-${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
+      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release.FortniteReplayReader-${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
       
       

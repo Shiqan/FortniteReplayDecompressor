@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
+    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
   </ItemGroup>
 
 </Project>

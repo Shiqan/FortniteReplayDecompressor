@@ -26,16 +26,19 @@ jobs:
     - name: Set suffix for develop release
       id: beta
       if: ${{ steps.vars.outputs.short_ref }} == 'develop'
-      run: echo ::set-output name=suffix::build${GITHUB_RUN_ID}
+      run: echo ::set-output name=suffix::-build-${GITHUB_RUN_ID}
     - name: Bump version and push tag
       id: versioning
       uses: anothrNick/github-tag-action@1.17.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
+        WITH_V: false
+    - name: Create package version
+      id: version
+      run: echo ::set-output name=tag::${{ steps.versioning.outputs.tag }} | sed 's/\./-/g'
     - name: Pack
-      run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
+      run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -p:PackageVersion=${{ steps.version.outputs.tag }}${{ steps.beta.outputs.suffix }}
     - name: Publish
-      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release.FortniteReplayReader-${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
+      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release.FortniteReplayReader-${{ steps.version.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
       
       

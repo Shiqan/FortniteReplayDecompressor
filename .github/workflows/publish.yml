@@ -26,7 +26,7 @@ jobs:
     - name: Set suffix for develop release
       id: beta
       if: ${{ steps.vars.outputs.short_ref }} == 'develop'
-      run: echo ::set-output name=suffix::-build-${GITHUB_RUN_ID}
+      run: echo ::set-output name=suffix::-beta
     - name: Bump version and push tag
       id: versioning
       uses: anothrNick/github-tag-action@1.17.2
@@ -39,6 +39,6 @@ jobs:
     - name: Pack
       run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -p:PackageVersion=${{ steps.version.outputs.tag }}${{ steps.beta.outputs.suffix }}
     - name: Publish
-      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release.FortniteReplayReader-${{ steps.version.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -k ${{ secrets.NUGET_TOKEN }}
+      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release/FortniteReplayReader-${{ steps.version.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }}
       
       

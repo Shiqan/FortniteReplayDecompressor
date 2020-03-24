@@ -25,13 +25,14 @@ jobs:
       run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}    
     - name: Set suffix for develop release
       id: beta
-      if: ${{ steps.vars.outputs.short_ref }} == 'develop'
+      if: steps.vars.outputs.short_ref == 'develop'
       run: echo ::set-output name=suffix::-beta
     - name: Bump version and push tag
       id: versioning
       uses: anothrNick/github-tag-action@1.17.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DEFAULT_BUMP: patch
         WITH_V: false
     - name: Create package version
       id: version

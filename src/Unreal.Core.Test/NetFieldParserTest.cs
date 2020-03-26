@@ -217,7 +217,7 @@ namespace Unreal.Core.Test
             var reader = new NetBitReader(new byte[] { 0x01, 0x0B, 0xC7, 0x47, 0x8A, 0x26, 0xA7, 0xC7, 0x00, 0x80, 0x71, 0xC5 }, 96)
             {
                 NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
-                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_ENGINENETVERSION_LATEST // 15
+                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME
             };
 
             var export = new NetFieldExport()

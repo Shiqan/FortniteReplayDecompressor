@@ -48,5 +48,10 @@ namespace Unreal.Core.Models
             var other = obj as FVector;
             return X == other?.X && Y == other?.Y && Z == other?.Z;
         }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
+        }
     }
 }

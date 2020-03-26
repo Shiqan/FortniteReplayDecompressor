@@ -34,9 +34,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch
         WITH_V: false
-    - name: Pack
+    - name: Pack Unreal.Core
+      run: dotnet pack ./src/Unreal.Core/Unreal.Core.csproj -c Release -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
+    - name: Pack FortniteReplayReader
       run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -c Release -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
     - name: Publish
-      run: dotnet nuget push ./src/FortniteReplayReader/bin/Release/FortniteReplayReader.${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }}
+      run: dotnet nuget push ./src/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }}
       
       

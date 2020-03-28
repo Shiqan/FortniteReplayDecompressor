@@ -74,6 +74,7 @@ namespace FortniteReplayReader.Models
         public bool? HasEverSkydivedFromBusAndLanded { get; set; }
 
         public Cosmetics Cosmetics { get; set; }
+        public uint? CurrentWeapon { get; internal set; }
     }
 
     public class Cosmetics

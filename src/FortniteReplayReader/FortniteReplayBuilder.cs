@@ -27,6 +27,7 @@ namespace FortniteReplayReader
 
         private Dictionary<uint, Inventory> _inventories = new Dictionary<uint, Inventory>();
         private Dictionary<uint, WeaponData> _weapons = new Dictionary<uint, WeaponData>();
+        private Dictionary<uint, WeaponData> _unknownWeapons = new Dictionary<uint, WeaponData>();
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
@@ -37,8 +38,8 @@ namespace FortniteReplayReader
 
         public void RemoveChannel(uint channelIndex, uint guid)
         {
-            _actorToChannel.Remove(guid);
-            _pawnChannelToStateChannel.Remove(channelIndex);
+            _weapons.Remove(channelIndex);
+            _unknownWeapons.Remove(channelIndex);
         }
 
         public FortniteReplay Build(FortniteReplay replay)
@@ -270,6 +271,11 @@ namespace FortniteReplayReader
             playerState.Cosmetics.SkyDiveContrail ??= pawn.SkyDiveContrail?.Name;
             playerState.Cosmetics.Dances ??= pawn.Dances?.Select(i => i.Name);
             playerState.Cosmetics.ItemWraps ??= pawn.ItemWraps?.Select(i => i.Name);
+
+            if (pawn.CurrentWeapon != null)
+            {
+                playerState.CurrentWeapon = pawn.CurrentWeapon;
+            }
         }
 
         public void UpdateInventory(uint channelIndex, FortInventory fortInventory)
@@ -331,8 +337,15 @@ namespace FortniteReplayReader
         {
             if (!_weapons.TryGetValue(channelIndex, out var newWeapon))
             {
-                newWeapon = new WeaponData();
-                _weapons[channelIndex] = newWeapon;
+                if (!_unknownWeapons.TryGetValue(channelIndex, out newWeapon))
+                {
+                    newWeapon = new WeaponData();
+                    _weapons[channelIndex] = newWeapon;
+                } 
+                else
+                {
+                    _unknownWeapons.Remove(channelIndex);
+                }
             }
 
             newWeapon.bIsEquippingWeapon ??= weapon.bIsEquippingWeapon;
@@ -344,15 +357,7 @@ namespace FortniteReplayReader
             newWeapon.B ??= weapon.B;
             newWeapon.C ??= weapon.C;
             newWeapon.D ??= weapon.D;
-            newWeapon.WeaponName = weapon.WeaponData?.Name;
-
-            if (weapon.Owner?.Value != null)
-            {
-                if (TryGetPlayerDataFromActor(weapon.Owner.Value, out var playerData))
-                {
-                    newWeapon.PlayerId = playerData.Id;
-                }
-            }
+            newWeapon.WeaponName ??= weapon.WeaponData?.Name;
         }
 
         public void UpdateSafeZones(SafeZoneIndicator safeZone)

@@ -84,12 +84,12 @@ namespace FortniteReplayReader
                 case ActiveGameplayModifier modifier:
                     Builder.UpdateGameplayModifiers(modifier);
                     break;
-                case FortPickup pickup:
+                //case FortPickup pickup:
                     //Builder.CreatePickupEvent(channelIndex, pickup);
-                    break;
-                case FortInventory inventory:
-                    Builder.UpdateInventory(channelIndex, inventory);
-                    break;
+                    //break;
+                //case FortInventory inventory:
+                //    Builder.UpdateInventory(channelIndex, inventory);
+                //    break;
                 case SpawnMachineRepData spawnMachine:
                     Builder.UpdateRebootVan(channelIndex, spawnMachine);
                     break;
@@ -112,12 +112,12 @@ namespace FortniteReplayReader
                 case PlayerPawn pawn:
                     Builder.UpdatePlayerPawn(channelIndex, pawn);
                     break;
-                case FortPickup pickup:
+                //case FortPickup pickup:
                     //Builder.CreatePickupEvent(channelIndex, pickup);
-                    break;
-                case FortInventory inventory:
-                    Builder.UpdateInventory(channelIndex, inventory);
-                    break;
+                    //break;
+                //case FortInventory inventory:
+                //    Builder.UpdateInventory(channelIndex, inventory);
+                //    break;
                 //case BroadcastExplosion explosion:
                 //    Builder.UpdateExplosion(explosion);
                 //    break;

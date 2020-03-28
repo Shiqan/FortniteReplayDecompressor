@@ -53,7 +53,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
         public int? AmmoCount { get; set; }
 
         [NetFieldExport("AppliedAlterations", RepLayoutCmdType.DynamicArray)]
-        public DebuggingObject[] AppliedAlterations { get; set; }
+        public ItemDefinition[] AppliedAlterations { get; set; }
 
         [NetFieldExport("bIsMuzzleTraceNearWall", RepLayoutCmdType.PropertyBool)]
         public bool? bIsMuzzleTraceNearWall { get; set; }

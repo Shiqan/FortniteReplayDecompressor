@@ -133,7 +133,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bThankedBusDriver", RepLayoutCmdType.PropertyBool)]
         public bool? bThankedBusDriver { get; set; }
-        
+
         [NetFieldExport("bDidNotThankBusDriver", RepLayoutCmdType.PropertyBool)]
         public bool? bDidNotThankBusDriver { get; set; }
 
@@ -226,5 +226,14 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
         public FVector DeathLocation { get; set; }
+
+        [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Ignore)]
+        public DebuggingObject SimulatedAttributes { get; set; }
+
+        [NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
+        public int? KickedFromSessionReason { get; set; }
+
+        [NetFieldExport("NumRejoins", RepLayoutCmdType.Enum)]
+        public int? NumRejoins { get; set; }
     }
 }

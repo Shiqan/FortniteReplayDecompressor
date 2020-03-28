@@ -13,5 +13,15 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
         public bool? bIsChargingWeapon { get; set; }
     }
 
+    [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_Valentine_Crossbow_Athena.B_Valentine_Crossbow_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class ValentineCrossbow : Crossbow
+    {
+    }
+
+    [NetFieldExportGroup("/Game/Weapons/FORT_Crossbows/Blueprints/B_DemonHunter_Crossbow_Athena.B_DemonHunter_Crossbow_Athena_C", minimalParseMode: ParseMode.Debug)]
+    public class DemonHunterCrossbow : Crossbow
+    {
+    }
+
     // /Game/Weapons/FORT_Crossbows/Blueprints/B_Prj_Arrow_ExplodeOnImpact_Athena_TnTina.B_Prj_Arrow_ExplodeOnImpact_Athena_TnTina_C
 }

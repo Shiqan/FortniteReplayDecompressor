@@ -61,6 +61,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("AttachSocket", RepLayoutCmdType.Property)]
         public FName AttachSocket { get; set; }
 
+        [NetFieldExport("ExitSocketIndex", RepLayoutCmdType.PropertyByte)]
+        public byte? ExitSocketIndex { get; set; }
+
         [NetFieldExport("AttachComponent", RepLayoutCmdType.PropertyObject)]
         public uint? AttachComponent { get; set; }
 
@@ -495,5 +498,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
         public bool? bInGliderRedeploy { get; set; }
+
+        [NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
+        public bool? bReplicatedIsInVortex { get; set; }
     }
 }

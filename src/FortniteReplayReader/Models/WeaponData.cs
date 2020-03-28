@@ -13,7 +13,5 @@
         public uint? B { get; set; }
         public uint? C { get; set; }
         public uint? D { get; set; }
-
-        public int? PlayerId { get; set; }
     }
 }

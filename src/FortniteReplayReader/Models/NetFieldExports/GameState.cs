@@ -273,6 +273,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningTeam { get; set; }
 
+        [NetFieldExport("WinningScore", RepLayoutCmdType.PropertyUInt32)]
+        public uint? WinningScore { get; set; }
+
         [NetFieldExport("CurrentHighScore", RepLayoutCmdType.PropertyUInt32)]
         public uint? CurrentHighScore { get; set; }
 
@@ -308,6 +311,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("EventTournamentRound", RepLayoutCmdType.Enum)]
         public int? EventTournamentRound { get; set; }
+
+        [NetFieldExport("EventId", RepLayoutCmdType.PropertyInt)]
+        public int? EventId { get; set; }
 
         [NetFieldExport("PlayerBotsLeft", RepLayoutCmdType.PropertyInt)]
         public int? PlayerBotsLeft { get; set; }
@@ -359,5 +365,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("PrioritizedCosmeticIndices", RepLayoutCmdType.DynamicArray)]
         public ItemDefinition[] PrioritizedCosmeticIndices { get; set; }
+
+        [NetFieldExport("Mappings", RepLayoutCmdType.DynamicArray)]
+        public ItemDefinition[] Mappings { get; set; }
     }
 }

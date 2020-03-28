@@ -18,7 +18,7 @@ The checkpoints and replay data are compressed using Oodle. [Oodle](http://www.r
 The incremental changes between checkpoints is called Replaydata. These incremental changes contain the (slightly changed) network packets that are send over the wire along with extra information for each packet, such as required objects to load. Each packet itself contains bunches, which are small updates for actor channels. In these bunches additional objects are loaded, and are the properties that should be replicated in the game world. Replication is done via property replication and function call replication (rpc).
 
 ## Kaitai Struct
-The information above can be quite daunting, to actually visualze the explanation above we can use the [Kaitai Struct WebIDE](https://ide.kaitai.io/) (source code of Kaitai available [here](https://github.com/kaitai-io/kaitai_struct_webide)). The Kaitai struct uses a `.ksy` file, and Kuinox created one for Fortnite.
+The information above can be quite daunting, to actually visualze the explanation above we can use the [Kaitai Struct WebIDE](https://ide.kaitai.io/) (source code of Kaitai available [here](https://github.com/kaitai-io/kaitai_struct_webide)). The Kaitai struct uses a `.ksy` file, and [Kuinox](https://github.com/Kuinox) created one for Fortnite.
 So download the [fortnite.ksy](fortnite.ksy) and drag & drop it in the web ide, after that just drag any fortnite replay to the hex viewer and see the structure for yourself. Make sure to drop by our Discord and thank Kuinox personally!
 
 

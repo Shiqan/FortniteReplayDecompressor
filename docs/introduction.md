@@ -6,9 +6,13 @@ So yes, we can parse your replays, zero cost (it's free) and fully extensible.
 
 ## Getting the library
 
-You cannot get the library yet, but it will be available on Nuget "soon". 
+In order to get started, you'll have to add the [FortniteReplayReader](https://www.nuget.org/packages/FortniteReplayReader) Nuget package to your project.
+```powershell
+dotnet add package FortniteReplayReader
+```
 
-Until then you'll have to get the source code from Github.
+*Note* If you are looking at parsing other `replay` files than Fortnite, you can add [Unreal.Core](https://www.nuget.org/packages/Unreal.Core).
+
 
 ## First example
 
@@ -30,9 +34,9 @@ Depending on the type of information you are after, you may find that you need t
 
 It is hard to say exactly which of these values you may need to set, as that obviously depends entirely on what you are trying to achieve. But for most people `Normal` should be sufficient.
 
++ `EventsOnly`
 + `Minimal`
 + `Normal`
-+ `Extended`
 + `Full`
 
 For example: 

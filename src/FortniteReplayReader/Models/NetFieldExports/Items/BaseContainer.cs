@@ -75,7 +75,5 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
 
         [NetFieldExport("bForceReplayRollback", RepLayoutCmdType.PropertyBool)]
         public bool? bForceReplayRollback { get; set; }
-
-
     }
 }

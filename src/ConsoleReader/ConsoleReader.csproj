@@ -7,14 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FortniteReplayReader" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
-    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

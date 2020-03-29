@@ -3,6 +3,20 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Authors>SL-x-TnT, Shiqan</Authors>
+    <Company />
+    <Description>Open source Kraken / Mermaid / Selkie / Leviathan / LZNA / Bitknit decompressor</Description>
+    <Copyright>Copyright © 2020 SL-x-TnT, Shiqan</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Shiqan/FortniteReplayDecompressor</PackageProjectUrl>
+    <PackageTags>Kraken Mermaid Selkie Leviathan LZNA Bitknit decompressor</PackageTags>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 </Project>

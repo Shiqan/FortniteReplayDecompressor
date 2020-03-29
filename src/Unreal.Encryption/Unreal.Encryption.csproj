@@ -2,10 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Authors>Shiqan</Authors>
+    <Company />
+    <Description>Unreal Engine replay encryption layer</Description>
+    <Copyright>Copyright © 2020 Shiqan</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Shiqan/FortniteReplayDecompressor</PackageProjectUrl>
+    <PackageTags>Unreal Engine Replay Reader</PackageTags>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
+    <PackageReference Include="OozSharp" Version="1.0.0" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 </Project>

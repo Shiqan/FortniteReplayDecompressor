@@ -14,7 +14,6 @@
     <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
     <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
     <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
-    <ProjectReference Include="..\Unreal.Network\Unreal.Network.csproj" />
   </ItemGroup>
 
   <ItemGroup>

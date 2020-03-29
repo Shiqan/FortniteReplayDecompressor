@@ -37,5 +37,5 @@ jobs:
     - name: Pack
       run: dotnet pack ./src/FortniteReplayDecompressor.sln -c Release -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
     - name: Publish
-      run: dotnet nuget push ./src/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols
+      run: dotnet nuget push ./src/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       

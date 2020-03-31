@@ -268,7 +268,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ActorGuid WinningPlayerState { get; set; }
 
         [NetFieldExport("WinningPlayerList", RepLayoutCmdType.DynamicArray)]
-        public byte[] WinningPlayerList { get; set; }
+        public int[] WinningPlayerList { get; set; }
 
         [NetFieldExport("WinningTeam", RepLayoutCmdType.PropertyUInt32)]
         public uint? WinningTeam { get; set; }

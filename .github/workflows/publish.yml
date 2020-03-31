@@ -1,4 +1,4 @@
-name: Publish Master
+name: Publish Packages
 
 on:
   push:
@@ -22,20 +22,54 @@ jobs:
       run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
     - name: Get branch name
       id: vars
-      run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}    
+      run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
     - name: Set suffix for develop release
       id: beta
       if: steps.vars.outputs.short_ref == 'develop'
-      run: echo ::set-output name=suffix::-beta
-    - name: Bump version and push tag
+      run: echo ::set-output name=suffix::-beta%{date +%Y%m%d}
+    - name: Get next version
       id: versioning
       uses: anothrNick/github-tag-action@1.17.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch
         WITH_V: false
-    - name: Pack
-      run: dotnet pack ./src/FortniteReplayDecompressor.sln -c Release -p:PackageVersion=${{ steps.versioning.outputs.tag }}${{ steps.beta.outputs.suffix }}
-    - name: Publish
-      run: dotnet nuget push ./src/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+        DRY_RUN: true
+    - name: Create PackageVersion
+      id: packageversion
+      run: echo ::set-output name=tag::${{ steps.versioning.outputs.new_tag }}${{ steps.beta.outputs.suffix }}
+      
+    - name: Pack OozSharp
+      run: dotnet pack ./src/OozSharp/OozSharp.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+    - name: Publish OozSharp
+      run: dotnet nuget push ./src/OozSharp/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+    
+    - name: Update Unreal.Encryption
+      run: sed -i "s/Include=\"OozSharp\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"OozSharp\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Encryption/Unreal.Encryption.csproj
+    - name: Pack Unreal.Encryption
+      run: dotnet pack ./src/Unreal.Encryption/Unreal.Encryption.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+    - name: Publish Unreal.Encryption
+      run: dotnet nuget push ./src/Unreal.Encryption/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      
+    - name: Update Unreal.Core
+      run: sed -i "s/Include=\"Unreal.Encryption\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"Unreal.Encryption\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Core/Unreal.Core.csproj   
+    - name: Pack Unreal.Core
+      run: dotnet pack ./src/Unreal.Core/Unreal.Core.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+    - name: Publish Unreal.Core
+      run: dotnet nuget push ./src/Unreal.Core/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      
+    - name: Update FortniteReplayReader
+      run: sed -i "s/Include=\"Unreal.Core\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"Unreal.Core\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/FortniteReplayReader/FortniteReplayReader.csproj
+    - name: Pack FortniteReplayReader
+      run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+    - name: Publish FortniteReplayReader
+      run: dotnet nuget push ./src/FortniteReplayReader/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      
+    - name: Bump version and push tag
+      if: steps.vars.outputs.short_ref != 'develop'
+      uses: anothrNick/github-tag-action@1.17.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DEFAULT_BUMP: patch
+        WITH_V: false
       

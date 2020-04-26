@@ -182,8 +182,8 @@ namespace FortniteReplayReader
             }
 
             playerData.Placement ??= state.Place;
-            playerData.TeamKills ??= state.TeamKillScore;
-            playerData.Kills ??= state.KillScore;
+            playerData.TeamKills = state.TeamKillScore ?? playerData.TeamKills;
+            playerData.Kills = state.KillScore ?? playerData.Kills;
             playerData.HasThankedBusDriver ??= state.bThankedBusDriver;
 
             playerData.DeathCause ??= state.DeathCause;

@@ -4,10 +4,20 @@ on:
   push:
     branches: 
         - master
-        - develop
     
 jobs:
+  check_skip:
+    runs-on: ubuntu-latest
+    if: !(github.event_name == 'push' && contains(github.event.head_commit.message, '#ignore'))
+    steps:
+      - run: |
+          cat <<'MESSAGE'
+            github.event_name: '${{ github.event_name }}'
+            github.event.head_commit.message: '${{ github.event.head_commit.message }}'
+          MESSAGE
+
   build:
+    needs: check_skip
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -20,13 +30,6 @@ jobs:
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
     - name: Test
       run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
-    - name: Get branch name
-      id: vars
-      run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
-    - name: Set suffix for develop release
-      id: beta
-      if: steps.vars.outputs.short_ref == 'develop'
-      run: echo ::set-output name=suffix::-beta%{date +%Y%m%d}
     - name: Get next version
       id: versioning
       uses: anothrNick/github-tag-action@1.17.2
@@ -37,7 +40,7 @@ jobs:
         DRY_RUN: true
     - name: Create PackageVersion
       id: packageversion
-      run: echo ::set-output name=tag::${{ steps.versioning.outputs.new_tag }}${{ steps.beta.outputs.suffix }}
+      run: echo ::set-output name=tag::${{ steps.versioning.outputs.new_tag }}
       
     - name: Pack OozSharp
       run: dotnet pack ./src/OozSharp/OozSharp.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
@@ -66,7 +69,6 @@ jobs:
       run: dotnet nuget push ./src/FortniteReplayReader/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Bump version and push tag
-      if: steps.vars.outputs.short_ref != 'develop'
       uses: anothrNick/github-tag-action@1.17.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -23,8 +23,3 @@ jobs:
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Debug
     - name: Test
       run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../../coverage/lcov.info" /p:Exclude=\"[Fortnite*]*.Models.*\" --no-build --configuration Debug
-    - name: Coveralls
-      if: ${{ matrix.os }} == ubuntu-latest
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}

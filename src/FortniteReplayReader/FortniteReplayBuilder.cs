@@ -161,8 +161,8 @@ namespace FortniteReplayReader
 
             if (!_players.TryGetValue(channelIndex, out var playerData))
             {
-                _players[channelIndex] = new PlayerData(state);
-                return;
+                playerData = new PlayerData(state);
+                _players[channelIndex] = playerData;
             }
 
             if (state.RebootCounter > 0 && state.RebootCounter > playerData.RebootCounter)

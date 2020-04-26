@@ -258,6 +258,38 @@ namespace FortniteReplayReader.Test
         }
 
         [Fact]
+        public void PlayerStateUpdatesTotalKillsTest()
+        {
+            var state = new FortPlayerState()
+            {
+                PlayerID = 1,
+                UniqueId = "abc-123",
+                BotUniqueId = "",
+                bIsABot = false,
+                TeamIndex = 1,
+                KillScore = 1,
+                TeamKillScore = 1,
+                HeroType = new ItemDefinition() { Name = "bandolier" }
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+
+            Assert.Equal(1u, replay.PlayerData.First().Kills);
+            Assert.Equal(1u, replay.PlayerData.First().TeamKills);
+
+            state = new FortPlayerState()
+            {
+                KillScore = 2,
+                TeamKillScore = 3,
+            };
+            builder.UpdatePlayerState(1, state);
+            builder.Build(replay);
+
+            Assert.Equal(2u, replay.PlayerData.First().Kills);
+            Assert.Equal(3u, replay.PlayerData.First().TeamKills);
+        }
+
+        [Fact]
         public void PlayerStateUpdateKillFeedTest()
         {
             var state = new FortPlayerState()

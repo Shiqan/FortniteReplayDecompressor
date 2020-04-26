@@ -3,7 +3,6 @@
 ![FortniteReplayReader Nuget](https://img.shields.io/nuget/v/FortniteReplayReader?color=brightgreen)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/p5CMqJC)
 ![Build](https://github.com/Shiqan/FortniteReplayDecompressor/workflows/Build/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/Shiqan/FortniteReplayDecompressor/badge.svg?branch=master)](https://coveralls.io/github/Shiqan/FortniteReplayDecompressor?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/fortnitereplaydecompressor/badge/?version=latest)](https://fortnitereplaydecompressor.readthedocs.io/en/latest/?badge=latest)
 
 C# parser for your Fortnite replays.

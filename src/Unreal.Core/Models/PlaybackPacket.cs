@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Enums;
+﻿using System;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {

@@ -5,20 +5,13 @@ namespace Unreal.Core.Test
 {
     public class BitReaderTest
     {
-        byte[] expectedBytes;
-        bool[] expectedBits;
-        BitReader reader;
-
-        public BitReaderTest()
+        [Theory]
+        [InlineData(new byte[] { 0x23 }, new bool[] { true, true, false, false, false, true, false, false })]
+        [InlineData(new byte[] { 0x2F }, new bool[] { true, true, true, true, false, true, false, false })]
+        [InlineData(new byte[] { 0xD7 }, new bool[] { true, true, true, false, true, false, true, true })]
+        public void ReadBitTest(byte[] rawData, bool[] expectedBits)
         {
-            expectedBits = new bool[] { true, true, false, false, false, true, false, false };
-            expectedBytes = new byte[] { 35, 47, 215 };
-            reader = new BitReader(expectedBytes);
-        }
-
-        [Fact]
-        public void ReadBitTest()
-        {
+            var reader = new BitReader(rawData);
             for (var i = 0; i < expectedBits.Length; i++)
             {
                 Assert.Equal(expectedBits[i], reader.ReadBit());
@@ -27,101 +20,110 @@ namespace Unreal.Core.Test
             Assert.Equal(8, reader.Position);
         }
 
-        [Fact]
-        public void ReadBitThrowsExceptionTest()
+        [Theory]
+        [InlineData(new byte[] { }, 0)]
+        [InlineData(new byte[] { 0x35 }, 8)]
+        public void ReadBitThrowsExceptionTest(byte[] rawData, int position)
         {
-            reader.Seek(24);
+            var reader = new BitReader(rawData);
+            reader.Seek(position);
             reader.ReadBit();
             Assert.True(reader.IsError);
         }
 
-        [Fact]
-        public void PeekBitTest()
+        [Theory]
+        [InlineData(new byte[] { 0x23 }, new bool[] { true, true, false, false, false, true, false, false })]
+        public void PeekBitTest(byte[] rawData, bool[] expectedBits)
         {
-            Assert.True(reader.PeekBit());
-            Assert.Equal(0, reader.Position);
-        }
-
-        [Fact]
-        public void SeekTest()
-        {
-            reader.Seek(8);
+            var reader = new BitReader(rawData);
+            for (var i = 0; i < expectedBits.Length; i++)
+            {
+                Assert.Equal(expectedBits[i], reader.ReadBit());
+                Assert.Equal(i + 1, reader.Position);
+            }
             Assert.Equal(8, reader.Position);
         }
 
-        [Fact]
-        public void SeekThrowsExceptionTest()
+        [Theory]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 8, 8)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 6, 18, System.IO.SeekOrigin.End)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 11, 11, System.IO.SeekOrigin.Current)]
+        public void SeekTest(byte[] rawData, int seek, int expectedPosition, System.IO.SeekOrigin seekOrigin = System.IO.SeekOrigin.Begin)
         {
-            reader.Seek(25);
-            Assert.True(reader.IsError);
-            reader.Reset();
+            var reader = new BitReader(rawData);
+            reader.Seek(seek, seekOrigin);
+            Assert.Equal(expectedPosition, reader.Position);
+        }
 
-            reader.Seek(-1);
-            Assert.True(reader.IsError);
-            reader.Reset();
-
-            reader.Seek(25, System.IO.SeekOrigin.End);
-            Assert.True(reader.IsError);
-            reader.Reset();
-
-            reader.Seek(20);
-            reader.Seek(10, System.IO.SeekOrigin.Current);
+        [Theory]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, -1)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 25)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 25, System.IO.SeekOrigin.End)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 25, System.IO.SeekOrigin.Current)]
+        public void SeekThrowsExceptionTest(byte[] rawData, int position, System.IO.SeekOrigin seekOrigin = System.IO.SeekOrigin.Begin)
+        {
+            var reader = new BitReader(rawData);
+            reader.Seek(position, seekOrigin);
             Assert.True(reader.IsError);
         }
 
-        [Fact]
-        public void ReadByteTest()
+        [Theory]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 })]
+        public void ReadByteTest(byte[] rawData)
         {
-            for (var i = 0; i < expectedBytes.Length; i++)
+            var reader = new BitReader(rawData);
+            for (var i = 0; i < rawData.Length; i++)
             {
-                Assert.Equal(expectedBytes[i], reader.ReadByte());
+                Assert.Equal(rawData[i], reader.ReadByte());
             }
-            Assert.Equal(expectedBytes.Length * 8, reader.Position);
+            Assert.Equal(rawData.Length * 8, reader.Position);
         }
 
-        [Fact]
-        public void ReadBytesTest()
+        [Theory]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 })]
+        public void ReadBytesTest(byte[] rawData)
         {
-            Assert.Equal(expectedBytes, reader.ReadBytes(3));
-            Assert.Equal(expectedBytes.Length * 8, reader.Position);
+            var reader = new BitReader(rawData);
+            Assert.Equal(rawData, reader.ReadBytes(3).ToArray());
+            Assert.Equal(rawData.Length * 8, reader.Position);
         }
 
 
         [Fact]
         public void ReadUInt32Test()
         {
-            reader = new BitReader(new byte[] { 10, 58, 0, 0 });
+            var reader = new BitReader(new byte[] { 10, 58, 0, 0 });
             Assert.Equal(14858u, reader.ReadUInt32());
         }
 
         [Fact]
         public void ReadInt32Test()
         {
-            reader = new BitReader(new byte[] { 10, 58, 0, 0 });
+            var reader = new BitReader(new byte[] { 10, 58, 0, 0 });
             Assert.Equal(14858, reader.ReadInt32());
         }
 
-        [Fact]
-        public void ReadPackedIntTest()
+        [Theory]
+        [InlineData(7u, new byte[] { 0x0E })]
+        [InlineData(18u, new byte[] { 0x24, 0x40 })]
+        [InlineData(102u, new byte[] { 0xCC })]
+        public void ReadPackedIntTest(uint expected, byte[] rawData)
         {
-            reader = new BitReader(new byte[] { 14 });
-            Assert.Equal(7u, reader.ReadIntPacked());
-            
-            reader = new BitReader(new byte[] { 36, 64 });
-            Assert.Equal(18u, reader.ReadIntPacked());
+            var reader = new BitReader(rawData);
+            Assert.Equal(expected, reader.ReadIntPacked());
         }
 
         [Fact]
         public void ReadSerializedIntTest()
         {
-            reader = new BitReader(new byte[] { 1 });
+            var reader = new BitReader(new byte[] { 1 });
             Assert.Equal(1u, reader.ReadSerializedInt(3));
         }
-        
+
         [Fact]
         public void ReadSerializedIntTest2()
         {
-            reader = new BitReader(new byte[] { 0x64 });
+            var reader = new BitReader(new byte[] { 0x64 });
             Assert.Equal(0u, reader.ReadSerializedInt(2));
             Assert.Equal(1, reader.Position);
         }
@@ -140,6 +142,17 @@ namespace Unreal.Core.Test
             Assert.Equal(9, archive.Position);
             Assert.Equal("Actor", name);
             Assert.False(archive.IsError);
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 0x99, 0xF1 }, new byte[] { 0x99, 0xF1 })]
+        public void AppendDataFromCheckedTest(byte[] rawData, byte[] rawData2)
+        {
+            var archive = new BitReader(rawData);
+            Assert.Equal(16, archive.GetBitsLeft());
+
+            archive.AppendDataFromChecked(rawData2);
+            Assert.Equal(32, archive.GetBitsLeft());
         }
     }
 }

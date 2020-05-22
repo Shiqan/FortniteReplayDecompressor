@@ -12,8 +12,7 @@ namespace Unreal.Core
     {
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
-        public NetBitReader(bool[] input) : base(input) { }
-        public NetBitReader(bool[] input, int bitCount) : base(input, bitCount) { }
+        public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }        
 
         public int SerializePropertyInt()
         {
@@ -304,9 +303,7 @@ namespace Unreal.Core
                 if (encoded)
                 {
                     var encodedSize = ReadByte();
-
-                    // https://github.com/dotnet/corefx/issues/10013
-                    return BitConverter.ToString(ReadBytes(encodedSize)).Replace("-", "");
+                    return ReadBytesToString(encodedSize);
                 }
                 else
                 {

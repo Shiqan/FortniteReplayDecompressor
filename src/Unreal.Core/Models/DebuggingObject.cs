@@ -61,7 +61,7 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            return _reader.ReadBytes((int)Math.Ceiling(_reader.GetBitsLeft() / 8.0));
+            return _reader.ReadBytes((int)Math.Ceiling(_reader.GetBitsLeft() / 8.0)).ToArray();
         }
 
         private string AsFString()

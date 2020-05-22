@@ -88,7 +88,7 @@ namespace Unreal.Core
         }
 
 #if DEBUG
-        public virtual void Debug(string filename, string directory, byte[] data)
+        public virtual void Debug(string filename, string directory, ReadOnlySpan<byte> data)
         {
             if (IsDebugMode)
             {
@@ -97,7 +97,7 @@ namespace Unreal.Core
                     Directory.CreateDirectory(directory);
                 }
 
-                File.WriteAllBytes($"{directory}/{filename}.dump", data);
+                File.WriteAllBytes($"{directory}/{filename}.dump", data.ToArray());
             }
         }
 
@@ -431,7 +431,7 @@ namespace Unreal.Core
             {
                 info.IsEncrypted = archive.ReadUInt32AsBoolean();
                 var size = archive.ReadUInt32();
-                info.EncryptionKey = archive.ReadBytes(size);
+                info.EncryptionKey = archive.ReadBytes(size).ToArray();
             }
 
             if (!info.IsLive && info.IsEncrypted && (info.EncryptionKey.Length == 0))
@@ -475,7 +475,7 @@ namespace Unreal.Core
                 return packet;
             }
 
-            packet.Data = archive.ReadBytes(bufferSize);
+            packet.Data = archive.ReadBytes(bufferSize).ToArray();
             packet.State = PacketState.Success;
             return packet;
         }
@@ -919,7 +919,7 @@ namespace Unreal.Core
                             return;
                         }
 
-                        PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
+                        PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBytes(bitsLeft));
                     }
                     else
                     {
@@ -2055,17 +2055,11 @@ namespace Unreal.Core
         /// <param name="archive"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected virtual Core.BinaryReader DecryptBuffer(FArchive archive, int size)
+        protected virtual FArchive DecryptBuffer(FArchive archive, int size)
         {
             if (!Replay.Info.IsEncrypted)
             {
-                return new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
-                {
-                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                    NetworkVersion = Replay.Header.NetworkVersion,
-                    ReplayHeaderFlags = Replay.Header.Flags,
-                    ReplayVersion = Replay.Info.FileVersion
-                };
+                return archive;
             }
 
             _logger?.LogError("Replay is marked as encrypted. Make sure to implement this method to decrypt the chunks.");
@@ -2079,27 +2073,20 @@ namespace Unreal.Core
         /// <param name="archive"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        protected virtual Core.BinaryReader Decompress(FArchive archive, int size)
+        protected virtual FArchive Decompress(FArchive archive, int size)
         {
             if (!Replay.Info.IsCompressed)
             {
-                // TODO a disposable FArchive to avoid reading the entire archive for no reason...
-                return new Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
-                {
-                    EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                    NetworkVersion = Replay.Header.NetworkVersion,
-                    ReplayHeaderFlags = Replay.Header.Flags,
-                    ReplayVersion = Replay.Info.FileVersion
-                };
+                return archive;
             }
 
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
-            var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
+            var output = Oodle.DecompressReplayData(compressedBuffer.ToArray(), decompressedSize);
 
             _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
-            return new Core.BinaryReader(new MemoryStream(output))
+            return new Core.BinaryReader(output.AsMemory())
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                 NetworkVersion = Replay.Header.NetworkVersion,

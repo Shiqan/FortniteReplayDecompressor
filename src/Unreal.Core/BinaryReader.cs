@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 using Unreal.Core.Models.Enums;
@@ -8,11 +9,12 @@ namespace Unreal.Core
     /// <summary>
     /// Custom Binary Reader with methods for Unreal Engine replay files
     /// </summary>
-    public class BinaryReader : FArchive, IDisposable
+    public class BinaryReader : FArchive
     {
-        private readonly System.IO.BinaryReader Reader;
-        public Stream BaseStream => Reader.BaseStream;
-        public override int Position { get => (int)BaseStream.Position; protected set => Seek(value); }
+        public ReadOnlyMemory<byte> Bytes;
+        private int _length;
+        private int _position;
+        public override int Position { get => _position; protected set => Seek(value); }
 
         /// <summary>
         /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
@@ -21,31 +23,28 @@ namespace Unreal.Core
         /// <seealso cref="System.IO.BinaryReader"/> 
         public BinaryReader(Stream input)
         {
-            Reader = new System.IO.BinaryReader(input);
+            using var ms = new MemoryStream();
+            input.CopyTo(ms);
+            Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
+            _length = Bytes.Length;
+            _position = 0;
+        }
+
+        public BinaryReader(ReadOnlyMemory<byte> input)
+        {
+            Bytes = input;
+            _length = Bytes.Length;
+            _position = 0;
         }
 
         public override bool AtEnd()
         {
-            return Reader.BaseStream.Position >= Reader.BaseStream.Length;
+            return _position >= _length;
         }
 
         public override bool CanRead(int count)
         {
-            return Reader.BaseStream.Position + count < Reader.BaseStream.Length;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Reader.Dispose();
-            }
+            return _position + count < _length;
         }
 
         public override T[] ReadArray<T>(Func<T> func1)
@@ -61,12 +60,16 @@ namespace Unreal.Core
 
         public override bool ReadBoolean()
         {
-            return Reader.ReadBoolean();
+            var result = BitConverter.ToBoolean(Bytes.Slice(_position, 1).Span);
+            _position++;
+            return result;
         }
 
         public override byte ReadByte()
         {
-            return Reader.ReadByte();
+            var result = Bytes.Slice(_position, 1).Span;
+            _position++;
+            return result[0];
         }
 
         public override T ReadByteAsEnum<T>()
@@ -74,20 +77,22 @@ namespace Unreal.Core
             return (T)Enum.ToObject(typeof(T), ReadByte());
         }
 
-        public override byte[] ReadBytes(int byteCount)
+        public override ReadOnlySpan<byte> ReadBytes(int byteCount)
         {
-            return Reader.ReadBytes(byteCount);
+            var result = Bytes.Slice(_position, byteCount).Span;
+            _position += byteCount;
+            return result;
         }
 
-        public override byte[] ReadBytes(uint byteCount)
+        public override ReadOnlySpan<byte> ReadBytes(uint byteCount)
         {
-            return Reader.ReadBytes((int)byteCount);
+            return ReadBytes((int)byteCount);
         }
 
         public override string ReadBytesToString(int count)
         {
             // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count)).Replace("-", "");
+            return Encoding.Default.GetString(ReadBytes(count)).Replace("-", "");
         }
 
         public override string ReadFString()
@@ -100,7 +105,7 @@ namespace Unreal.Core
             }
 
             var isUnicode = length < 0;
-            byte[] data;
+            ReadOnlySpan<byte> data;
             string value;
 
             if (isUnicode)
@@ -167,12 +172,16 @@ namespace Unreal.Core
 
         public override short ReadInt16()
         {
-            return Reader.ReadInt16();
+            var result = BinaryPrimitives.ReadInt16LittleEndian(Bytes.Slice(_position, 2).Span);
+            _position += 2;
+            return result;
         }
 
         public override int ReadInt32()
         {
-            return Reader.ReadInt32();
+            var result = BinaryPrimitives.ReadInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            _position += 4;
+            return result;
         }
 
         public override bool ReadInt32AsBoolean()
@@ -182,7 +191,9 @@ namespace Unreal.Core
 
         public override long ReadInt64()
         {
-            return Reader.ReadInt64();
+            var result = BinaryPrimitives.ReadInt64LittleEndian(Bytes.Slice(_position, 8).Span);
+            _position += 8;
+            return result;
         }
 
         public override uint ReadIntPacked()
@@ -203,12 +214,16 @@ namespace Unreal.Core
 
         public override sbyte ReadSByte()
         {
-            return Reader.ReadSByte();
+            var result = Bytes.Slice(_position, 1).Span;
+            _position++;
+            return (sbyte)result[0];
         }
 
         public override float ReadSingle()
         {
-            return Reader.ReadSingle();
+            var result = (float)BinaryPrimitives.ReadUInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            _position += 4;
+            return result;
         }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)
@@ -224,12 +239,16 @@ namespace Unreal.Core
 
         public override ushort ReadUInt16()
         {
-            return Reader.ReadUInt16();
+            var result = BinaryPrimitives.ReadUInt16LittleEndian(Bytes.Slice(_position, 2).Span);
+            _position += 2;
+            return result;
         }
 
         public override uint ReadUInt32()
         {
-            return Reader.ReadUInt32();
+            var result = BinaryPrimitives.ReadUInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            _position += 4;
+            return result;
         }
 
         public override bool ReadUInt32AsBoolean()
@@ -244,22 +263,36 @@ namespace Unreal.Core
 
         public override ulong ReadUInt64()
         {
-            return Reader.ReadUInt64();
+            var result = BinaryPrimitives.ReadUInt64LittleEndian(Bytes.Slice(_position, 8).Span);
+            _position += 8;
+            return result;
         }
 
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
-            Reader.BaseStream.Seek(offset, seekOrigin);
+            if (offset < 0 || offset > _length || (seekOrigin == SeekOrigin.Current && offset + _position > _length))
+            {
+                IsError = true;
+                return;
+            }
+
+            _ = (seekOrigin switch
+            {
+                SeekOrigin.Begin => _position = offset,
+                SeekOrigin.End => _position = _length - offset,
+                SeekOrigin.Current => _position += offset,
+                _ => _position = offset,
+            });
         }
 
         public override void SkipBytes(uint byteCount)
         {
-            Reader.BaseStream.Seek(byteCount, SeekOrigin.Current);
+            SkipBytes((int)byteCount);
         }
 
         public override void SkipBytes(int byteCount)
         {
-            Reader.BaseStream.Seek(byteCount, SeekOrigin.Current);
+            _position += byteCount;
         }
     }
 }

@@ -25,9 +25,6 @@ namespace Unreal.Core
 
         public override int MarkPosition { get; protected set; }
 
-        // Num = count bits
-        // Pos = 0
-
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
@@ -52,12 +49,12 @@ namespace Unreal.Core
 
         public override bool AtEnd()
         {
-            return Position >= LastBit || CurrentByte > Buffer.Length;
+            return Position >= LastBit;
         }
 
         public override bool CanRead(int count)
         {
-            return CurrentByte + count <= LastBit || CurrentByte + count <= Buffer.Length;
+            return Position + count <= LastBit;
         }
 
         public override bool PeekBit()
@@ -103,15 +100,31 @@ namespace Unreal.Core
 
         public override ReadOnlySpan<byte> ReadBits(int bitCount)
         {
-            if (!CanRead(bitCount))
+            if (!CanRead(bitCount) || bitCount < 0)
             {
                 IsError = true;
                 return ReadOnlySpan<byte>.Empty;
             }
 
-            var result = ReadBytes((bitCount + 3) / 8);
+            var bitCountUsedInByte = Position & 7;
+            if (bitCountUsedInByte == 0 && bitCount % 8 == 0)
+            {
+                return ReadBytes(bitCount >> 3);
+            }
 
-            Position += bitCount;
+            Span<byte> result = new byte[((bitCount >> 3) + 1)];
+            for (int i = 0; i < bitCount; i++)
+            {
+                if (IsError)
+                {
+                    return Span<byte>.Empty;
+                }
+
+                if (ReadBit())
+                {
+                    result[(i >> 3)] |= (byte)(1 << i);
+                }
+            }
             return result;
         }
 
@@ -152,14 +165,14 @@ namespace Unreal.Core
 
         public override ReadOnlySpan<byte> ReadBytes(int byteCount)
         {
-            if (!CanRead(byteCount) || byteCount < 0)
+            if (!CanRead(byteCount * 8) || byteCount < 0)
             {
                 IsError = true;
                 return Span<byte>.Empty;
             }
 
             var bitCountUsedInByte = Position & 7;
-            var bitCountLeftInByte = 8 - (Position & 7);
+            var bitCountLeftInByte = 8 - bitCountUsedInByte;
             ReadOnlySpan<byte> result;
             if (bitCountUsedInByte == 0)
             {
@@ -478,7 +491,7 @@ namespace Unreal.Core
             _ = (seekOrigin switch
             {
                 SeekOrigin.Begin => Position = offset,
-                SeekOrigin.End => Position = (Buffer.Length * 8)- offset,
+                SeekOrigin.End => Position = (Buffer.Length * 8) - offset,
                 SeekOrigin.Current => Position += offset,
                 _ => Position = offset,
             });
@@ -516,7 +529,7 @@ namespace Unreal.Core
 
         public override int GetBitsLeft()
         {
-            return Buffer.Length - Position;
+            return (Buffer.Length * 8) - Position;
         }
 
         public override void AppendDataFromChecked(ReadOnlySpan<byte> data)

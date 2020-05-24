@@ -6,7 +6,7 @@ namespace BenchmarkReader
     {
         static void Main(string[] args)
         {
-            BenchmarkRunner.Run<BenchmarkReplayReader>();
+            BenchmarkRunner.Run<BenchmarkBitReader>();
         }
     }
 }

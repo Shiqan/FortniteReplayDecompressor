@@ -32,11 +32,17 @@ namespace BenchmarkReader
         }
 
         [Benchmark]
+        public void ReadByte()
+        {
+            Reader.ReadByte();
+        }
+
+        [Benchmark]
         public void ReadBytes()
         {
             Reader.ReadBytes(5);
         }
-        
+
         [Benchmark]
         public void BitReader()
         {

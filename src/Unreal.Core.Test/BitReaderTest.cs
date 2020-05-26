@@ -40,10 +40,9 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             for (var i = 0; i < expectedBits.Length; i++)
             {
-                Assert.Equal(expectedBits[i], reader.PeekBit());
-                Assert.Equal(i + 1, reader.Position);
+                Assert.Equal(expectedBits[0], reader.PeekBit());
             }
-            Assert.Equal(8, reader.Position);
+            Assert.Equal(0, reader.Position);
         }
 
         [Theory]
@@ -123,9 +122,9 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0x46, 1)]
-        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0xF5, 14)]
-        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0x32, 4)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0x91, 1)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0x5C, 14)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, 0xF2, 4)]
         public void ReadByteMisalignedTest(byte[] rawData, byte expected, int bitPosition)
         {
             var reader = new BitReader(rawData);
@@ -147,9 +146,9 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, new byte[] { 0x46 }, 1, 1)]
-        [InlineData(new byte[] { 0x4E, 0xE5, 0x8A, 0x3F }, new byte[] { 0x62, 0x8F }, 2, 14)]
-        [InlineData(new byte[] { 0xAB, 0x46, 0x65, 0x72, 0x72, 0x6F, 0x6E, 0x99 }, new byte[] { 0xAE, 0x4E }, 2, 21)]
+        [InlineData(new byte[] { 0x23, 0x2F, 0xD7 }, new byte[] { 0x91 }, 1, 1)]
+        [InlineData(new byte[] { 0x4E, 0xE5, 0x8A, 0x3F }, new byte[] { 0x2B, 0xFE }, 2, 14)]
+        [InlineData(new byte[] { 0xAB, 0x46, 0x65, 0x72, 0x72, 0x6F, 0x6E, 0x99 }, new byte[] { 0x93, 0x93 }, 2, 21)]
         public void ReadBytesMisalignedTest(byte[] rawData, byte[] expected, int bytesToRead, int bitPosition)
         {
             var reader = new BitReader(rawData);
@@ -173,10 +172,8 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(109, new byte[] { 0x6D, 0x00, 0x00, 0x00 })]
-        [InlineData(14858, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
-        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00 })]
-        [InlineData(-420, new byte[] { 0x5C, 0xFE, 0xFF, 0xFF })]
+        [InlineData(510, new byte[] { 0xFE, 0x01 })]
+        [InlineData(16, new byte[] { 0x10, 0x00 })]
         public void ReadUInt16Test(ushort expected, byte[] rawData)
         {
             var reader = new BitReader(rawData);
@@ -184,10 +181,8 @@ namespace Unreal.Core.Test
         }
         
         [Theory]
-        [InlineData(109, new byte[] { 0x6D, 0x00, 0x00, 0x00 })]
-        [InlineData(14858, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
-        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00 })]
-        [InlineData(-420, new byte[] { 0x5C, 0xFE, 0xFF, 0xFF })]
+        [InlineData(109, new byte[] { 0x6D, 0x00 })]
+        [InlineData(-255, new byte[] { 0x01, 0xFF })]
         public void ReadInt16Test(short expected, byte[] rawData)
         {
             var reader = new BitReader(rawData);
@@ -204,11 +199,13 @@ namespace Unreal.Core.Test
             Assert.Equal(expected, reader.ReadUInt32());
         }
         
-        [Fact]
-        public void ReadUInt32Test()
+        [Theory]
+        [InlineData(14858u, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
+        [InlineData(73909u, new byte[] { 0xB5, 0x20, 0x01, 0x00 })]
+        public void ReadUInt32Test(uint expected, byte[] rawData)
         {
-            var reader = new BitReader(new byte[] { 10, 58, 0, 0 });
-            Assert.Equal(14858u, reader.ReadUInt32());
+            var reader = new BitReader(rawData);
+            Assert.Equal(expected, reader.ReadUInt32());
         }
 
         [Theory]
@@ -242,10 +239,8 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(109, new byte[] { 0x6D, 0x00, 0x00, 0x00 })]
-        [InlineData(14858, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
-        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00 })]
-        [InlineData(-420, new byte[] { 0x5C, 0xFE, 0xFF, 0xFF })]
+        [InlineData(123456789123456789, new byte[] { 0x15, 0x5F, 0xD0, 0xAC, 0x4B, 0x9B, 0xB6, 0x01 })]
+        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
         public void ReadUInt64Test(ulong expected, byte[] rawData)
         {
             var reader = new BitReader(rawData);
@@ -253,10 +248,9 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(109, new byte[] { 0x6D, 0x00, 0x00, 0x00 })]
-        [InlineData(14858, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
-        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00 })]
-        [InlineData(-420, new byte[] { 0x5C, 0xFE, 0xFF, 0xFF })]
+        [InlineData(123456789123456789, new byte[] { 0x15, 0x5F, 0xD0, 0xAC, 0x4B, 0x9B, 0xB6, 0x01 })]
+        [InlineData(420, new byte[] { 0xA4, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+        [InlineData(-420, new byte[] { 0x5C, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF })]
         public void ReadInt64Test(long expected, byte[] rawData)
         {
             var reader = new BitReader(rawData);
@@ -273,25 +267,17 @@ namespace Unreal.Core.Test
             Assert.Equal(expected, reader.ReadIntPacked());
         }
 
-        [Fact]
-        public void ReadSerializedIntTest()
-        {
-            var reader = new BitReader(new byte[] { 1 });
-            Assert.Equal(1u, reader.ReadSerializedInt(3));
-        }
-
-        [Fact]
-        public void ReadSerializedIntTest2()
-        {
-            var reader = new BitReader(new byte[] { 0x64 });
-            Assert.Equal(0u, reader.ReadSerializedInt(2));
-            Assert.Equal(1, reader.Position);
-        }
-
         [Theory]
-        [InlineData(new byte[] {
-            0x99, 0xF1
-        })]
+        [InlineData(0u, new byte[] { 0x64 }, 3)]
+        [InlineData(1u, new byte[] { 0x01 }, 2)]
+        public void ReadSerializedIntTest(uint expected, byte[] rawData, int bitsToRead)
+        {
+            var reader = new BitReader(rawData);
+            Assert.Equal(expected, reader.ReadSerializedInt(bitsToRead));
+        }
+        
+        [Theory]
+        [InlineData(new byte[] { 0x99, 0xF1 })]
         public void StaticParseNameTest(byte[] rawData)
         {
             var archive = new BitReader(rawData)
@@ -319,14 +305,15 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(new byte[] { 0x99, 0xF1 }, new byte[] { 0x99, 0xF1 })]
+        [InlineData(new byte[] { 0x99, 0xF1 }, new byte[] { 0x21, 0xA1 })]
+        [InlineData(new byte[] { 0x81, 0xEE, 0x7A, 0x00, 0x06 }, new byte[] { 0x84, 0xE3 })]
         public void AppendDataFromCheckedTest(byte[] rawData, byte[] rawData2)
         {
             var archive = new BitReader(rawData);
-            Assert.Equal(16, archive.GetBitsLeft());
+            Assert.Equal(rawData.Length * 8, archive.GetBitsLeft());
 
             archive.AppendDataFromChecked(rawData2);
-            Assert.Equal(32, archive.GetBitsLeft());
+            Assert.Equal(rawData.Length * 8 + rawData2.Length * 8, archive.GetBitsLeft());
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using System.Text;
-using Unreal.Core.Extensions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -15,7 +13,6 @@ namespace Unreal.Core
     public class BitReader : FBitArchive
     {
         private ReadOnlyMemory<byte> Buffer { get; set; }
-        //private BitArray Bits { get; set; }
 
         public override int Position { get; protected set; }
 
@@ -95,7 +92,7 @@ namespace Unreal.Core
                     result |= (byte)(1 << i);
                 }
             }
-            return (int)result;
+            return result;
         }
 
         public override ReadOnlySpan<byte> ReadBits(int bitCount)
@@ -113,7 +110,7 @@ namespace Unreal.Core
             }
 
             Span<byte> result = new byte[((bitCount >> 3) + 1)];
-            for (int i = 0; i < bitCount; i++)
+            for (var i = 0; i < bitCount; i++)
             {
                 if (IsError)
                 {
@@ -151,8 +148,8 @@ namespace Unreal.Core
         {
             var bitCountUsedInByte = Position & 7;
             var bitCountLeftInByte = 8 - (Position & 7);
-
-            var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] << bitCountUsedInByte) | (Buffer.Span[CurrentByte + 1] >> bitCountLeftInByte));
+            
+            var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
 
             Position += 8;
             return result;
@@ -181,9 +178,9 @@ namespace Unreal.Core
             else
             {
                 Span<byte> output = new byte[byteCount];
-                for (int i = 0; i < byteCount; i++)
+                for (var i = 0; i < byteCount; i++)
                 {
-                    output[i] = (byte)((Buffer.Span[CurrentByte + i] << bitCountUsedInByte) | (Buffer.Span[CurrentByte + 1 + i] >> bitCountLeftInByte));
+                    output[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
                 }
                 result = output;
             }
@@ -304,16 +301,16 @@ namespace Unreal.Core
 
         public override uint ReadIntPacked()
         {
-            int BitsUsed = (int)Position % 8;
-            int BitsLeft = 8 - BitsUsed;
-            int SourceMask0 = (1 << BitsLeft) - 1;
-            int SourceMask1 = (1 << BitsUsed) - 1;
+            var BitsUsed = Position % 8;
+            var BitsLeft = 8 - BitsUsed;
+            var SourceMask0 = (1 << BitsLeft) - 1;
+            var SourceMask1 = (1 << BitsUsed) - 1;
 
             uint value = 0;
 
-            int OldPos = Position;
+            var OldPos = Position;
 
-            int shift = 0;
+            var shift = 0;
             for (var it = 0; it < 5; it++)
             {
                 if (IsError)
@@ -321,13 +318,13 @@ namespace Unreal.Core
                     return 0;
                 }
 
-                int currentBytePos = (int)Position / 8;
-                int byteAlignedPositon = currentBytePos * 8;
+                var currentBytePos = Position / 8;
+                var byteAlignedPositon = currentBytePos * 8;
 
                 Position = byteAlignedPositon;
 
-                byte currentByte = ReadByte();
-                byte nextByte = currentByte;
+                var currentByte = ReadByte();
+                var nextByte = currentByte;
                 if (BitsUsed != 0)
                 {
                     nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
@@ -335,7 +332,7 @@ namespace Unreal.Core
 
                 OldPos += 8;
 
-                int readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
+                var readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
                 value = (uint)((readByte >> 1) << shift) | value;
 
                 if ((readByte & 1) == 0)
@@ -529,16 +526,16 @@ namespace Unreal.Core
 
         public override int GetBitsLeft()
         {
-            return (Buffer.Length * 8) - Position;
+            return LastBit - Position;
         }
 
         public override void AppendDataFromChecked(ReadOnlySpan<byte> data)
         {
-            LastBit += data.Length;
+            LastBit += (data.Length * 8);
 
-            var combined = new Memory<byte>();
+            var combined = new byte[Buffer.Span.Length + data.Length];
             Buffer.CopyTo(combined);
-            data.CopyTo(combined.ToArray());
+            data.CopyTo(combined);
 
             Buffer = combined;
         }

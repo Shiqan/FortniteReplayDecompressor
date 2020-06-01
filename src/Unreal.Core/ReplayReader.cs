@@ -1884,9 +1884,9 @@ namespace Unreal.Core
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
-                var bunchDataBits = bitReader.ReadSerializedInt(maxPacket * 8);
+                var bunchDataBits = (int) bitReader.ReadSerializedInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
-                bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits))
+                bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits), bunchDataBits)
                 {
                     EngineNetworkVersion = bitReader.EngineNetworkVersion,
                     NetworkVersion = bitReader.NetworkVersion,

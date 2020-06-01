@@ -109,7 +109,7 @@ namespace Unreal.Core
                 return ReadBytes(bitCount >> 3);
             }
 
-            Span<byte> result = new byte[((bitCount >> 3) + 1)];
+            Span<byte> result = new byte[((bitCount + 7) / 8)];
             for (var i = 0; i < bitCount; i++)
             {
                 if (IsError)
@@ -169,7 +169,7 @@ namespace Unreal.Core
             }
 
             var bitCountUsedInByte = Position & 7;
-            var bitCountLeftInByte = 8 - bitCountUsedInByte;
+            var bitCountLeftInByte = 8 - (Position & 7);
             ReadOnlySpan<byte> result;
             if (bitCountUsedInByte == 0)
             {
@@ -301,47 +301,85 @@ namespace Unreal.Core
 
         public override uint ReadIntPacked()
         {
-            var BitsUsed = Position % 8;
-            var BitsLeft = 8 - BitsUsed;
-            var SourceMask0 = (1 << BitsLeft) - 1;
-            var SourceMask1 = (1 << BitsUsed) - 1;
+            //var BitsUsed = Position % 8;
+            //var BitsLeft = 8 - BitsUsed;
+            //var SourceMask0 = (1 << BitsLeft) - 1;
+            //var SourceMask1 = (1 << BitsUsed) - 1;
+
+            //uint value = 0;
+
+            //var OldPos = Position;
+
+            //var shift = 0;
+            //for (var it = 0; it < 5; it++)
+            //{
+            //    if (IsError)
+            //    {
+            //        return 0;
+            //    }
+
+            //    var currentBytePos = Position / 8;
+            //    var byteAlignedPositon = currentBytePos * 8;
+
+            //    Position = byteAlignedPositon;
+
+            //    var currentByte = ReadByte();
+            //    var nextByte = currentByte;
+            //    if (BitsUsed != 0)
+            //    {
+            //        nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
+            //    }
+
+            //    OldPos += 8;
+
+            //    var readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
+            //    value = (uint)((readByte >> 1) << shift) | value;
+
+            //    if ((readByte & 1) == 0)
+            //    {
+            //        break;
+            //    }
+            //    shift += 7;
+            //}
+            //Position = OldPos;
+
+            //return value;
+
+
+
+            var bitCountUsedInByte = Position & 7;
+            var bitCountLeftInByte = 8 - (Position & 7);
+            var srcMaskByte0 = (byte)((1U << bitCountLeftInByte) - 1U);
+            var srcMaskByte1 = (byte)((1U << bitCountUsedInByte) - 1U);
+            var srcIndex = CurrentByte;
+            var nextSrcIndex = bitCountUsedInByte != 0 ? srcIndex + 1 : srcIndex;
 
             uint value = 0;
-
-            var OldPos = Position;
-
-            var shift = 0;
-            for (var it = 0; it < 5; it++)
+            for (int It = 0, shiftCount = 0; It < 5; ++It, shiftCount += 7)
             {
-                if (IsError)
+                if (!CanRead(8))
                 {
-                    return 0;
+                    IsError = true;
+                    break;
                 }
 
-                var currentBytePos = Position / 8;
-                var byteAlignedPositon = currentBytePos * 8;
-
-                Position = byteAlignedPositon;
-
-                var currentByte = ReadByte();
-                var nextByte = currentByte;
-                if (BitsUsed != 0)
+                if (nextSrcIndex >= Buffer.Length)
                 {
-                    nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
+                    nextSrcIndex = srcIndex;
                 }
 
-                OldPos += 8;
+                Position += 8;
 
-                var readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
-                value = (uint)((readByte >> 1) << shift) | value;
+                var readByte = (byte) (((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
+                value = (uint)((readByte >> 1) << shiftCount) | value;
+                srcIndex++;
+                nextSrcIndex++;
 
                 if ((readByte & 1) == 0)
                 {
                     break;
                 }
-                shift += 7;
             }
-            Position = OldPos;
 
             return value;
         }

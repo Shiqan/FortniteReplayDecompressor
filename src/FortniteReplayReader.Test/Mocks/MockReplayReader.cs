@@ -27,7 +27,7 @@ namespace FortniteReplayReader.Test.Mocks
             return Replay;
         }
 
-        internal BinaryReader DecryptBuffer(BinaryReader archive, int v)
+        internal FArchive DecryptBuffer(BinaryReader archive, int v)
         {
             return base.DecryptBuffer(archive, v);
         }

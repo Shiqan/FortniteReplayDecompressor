@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
     <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
     <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
     <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />

@@ -172,14 +172,14 @@ namespace Unreal.Core
 
         public override short ReadInt16()
         {
-            var result = BinaryPrimitives.ReadInt16LittleEndian(Bytes.Slice(_position, 2).Span);
+            var result = BitConverter.ToInt16(Bytes.Slice(_position, 2).Span);
             _position += 2;
             return result;
         }
 
         public override int ReadInt32()
         {
-            var result = BinaryPrimitives.ReadInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            var result = BitConverter.ToInt32(Bytes.Slice(_position, 4).Span);
             _position += 4;
             return result;
         }
@@ -191,7 +191,7 @@ namespace Unreal.Core
 
         public override long ReadInt64()
         {
-            var result = BinaryPrimitives.ReadInt64LittleEndian(Bytes.Slice(_position, 8).Span);
+            var result = BitConverter.ToInt64(Bytes.Slice(_position, 8).Span);
             _position += 8;
             return result;
         }
@@ -221,7 +221,7 @@ namespace Unreal.Core
 
         public override float ReadSingle()
         {
-            var result = (float)BinaryPrimitives.ReadUInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            var result = BitConverter.ToSingle(Bytes.Slice(_position, 4).Span);
             _position += 4;
             return result;
         }
@@ -239,21 +239,21 @@ namespace Unreal.Core
 
         public override ushort ReadUInt16()
         {
-            var result = BinaryPrimitives.ReadUInt16LittleEndian(Bytes.Slice(_position, 2).Span);
+            var result = BitConverter.ToUInt16(Bytes.Slice(_position, 2).Span);
             _position += 2;
             return result;
         }
 
         public override uint ReadUInt32()
         {
-            var result = BinaryPrimitives.ReadUInt32LittleEndian(Bytes.Slice(_position, 4).Span);
+            var result = BitConverter.ToUInt32(Bytes.Slice(_position, 4).Span);
             _position += 4;
             return result;
         }
 
         public override bool ReadUInt32AsBoolean()
         {
-            return ReadUInt32() == 1u;
+            return ReadUInt32() >= 1u;
         }
 
         public override T ReadUInt32AsEnum<T>()
@@ -263,7 +263,7 @@ namespace Unreal.Core
 
         public override ulong ReadUInt64()
         {
-            var result = BinaryPrimitives.ReadUInt64LittleEndian(Bytes.Slice(_position, 8).Span);
+            var result = BitConverter.ToUInt64(Bytes.Slice(_position, 8).Span);
             _position += 8;
             return result;
         }

@@ -24,13 +24,13 @@ namespace ConsoleReader
             var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
+            var reader = new ReplayReader(logger, ParseMode.Minimal);
             foreach (var replayFile in replayFiles)
             {
                 var sw = new Stopwatch();
                 sw.Start();
                 try
                 {
-                    var reader = new ReplayReader(logger, ParseMode.Minimal);
                     var replay = reader.ReadReplay(replayFile);
                 }
                 catch (Exception ex)

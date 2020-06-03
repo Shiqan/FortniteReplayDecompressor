@@ -110,18 +110,24 @@ namespace Unreal.Core
             }
 
             Span<byte> result = new byte[((bitCount + 7) / 8)];
+            
+            var bitCountLeftInByte = 8 - (Position & 7);
+            var byteCount = bitCount / 8;
+            for (var i = 0; i < byteCount; i++)
+            {
+                result[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+            }
+            Position += (byteCount * 8);
+
+            bitCount %= 8;
             for (var i = 0; i < bitCount; i++)
             {
-                if (IsError)
-                {
-                    return Span<byte>.Empty;
-                }
-
                 if (ReadBit())
                 {
-                    result[(i >> 3)] |= (byte)(1 << i);
+                    result[^1] |= (byte)(1 << i);
                 }
             }
+
             return result;
         }
 

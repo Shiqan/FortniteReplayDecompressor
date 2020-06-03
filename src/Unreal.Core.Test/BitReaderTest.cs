@@ -62,9 +62,12 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(new byte[] { 0x23 }, new byte[] { 0x11 }, 5, 1)]
-        [InlineData(new byte[] { 0x4A, 0xF1, 0xB2 }, new byte[] { 0x5E, 0x00 }, 11, 11)]
-        [InlineData(new byte[] { 0xEE, 0x32, 0xC9 }, new byte[] { 0x0C }, 4, 20)]
+        //[InlineData(new byte[] { 0x23 }, new byte[] { 0x11 }, 5, 1)]
+        //[InlineData(new byte[] { 0x4A, 0xF1, 0xB2 }, new byte[] { 0x5E, 0x00 }, 11, 11)]
+        //[InlineData(new byte[] { 0xEE, 0x32, 0xC9 }, new byte[] { 0x0C }, 4, 20)]
+        [InlineData(new byte[] { 0x58, 0x22, 0x38 }, new byte[] { 0x4B, 0x04 }, 16, 3)]
+        [InlineData(new byte[] { 0x58, 0x22, 0x38 }, new byte[] { 0x4B, 0x04, 0x03 }, 18, 3)]
+        [InlineData(new byte[] { 0x94, 0xA6, 0x7C, 0x0D }, new byte[] { 0xD2, 0x94, 0x2F }, 23, 3)]
         public void ReadBitsMisAlignedTest(byte[] rawData, byte[] expected, int bitsToRead, int position)
         {
             var reader = new BitReader(rawData);

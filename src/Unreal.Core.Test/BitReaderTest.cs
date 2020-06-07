@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Unreal.Core.Models;
 using Xunit;
 
 namespace Unreal.Core.Test
@@ -55,16 +56,14 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             var result = reader.ReadBits(bitsToRead).ToArray();
 
-            var t = new BitArray(rawData);
-
             Assert.Equal(expected, result);
             Assert.Equal(bitsToRead, reader.Position);
         }
 
         [Theory]
-        //[InlineData(new byte[] { 0x23 }, new byte[] { 0x11 }, 5, 1)]
-        //[InlineData(new byte[] { 0x4A, 0xF1, 0xB2 }, new byte[] { 0x5E, 0x00 }, 11, 11)]
-        //[InlineData(new byte[] { 0xEE, 0x32, 0xC9 }, new byte[] { 0x0C }, 4, 20)]
+        [InlineData(new byte[] { 0x23 }, new byte[] { 0x11 }, 5, 1)]
+        [InlineData(new byte[] { 0x4A, 0xF1, 0xB2 }, new byte[] { 0x5E, 0x06 }, 11, 11)]
+        [InlineData(new byte[] { 0xEE, 0x32, 0xC9 }, new byte[] { 0x0C }, 4, 20)]
         [InlineData(new byte[] { 0x58, 0x22, 0x38 }, new byte[] { 0x4B, 0x04 }, 16, 3)]
         [InlineData(new byte[] { 0x58, 0x22, 0x38 }, new byte[] { 0x4B, 0x04, 0x03 }, 18, 3)]
         [InlineData(new byte[] { 0x94, 0xA6, 0x7C, 0x0D }, new byte[] { 0xD2, 0x94, 0x2F }, 23, 3)]
@@ -182,7 +181,7 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             Assert.Equal(expected, reader.ReadUInt16());
         }
-        
+
         [Theory]
         [InlineData(109, new byte[] { 0x6D, 0x00 })]
         [InlineData(-255, new byte[] { 0x01, 0xFF })]
@@ -201,7 +200,7 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             Assert.Equal(expected, reader.ReadUInt32());
         }
-        
+
         [Theory]
         [InlineData(14858u, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
         [InlineData(73909u, new byte[] { 0xB5, 0x20, 0x01, 0x00 })]
@@ -219,7 +218,7 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             Assert.Equal(expected, reader.ReadInt32AsBoolean());
         }
-        
+
         [Theory]
         [InlineData(109, new byte[] { 0x6D, 0x00, 0x00, 0x00 })]
         [InlineData(14858, new byte[] { 0x0A, 0x3A, 0x00, 0x00 })]
@@ -230,7 +229,7 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             Assert.Equal(expected, reader.ReadInt32());
         }
-        
+
         [Theory]
         [InlineData(new byte[] { 0xE7 })]
         [InlineData(new byte[] { 0x6D, 0x00, 0x00 })]
@@ -278,7 +277,7 @@ namespace Unreal.Core.Test
             var reader = new BitReader(rawData);
             Assert.Equal(expected, reader.ReadSerializedInt(bitsToRead));
         }
-        
+
         [Theory]
         [InlineData(new byte[] { 0x99, 0xF1 })]
         public void StaticParseNameTest(byte[] rawData)
@@ -294,17 +293,32 @@ namespace Unreal.Core.Test
         }
 
         [Theory]
-        [InlineData(new byte[] { })]
-        public void ReadVectorTest(byte[] rawData)
+        [InlineData(new byte[] { 0x70, 0x99, 0x7F, 0x3F, 0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F }, 0.998435020446777, 1, 1)]
+        [InlineData(new byte[] { 0xD3, 0x89, 0x7F, 0x3F, 0xBB, 0x08, 0x80, 0x3F, 0x00, 0x00, 0x80, 0x3F }, 0.99819678068161, 1.00026643276215, 1)]
+        public void ReadVectorTest(byte[] rawData, float x, float y, float z)
         {
+            var reader = new BitReader(rawData);
+            var result = reader.ReadVector();
 
+            var expected = new FVector(x, y, z);
+
+            Assert.Equal(expected, result);
         }
 
         [Theory]
-        [InlineData(new byte[] { })]
-        public void ReadPackedVectorTest(byte[] rawData)
+        [InlineData(new byte[] { 0xB4, 0xC5, 0x5C, 0xEF, 0x81, 0x33, 0x76, 0x33, 0x3F }, 10, 24, 176286, -167520, -2618)]
+        [InlineData(new byte[] { 0x74, 0xF3, 0x74, 0xC7, 0xB4, 0x2D, 0x62, 0x51, 0x3F }, 10, 24, 181237, -172272, -2235)]
+        [InlineData(new byte[] { 0x98, 0xE4, 0x52, 0x62, 0x07, 0x9A, 0x75, 0x70, 0x4F, 0xF9, 0x03 }, 100, 30, 179955, -181401, -2192)]
+        [InlineData(new byte[] { 0x98, 0x5A, 0xF6, 0x63, 0x8C, 0x4B, 0x7A, 0x46, 0x08, 0xF8, 0x03 }, 100, 30, 188546, -175249, -2610)]
+        [InlineData(new byte[] { 0x40, 0x05 }, 1, 24, 0, 0, 0)]
+        public void ReadPackedVectorTest(byte[] rawData, int scaleFactor, int maxBits, float x, float y, float z)
         {
+            var reader = new BitReader(rawData);
+            var result = reader.ReadPackedVector(scaleFactor, maxBits);
 
+            var expected = new FVector(x, y, z);
+
+            Assert.Equal(expected, result);
         }
 
         [Theory]
@@ -315,7 +329,7 @@ namespace Unreal.Core.Test
             var archive = new BitReader(rawData);
             Assert.Equal(rawData.Length * 8, archive.GetBitsLeft());
 
-            archive.AppendDataFromChecked(rawData2);
+            archive.AppendDataFromChecked(rawData2, rawData2.Length * 8);
             Assert.Equal(rawData.Length * 8 + rawData2.Length * 8, archive.GetBitsLeft());
         }
     }

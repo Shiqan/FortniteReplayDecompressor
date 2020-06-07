@@ -12,7 +12,8 @@ namespace Unreal.Core
     {
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
-        public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }        
+        public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }
+        public NetBitReader(ReadOnlySpan<byte> input, int bitCount) : base(input.ToArray(), bitCount) { }
 
         public int SerializePropertyInt()
         {

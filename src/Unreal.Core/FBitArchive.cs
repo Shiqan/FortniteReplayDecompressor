@@ -125,6 +125,6 @@ namespace Unreal.Core
         /// Append bool array to this archive.
         /// </summary>
         /// <param name="data"></param>
-        public abstract void AppendDataFromChecked(ReadOnlySpan<byte> data);
+        public abstract void AppendDataFromChecked(ReadOnlySpan<byte> data, int bitCount);
     }
 }

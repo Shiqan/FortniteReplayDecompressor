@@ -220,6 +220,7 @@ namespace Unreal.Core.Models
             NetGuidToPathName.Clear();
             ObjectLookup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
+            _networkGameplayTagNodeIndex = null;
 
             _archTypeToExportGroup.Clear();
             _cleanedPaths.Clear();

@@ -16,7 +16,13 @@ namespace FortniteReplayReader
         private List<KillFeedEntry> KillFeed = new List<KillFeedEntry>();
 
         private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
+        private Dictionary<uint, uint> _channelToActor = new Dictionary<uint, uint>();
         private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
+
+        /// <summary>
+        /// Sometimes we receive a PlayerPawn but we havent received the PlayerState yet, so we dont want to processes these yet.
+        /// </summary>
+        private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
 
         private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
         private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
@@ -34,6 +40,7 @@ namespace FortniteReplayReader
         public void AddActorChannel(uint channelIndex, uint guid)
         {
             _actorToChannel[guid] = channelIndex;
+            _channelToActor[channelIndex] = guid;
         }
 
         public void RemoveChannel(uint channelIndex, uint guid)
@@ -42,6 +49,11 @@ namespace FortniteReplayReader
             _unknownWeapons.Remove(channelIndex);
         }
 
+        /// <summary>
+        /// Once a replay is fully parsed, add the data build over time to the replay.
+        /// </summary>
+        /// <param name="replay"></param>
+        /// <returns>FortniteReplay</returns>
         public FortniteReplay Build(FortniteReplay replay)
         {
             UpdateTeamData();
@@ -74,6 +86,20 @@ namespace FortniteReplayReader
             }
             playerData = null;
             return false;
+        }
+
+        private void HandleQueuedPlayerPawns(uint stateChannelIndex)
+        {
+            if (_channelToActor.TryGetValue(stateChannelIndex, out var actorId))
+            {
+                if (_queuedPlayerPawns.Remove(actorId, out var playerPawns))
+                {
+                    foreach (var playerPawn in playerPawns)
+                    {
+                        UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
+                    }
+                }
+            }
         }
 
         public void UpdateGameState(GameState state)
@@ -159,7 +185,9 @@ namespace FortniteReplayReader
                 return;
             }
 
-            if (!_players.TryGetValue(channelIndex, out var playerData))
+            var isNewPlayer = !_players.TryGetValue(channelIndex, out var playerData);
+
+            if (isNewPlayer)
             {
                 playerData = new PlayerData(state);
                 _players[channelIndex] = playerData;
@@ -193,6 +221,12 @@ namespace FortniteReplayReader
 
             playerData.Cosmetics.Parts ??= state.Parts?.Name;
             playerData.Cosmetics.VariantRequiredCharacterParts ??= state.VariantRequiredCharacterParts?.Select(i => i.Name);
+
+
+            if (isNewPlayer)
+            {
+                HandleQueuedPlayerPawns(channelIndex);
+            }
         }
 
         public void UpdateKillFeed(uint channelIndex, PlayerData data, FortPlayerState state)
@@ -251,7 +285,18 @@ namespace FortniteReplayReader
                 }
                 else
                 {
-                    // no player state channel?
+                    if (!_queuedPlayerPawns.TryGetValue(actorId, out var playerPawns))
+                    {
+                        playerPawns = new List<QueuedPlayerPawn>();
+                        _queuedPlayerPawns[actorId] = playerPawns;
+                    }
+
+                    playerPawns.Add(new QueuedPlayerPawn
+                    {
+                        ChannelId = channelIndex,
+                        PlayerPawn = pawn
+                    });
+
                     return;
                 }
             }
@@ -341,7 +386,7 @@ namespace FortniteReplayReader
                 {
                     newWeapon = new WeaponData();
                     _weapons[channelIndex] = newWeapon;
-                } 
+                }
                 else
                 {
                     _unknownWeapons.Remove(channelIndex);

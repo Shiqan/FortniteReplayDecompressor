@@ -424,7 +424,7 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    var cmdReader = new NetBitReader(netBitReader.ReadBits(numBits))
+                    var cmdReader = new NetBitReader(netBitReader.ReadBits(numBits), (int) numBits)
                     {
                         EngineNetworkVersion = netBitReader.EngineNetworkVersion,
                         NetworkVersion = netBitReader.NetworkVersion

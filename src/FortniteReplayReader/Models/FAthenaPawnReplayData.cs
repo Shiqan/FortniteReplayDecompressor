@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models
 
         public void Serialize(NetBitReader reader)
         {
-            //EncryptedReplayData = reader.ReadBytes(reader.GetBitsLeft() / 8);
+            reader.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }

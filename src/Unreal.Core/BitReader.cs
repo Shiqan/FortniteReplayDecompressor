@@ -110,7 +110,7 @@ namespace Unreal.Core
             }
 
             Span<byte> result = new byte[((bitCount + 7) / 8)];
-            
+
             var bitCountLeftInByte = 8 - (Position & 7);
             var byteCount = bitCount / 8;
             for (var i = 0; i < byteCount; i++)
@@ -154,7 +154,7 @@ namespace Unreal.Core
         {
             var bitCountUsedInByte = Position & 7;
             var bitCountLeftInByte = 8 - (Position & 7);
-            
+
             var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
 
             Position += 8;
@@ -376,7 +376,7 @@ namespace Unreal.Core
 
                 Position += 8;
 
-                var readByte = (byte) (((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
+                var readByte = (byte)(((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
                 value = (uint)((readByte >> 1) << shiftCount) | value;
                 srcIndex++;
                 nextSrcIndex++;
@@ -573,13 +573,14 @@ namespace Unreal.Core
             return LastBit - Position;
         }
 
-        public override void AppendDataFromChecked(ReadOnlySpan<byte> data)
+        public override void AppendDataFromChecked(ReadOnlySpan<byte> data, int bitCount)
         {
-            LastBit += (data.Length * 8);
+            LastBit += bitCount;
 
+            // this works only because partial bunches are enforced to be byte aligned
             var combined = new byte[Buffer.Span.Length + data.Length];
             Buffer.CopyTo(combined);
-            data.CopyTo(combined);
+            data.ToArray().CopyTo(combined, Buffer.Span.Length);
 
             Buffer = combined;
         }

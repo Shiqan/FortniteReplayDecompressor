@@ -15,7 +15,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Information));
+                    .SetMinimumLevel(LogLevel.Error));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -24,11 +24,11 @@ namespace ConsoleReader
             var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
+            var sw = new Stopwatch();
             var reader = new ReplayReader(logger, ParseMode.Minimal);
             foreach (var replayFile in replayFiles)
             {
-                var sw = new Stopwatch();
-                sw.Start();
+                sw.Restart();
                 try
                 {
                     var replay = reader.ReadReplay(replayFile);
@@ -38,7 +38,7 @@ namespace ConsoleReader
                     Console.WriteLine(ex);
                 }
                 sw.Stop();
-                Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
+                Console.WriteLine($"---- {replayFile} : done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
             }
 
             //var replayFile = "Replays/shootergame.replay";

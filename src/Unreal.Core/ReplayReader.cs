@@ -82,9 +82,25 @@ namespace Unreal.Core
             ReadReplayInfo(archive);
             ReadReplayChunks(archive);
 
-            _netGuidCache.Cleanup();
+            Cleanup();
 
             return Replay;
+        }
+
+        protected virtual void Cleanup()
+        {
+            InReliable = 0;
+            Channels = new UChannel[DefaultMaxChannelSize];
+            IgnoringChannels = new uint?[DefaultMaxChannelSize];
+
+            replayDataIndex = 0;
+            checkpointIndex = 0;
+            packetIndex = 0;
+            bunchIndex = 0;
+            InPacketId = 0;
+            PartialBunch = null;
+
+            _netGuidCache.Cleanup();
         }
 
 #if DEBUG
@@ -802,7 +818,14 @@ namespace Unreal.Core
 
                     if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                     {
-                        var networkChecksum = archive.ReadUInt32();
+                        try
+                        {
+                            var networkChecksum = archive.ReadUInt32();
+                        }
+                        catch
+                        {
+                            _logger.LogInformation("hoi");
+                        }
                     }
 
                     if (isExportingNetGUIDBunch)
@@ -919,7 +942,7 @@ namespace Unreal.Core
                             return;
                         }
 
-                        PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBytes(bitsLeft));
+                        //PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBytes(bitsLeft / 8), bitsLeft);
                     }
                     else
                     {
@@ -952,11 +975,10 @@ namespace Unreal.Core
                     if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
                     {
                         var bitsLeft = bunch.Archive.GetBitsLeft();
-                        _logger?.LogDebug($"Merging Partial Bunch: {bitsLeft} Bytes");
+                        _logger?.LogDebug($"Merging Partial Bunch: {bitsLeft} bits");
                         if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                         {
-                            PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft));
-                            // InPartialBunch->AppendDataFromChecked( Bunch.GetDataPosChecked(), Bunch.GetBitsLeft() );
+                            PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft), bitsLeft);
                         }
 
                         // Only the final partial bunch should ever be non byte aligned. This is enforced during partial bunch creation
@@ -1337,7 +1359,8 @@ namespace Unreal.Core
             var export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
             if (export != null)
             {
-                var cmdReader = new NetBitReader(reader.ReadBits(reader.GetBitsLeft()))
+                var numBits = reader.GetBitsLeft();
+                var cmdReader = new NetBitReader(reader.ReadBits(numBits), numBits)
                 {
                     EngineNetworkVersion = reader.EngineNetworkVersion,
                     NetworkVersion = reader.NetworkVersion
@@ -1549,7 +1572,7 @@ namespace Unreal.Core
                 hasdata = true;
                 try
                 {
-                    var cmdReader = new NetBitReader(archive.ReadBits(numBits))
+                    var cmdReader = new NetBitReader(archive.ReadBits(numBits), (int)numBits)
                     {
                         EngineNetworkVersion = archive.EngineNetworkVersion,
                         NetworkVersion = archive.NetworkVersion
@@ -1634,7 +1657,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            reader = new BitReader(archive.ReadBits(numPayloadBits))
+            reader = new BitReader(archive.ReadBits(numPayloadBits), (int)numPayloadBits)
             {
                 EngineNetworkVersion = archive.EngineNetworkVersion,
                 NetworkVersion = archive.NetworkVersion
@@ -1666,7 +1689,7 @@ namespace Unreal.Core
             }
 
             var numPayloadBits = bunch.Archive.ReadIntPacked();
-            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits))
+            reader = new BitReader(bunch.Archive.ReadBits(numPayloadBits), (int)numPayloadBits)
             {
                 EngineNetworkVersion = bunch.Archive.EngineNetworkVersion,
                 NetworkVersion = bunch.Archive.NetworkVersion
@@ -1884,7 +1907,7 @@ namespace Unreal.Core
 
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
                 var maxPacket = 1024 * 2;
-                var bunchDataBits = (int) bitReader.ReadSerializedInt(maxPacket * 8);
+                var bunchDataBits = (int)bitReader.ReadSerializedInt(maxPacket * 8);
                 // Bunch.SetData( Reader, BunchDataBits );
                 bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits), bunchDataBits)
                 {
@@ -1896,25 +1919,8 @@ namespace Unreal.Core
 
                 if (bunch.bHasPackageMapExports)
                 {
-                    // Driver->NetGUIDInBytes += (BunchDataBits + (HeaderPos - IncomingStartPos)) >> 3 ??
-                    // Cast<UPackageMapClient>( PackageMap )->ReceiveNetGUIDBunch( Bunch );
                     ReceiveNetGUIDBunch(bunch.Archive);
                 }
-
-                // Can't handle other channels until control channel exists.
-                //if (!Channels.ContainsKey(bunch.ChIndex) && (bunch.ChIndex != 0 || bunch.ChName != ChannelName.Control.ToString()))
-                //{
-                //    if (!Channels.ContainsKey(0))
-                //    {
-                //        return;
-                //    }
-                //}
-
-                // ignore control channel close if it hasn't been opened yet
-                //if (bunch.ChIndex == 0 && !Channels.ContainsKey(0) && bunch.bClose && bunch.ChName == ChannelName.Control)
-                //{
-                //    return;
-                //}
 
                 // We're on a 100% reliable connection and we are rolling back some data.
                 // In that case, we can generally ignore these bunches.

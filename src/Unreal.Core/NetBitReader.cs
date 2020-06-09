@@ -133,7 +133,7 @@ namespace Unreal.Core
             //int maxDelta = (1 << (numBits - 0)) -1;
 
             var delta = ReadSerializedInt(serIntMax);
-            float unscaledValue = unchecked((int)delta) - bias;
+            float unscaledValue = (int)delta - bias;
 
             if (maxValue > maxBitValue)
             {

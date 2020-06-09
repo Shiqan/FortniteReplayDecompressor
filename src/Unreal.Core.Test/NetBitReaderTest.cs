@@ -1,4 +1,3 @@
-using System;
 using Unreal.Core.Models.Enums;
 using Xunit;
 
@@ -56,18 +55,30 @@ namespace Unreal.Core.Test
             0x2D, 0x32, 0x32, 0x38, 0x4E, 0x47, 0x43, 0x35, 0x2D, 0x42, 0x39, 0x31,
             0x33, 0x37, 0x31, 0x30, 0x38, 0x34, 0x46, 0x46, 0x32, 0x46, 0x37, 0x45,
             0x35, 0x44, 0x36, 0x38, 0x38, 0x30, 0x31, 0x39, 0x35, 0x30, 0x35, 0x30,
-            0x39, 0x41, 0x43, 0x31, 0x34, 0x00 }, 432)]
+            0x39, 0x41, 0x43, 0x31, 0x34, 0x00 }, 432, "DESKTOP-228NGC5-B91371084FF2F7E5D68801950509AC14")]
         [InlineData(new byte[] {
             0x11, 0x10, 0x37, 0xDF, 0x4A, 0x07, 0x98, 0xC2, 0x40, 0x2E, 0xAA, 0x62,
-            0x69, 0x47, 0xEC, 0x29, 0x90, 0x3F}, 144)]
+            0x69, 0x47, 0xEC, 0x29, 0x90, 0x3F}, 144, "37DF4A0798C2402EAA626947EC29903F")]
         [InlineData(new byte[] {
-            0x29, 0x08, 0x25, 0x35, 0x43, 0x94, 0x31, 0x47, 0x40, 0x39}, 80)]
-        public void NetUniqueIdTest(byte[] rawData, int bitCount)
+            0x29, 0x08, 0x25, 0x35, 0x43, 0x94, 0x31, 0x47, 0x40, 0x39}, 80, "2535439431474039")]
+        public void NetUniqueIdTest(byte[] rawData, int bitCount, string expected)
         {
             var reader = new NetBitReader(rawData, bitCount);
-            reader.SerializePropertyNetId();
+            var result = reader.SerializePropertyNetId();
+            Assert.Equal(expected, result);
             Assert.False(reader.IsError);
             Assert.True(reader.AtEnd());
         }
+
+        //[Theory]
+        //[InlineData(new byte[] { }, 10, 24, 0f)]
+        //public void ReadFixedCompressedFloatTest(byte[] rawData, int maxValue, int numBits, float expected)
+        //{
+        //    var reader = new NetBitReader(rawData);
+        //    var result = reader.ReadFixedCompressedFloat(maxValue, numBits);
+        //    Assert.Equal(expected, result);
+        //    Assert.False(reader.IsError);
+        //    Assert.True(reader.AtEnd());
+        //}
     }
 }

@@ -92,7 +92,7 @@ namespace Unreal.Core
         public override string ReadBytesToString(int count)
         {
             // https://github.com/dotnet/corefx/issues/10013
-            return Encoding.Default.GetString(ReadBytes(count)).Replace("-", "");
+            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
         }
 
         public override string ReadFString()

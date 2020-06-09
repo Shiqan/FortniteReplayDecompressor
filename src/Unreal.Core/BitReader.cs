@@ -203,7 +203,7 @@ namespace Unreal.Core
         public override string ReadBytesToString(int count)
         {
             // https://github.com/dotnet/corefx/issues/10013
-            return Encoding.Default.GetString(ReadBytes(count)).Replace("-", "");
+            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
         }
 
         public override string ReadFString()
@@ -307,52 +307,6 @@ namespace Unreal.Core
 
         public override uint ReadIntPacked()
         {
-            //var BitsUsed = Position % 8;
-            //var BitsLeft = 8 - BitsUsed;
-            //var SourceMask0 = (1 << BitsLeft) - 1;
-            //var SourceMask1 = (1 << BitsUsed) - 1;
-
-            //uint value = 0;
-
-            //var OldPos = Position;
-
-            //var shift = 0;
-            //for (var it = 0; it < 5; it++)
-            //{
-            //    if (IsError)
-            //    {
-            //        return 0;
-            //    }
-
-            //    var currentBytePos = Position / 8;
-            //    var byteAlignedPositon = currentBytePos * 8;
-
-            //    Position = byteAlignedPositon;
-
-            //    var currentByte = ReadByte();
-            //    var nextByte = currentByte;
-            //    if (BitsUsed != 0)
-            //    {
-            //        nextByte = (Position + 8 <= LastBit) ? PeekByte() : new byte();
-            //    }
-
-            //    OldPos += 8;
-
-            //    var readByte = ((currentByte >> BitsUsed) & SourceMask0) | ((nextByte & SourceMask1) << (BitsLeft & 7));
-            //    value = (uint)((readByte >> 1) << shift) | value;
-
-            //    if ((readByte & 1) == 0)
-            //    {
-            //        break;
-            //    }
-            //    shift += 7;
-            //}
-            //Position = OldPos;
-
-            //return value;
-
-
-
             var bitCountUsedInByte = Position & 7;
             var bitCountLeftInByte = 8 - (Position & 7);
             var srcMaskByte0 = (byte)((1U << bitCountLeftInByte) - 1U);

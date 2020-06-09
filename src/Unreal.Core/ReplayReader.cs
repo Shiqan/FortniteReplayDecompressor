@@ -1238,7 +1238,7 @@ namespace Unreal.Core
                 return true;
             }
 
-            if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup?.PathName, out var classNetCache))
+            if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup?.PathName, out var classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
             {
                 _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup?.PathName}");
                 return false;

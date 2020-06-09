@@ -12,7 +12,9 @@ namespace FortniteReplayReader.Models
         public IEnumerable<string> AdditionalPlaylistLevels { get; set; }
         public IList<string> ActiveGameplayModifiers { get; set; } = new List<string>();
 
-        public int? TeamCount { get; set; }
+        public int? MaxPlayers { get; set; }
+        public int? TotalTeams { get; set; }
+        public int? TotalBots { get; set; }
         public int? TeamSize { get; set; }
         public int? TotalPlayerStructures { get; set; }
 

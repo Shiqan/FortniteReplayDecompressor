@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader
@@ -38,7 +39,7 @@ namespace ConsoleReader
                     Console.WriteLine(ex);
                 }
                 sw.Stop();
-                Console.WriteLine($"---- {replayFile} : done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
+                Console.WriteLine($"---- {replayFile} : done in {sw.ElapsedMilliseconds} milliseconds ----");
             }
 
             //var replayFile = "Replays/shootergame.replay";

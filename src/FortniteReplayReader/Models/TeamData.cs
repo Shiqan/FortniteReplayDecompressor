@@ -9,5 +9,6 @@ namespace FortniteReplayReader.Models
         public IList<string> PlayerNames { get; set; }
         public int? PartyOwnerId { get; set; }
         public int? Placement { get; set; }
+        public uint? TeamKills { get; set; }
     }
 }

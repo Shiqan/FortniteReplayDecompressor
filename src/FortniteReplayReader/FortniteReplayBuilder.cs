@@ -113,8 +113,11 @@ namespace FortniteReplayReader
 
             GameData.AdditionalPlaylistLevels ??= state.AdditionalPlaylistLevelsStreamed?.Select(i => i.Name);
 
-            GameData.TeamCount ??= state.TeamCount;
+            GameData.MaxPlayers ??= state.TeamCount;
             GameData.TeamSize ??= state.TeamSize;
+            GameData.TeamSize ??= state.ActiveTeamNums?.Length;
+            GameData.TotalBots = state.PlayerBotsLeft > GameData.TotalBots ? state.PlayerBotsLeft : GameData.TotalBots;
+
             GameData.TotalPlayerStructures ??= state.TotalPlayerStructures;
 
             GameData.AircraftStartTime ??= state.AircraftStartTime;
@@ -147,7 +150,7 @@ namespace FortniteReplayReader
             {
                 if (playerData?.TeamIndex == null)
                 {
-                    return;
+                    continue;
                 }
 
                 if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
@@ -158,10 +161,14 @@ namespace FortniteReplayReader
                         PlayerIds = new List<int?>() { playerData.Id },
                         PlayerNames = new List<string>() { playerData.PlayerId },
                         Placement = playerData.Placement,
-                        PartyOwnerId = playerData.IsPartyLeader ? playerData.Id : null
+                        PartyOwnerId = playerData.IsPartyLeader ? playerData.Id : null,
+                        TeamKills = playerData.TeamKills
                     };
                     continue;
                 }
+
+                teamData.Placement ??= playerData.Placement;
+                teamData.TeamKills ??= playerData.TeamKills;
 
                 teamData.PlayerIds.Add(playerData.Id);
                 teamData.PlayerNames.Add(playerData.PlayerId);
@@ -209,15 +216,25 @@ namespace FortniteReplayReader
                 playerData.IsReplayOwner = true;
             }
 
+            if (state.TeamIndex > 0)
+            {
+                playerData.TeamIndex = state.TeamIndex;
+            }
             playerData.Placement ??= state.Place;
             playerData.TeamKills = state.TeamKillScore ?? playerData.TeamKills;
             playerData.Kills = state.KillScore ?? playerData.Kills;
             playerData.HasThankedBusDriver ??= state.bThankedBusDriver;
+            playerData.Disconnected ??= state.bIsDisconnected;
 
             playerData.DeathCause ??= state.DeathCause;
             playerData.DeathLocation ??= state.DeathLocation;
             playerData.DeathCircumstance ??= state.DeathCircumstance;
             playerData.DeathTags ??= state.DeathTags?.Tags?.Select(i => i.TagName);
+
+            if (state.DeathTags != null)
+            {
+                playerData.DeathTime = ReplicatedWorldTimeSeconds;
+            }
 
             playerData.Cosmetics.Parts ??= state.Parts?.Name;
             playerData.Cosmetics.VariantRequiredCharacterParts ??= state.VariantRequiredCharacterParts?.Select(i => i.Name);

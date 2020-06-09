@@ -85,8 +85,8 @@ namespace FortniteReplayReader
                     Builder.UpdateGameplayModifiers(modifier);
                     break;
                 //case FortPickup pickup:
-                    //Builder.CreatePickupEvent(channelIndex, pickup);
-                    //break;
+                //Builder.CreatePickupEvent(channelIndex, pickup);
+                //break;
                 //case FortInventory inventory:
                 //    Builder.UpdateInventory(channelIndex, inventory);
                 //    break;
@@ -113,8 +113,8 @@ namespace FortniteReplayReader
                     Builder.UpdatePlayerPawn(channelIndex, pawn);
                     break;
                 //case FortPickup pickup:
-                    //Builder.CreatePickupEvent(channelIndex, pickup);
-                    //break;
+                //Builder.CreatePickupEvent(channelIndex, pickup);
+                //break;
                 //case FortInventory inventory:
                 //    Builder.UpdateInventory(channelIndex, inventory);
                 //    break;

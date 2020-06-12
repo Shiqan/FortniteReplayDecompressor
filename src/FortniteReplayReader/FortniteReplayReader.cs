@@ -85,8 +85,8 @@ namespace FortniteReplayReader
                     Builder.UpdateGameplayModifiers(modifier);
                     break;
                 //case FortPickup pickup:
-                    //Builder.CreatePickupEvent(channelIndex, pickup);
-                    //break;
+                //Builder.CreatePickupEvent(channelIndex, pickup);
+                //break;
                 //case FortInventory inventory:
                 //    Builder.UpdateInventory(channelIndex, inventory);
                 //    break;
@@ -113,8 +113,8 @@ namespace FortniteReplayReader
                     Builder.UpdatePlayerPawn(channelIndex, pawn);
                     break;
                 //case FortPickup pickup:
-                    //Builder.CreatePickupEvent(channelIndex, pickup);
-                    //break;
+                //Builder.CreatePickupEvent(channelIndex, pickup);
+                //break;
                 //case FortInventory inventory:
                 //    Builder.UpdateInventory(channelIndex, inventory);
                 //    break;
@@ -303,11 +303,11 @@ namespace FortniteReplayReader
             return archive.ReadGUID(size);
         }
 
-        protected override Unreal.Core.BinaryReader DecryptBuffer(FArchive archive, int size)
+        protected override FArchive DecryptBuffer(FArchive archive, int size)
         {
             if (!Replay.Info.IsEncrypted)
             {
-                return new Unreal.Core.BinaryReader(new MemoryStream(archive.ReadBytes(size)))
+                return new Unreal.Core.BinaryReader(archive.ReadBytes(size).ToArray())
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
@@ -322,13 +322,13 @@ namespace FortniteReplayReader
             using var rDel = new RijndaelManaged
             {
                 KeySize = (key.Length * 8),
-                Key = key,
+                Key = key.ToArray(),
                 Mode = CipherMode.ECB,
                 Padding = PaddingMode.PKCS7
             };
 
             using var cryptoTransform = rDel.CreateDecryptor();
-            var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
+            var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes.ToArray(), 0, encryptedBytes.Length);
 
             var decrypted = new Unreal.Core.BinaryReader(new MemoryStream(decryptedArray))
             {

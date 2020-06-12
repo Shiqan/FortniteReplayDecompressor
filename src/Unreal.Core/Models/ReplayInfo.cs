@@ -16,7 +16,7 @@ namespace Unreal.Core.Models
         public bool IsLive { get; set; }
         public bool IsCompressed { get; set; }
         public bool IsEncrypted { get; set; }
-        public byte[] EncryptionKey { get; set; }
+        public ReadOnlyMemory<byte> EncryptionKey { get; set; }
         public ReplayVersionHistory FileVersion { get; set; }
     }
 }

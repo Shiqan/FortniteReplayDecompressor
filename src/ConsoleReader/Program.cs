@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader
@@ -15,7 +16,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Warning));
+                    .SetMinimumLevel(LogLevel.Error));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -24,13 +25,13 @@ namespace ConsoleReader
             var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
+            var sw = new Stopwatch();
+            var reader = new ReplayReader(logger, ParseMode.Minimal);
             foreach (var replayFile in replayFiles)
             {
-                var sw = new Stopwatch();
-                sw.Start();
+                sw.Restart();
                 try
                 {
-                    var reader = new ReplayReader(logger, ParseMode.Minimal);
                     var replay = reader.ReadReplay(replayFile);
                 }
                 catch (Exception ex)
@@ -38,7 +39,7 @@ namespace ConsoleReader
                     Console.WriteLine(ex);
                 }
                 sw.Stop();
-                Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
+                Console.WriteLine($"---- {replayFile} : done in {sw.ElapsedMilliseconds} milliseconds ----");
             }
 
             //var replayFile = "Replays/shootergame.replay";

@@ -113,18 +113,18 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(7);
+            var flags = reader.ReadBits(7)[0];
 
             // Most of the time the vectors are the same values, use that as an optimization
-            BlockingHit = flags[0];
-            StartPenetrating = flags[1];
-            bool bImpactPointEqualsLocation = flags[2];
-            bool bImpactNormalEqualsNormal = flags[3];
+            BlockingHit = (flags & (1 << 0)) >= 1;
+            StartPenetrating = (flags & (1 << 1)) >= 1;
+            bool bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
+            bool bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
 
             // Often times the indexes are invalid, use that as an optimization
-            bool bInvalidItem = flags[4];
-            bool bInvalidFaceIndex = flags[5];
-            bool bNoPenetrationDepth = flags[6];
+            bool bInvalidItem = (flags & (1 << 4)) >= 1;
+            bool bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
+            bool bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
 
             Time = reader.ReadSingle();
 

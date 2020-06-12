@@ -14,12 +14,14 @@ namespace FortniteReplayReader.Models
             IsBot = playerState.bIsABot;
             PlayerNameCustomOverride = playerState.PlayerNameCustomOverride?.Text;
             IsGameSessionOwner = playerState.bIsGameSessionOwner;
+            PlayerNumber = playerState.WorldPlayerId;
             PlayerName = playerState.PlayerNamePrivate;
             StreamerModeName = playerState.StreamerModeName?.Text;
             IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId;
             TeamIndex = playerState.TeamIndex;
             Level = playerState.Level;
             SeasonLevelUIDisplay = playerState.SeasonLevelUIDisplay;
+            PlatformUniqueNetId = playerState.PlatformUniqueNetId;
             Platform = playerState.Platform;
             HasFinishedLoading = playerState.bHasFinishedLoading;
             HasStartedPlaying = playerState.bHasStartedPlaying;
@@ -37,8 +39,9 @@ namespace FortniteReplayReader.Models
         }
 
         public int? Id { get; set; }
-        public string PlayerId => (IsBot == true) ? BotId : EpicId;
+        public string PlayerId => (IsBot == true) ? BotId : EpicId ?? PlatformUniqueNetId;
         public string EpicId { get; set; }
+        public string PlatformUniqueNetId { get; set; }
         public string BotId { get; set; }
         public bool? IsBot { get; set; }
         public string PlayerName { get; set; }
@@ -60,6 +63,7 @@ namespace FortniteReplayReader.Models
         public bool? HasThankedBusDriver { get; set; }
         public bool? IsUsingStreamerMode { get; set; }
         public bool? IsUsingAnonymousMode { get; set; }
+        public bool? Disconnected { get; internal set; }
 
         public uint? RebootCounter { get; set; }
         public int? Placement { get; set; }
@@ -69,6 +73,7 @@ namespace FortniteReplayReader.Models
         public int? DeathCircumstance { get; set; }
         public IEnumerable<string> DeathTags { get; set; }
         public FVector DeathLocation { get; set; }
+        public float? DeathTime { get; set; }
 
         public bool? HasEverSkydivedFromBus { get; set; }
         public bool? HasEverSkydivedFromBusAndLanded { get; set; }

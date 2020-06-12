@@ -43,6 +43,6 @@ For example:
 
 ``` csharp
 var replayFile = "your-amazing-fortnite.replay";
-var reader = new ReplayReader();
-var replay = reader.ReadReplay(replayFile, ParseMode.Full);
+var reader = new ReplayReader(parseMode: ParseMode.Full);
+var replay = reader.ReadReplay(replayFile);
 ```

@@ -71,8 +71,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId)]
         public string PartyOwnerUniqueId { get; set; }
 
-        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt)]
-        public int? WorldPlayerId { get; set; }
+        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyUInt16)]
+        public ushort? WorldPlayerId { get; set; }
 
         [NetFieldExport("HeroType", RepLayoutCmdType.Property)]
         public ItemDefinition HeroType { get; set; }
@@ -233,7 +233,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
         public int? KickedFromSessionReason { get; set; }
 
-        [NetFieldExport("NumRejoins", RepLayoutCmdType.Enum)]
+        [NetFieldExport("NumRejoins", RepLayoutCmdType.PropertyInt)]
         public int? NumRejoins { get; set; }
+
+        [NetFieldExport("bIsAnAthenaGameParticipant", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsAnAthenaGameParticipant { get; set; }
     }
 }

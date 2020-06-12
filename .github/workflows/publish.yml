@@ -48,21 +48,20 @@ jobs:
       run: dotnet nuget push ./src/OozSharp/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
     
     - name: Update Unreal.Encryption
-      run: sed -i "s/Include=\"OozSharp\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"OozSharp\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Encryption/Unreal.Encryption.csproj
-    - name: Pack Unreal.Encryption
+      run: sed -i "s/ProjectReference Include=\"..\\\OozSharp\\\OozSharp.csproj\"/PackageReference Include=\"OozSharp\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Encryption/Unreal.Encryption.csproj
       run: dotnet pack ./src/Unreal.Encryption/Unreal.Encryption.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
     - name: Publish Unreal.Encryption
       run: dotnet nuget push ./src/Unreal.Encryption/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Update Unreal.Core
-      run: sed -i "s/Include=\"Unreal.Encryption\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"Unreal.Encryption\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Core/Unreal.Core.csproj   
+      run: sed -i "s/ProjectReference Include=\"..\\\Unreal.Encryption\\\Unreal.Encryption.csproj\"/PackageReference Include=\"Unreal.Encryption\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Core/Unreal.Core.csproj   
     - name: Pack Unreal.Core
       run: dotnet pack ./src/Unreal.Core/Unreal.Core.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
     - name: Publish Unreal.Core
       run: dotnet nuget push ./src/Unreal.Core/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Update FortniteReplayReader
-      run: sed -i "s/Include=\"Unreal.Core\" Version=\"${{ steps.versioning.outputs.tag }}\"/Include=\"Unreal.Core\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/FortniteReplayReader/FortniteReplayReader.csproj
+      run: sed -i "s/ProjectReference Include=\"..\\\Unreal.Core\\\Unreal.Core.csproj\"/PackageReference Include=\"Unreal.Core\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/FortniteReplayReader/FortniteReplayReader.csproj
     - name: Pack FortniteReplayReader
       run: dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
     - name: Publish FortniteReplayReader

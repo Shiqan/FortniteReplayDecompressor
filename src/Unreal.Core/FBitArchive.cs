@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models;
+﻿using System;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
@@ -35,14 +36,14 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
-        public abstract bool[] ReadBits(int bitCount);
+        public abstract ReadOnlySpan<byte> ReadBits(int bitCount);
 
         /// <summary>
         /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
-        public abstract bool[] ReadBits(uint bitCount);
+        public abstract ReadOnlySpan<byte> ReadBits(uint bitCount);
 
         /// <summary>
         /// Retuns int and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
@@ -124,6 +125,6 @@ namespace Unreal.Core
         /// Append bool array to this archive.
         /// </summary>
         /// <param name="data"></param>
-        public abstract void AppendDataFromChecked(bool[] data);
+        public abstract void AppendDataFromChecked(ReadOnlySpan<byte> data, int bitCount);
     }
 }

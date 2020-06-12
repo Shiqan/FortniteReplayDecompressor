@@ -13,7 +13,7 @@ namespace Unreal.Core.Models
         {
         }
 
-        public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
+        //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>
         /// Maps net field export group name to the respective FNetFieldExportGroup
@@ -63,6 +63,11 @@ namespace Unreal.Core.Models
         /// </summary>
         public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
         {
+            if (group.EndsWith("ClassNetCache"))
+            {
+                exportGroup.PathName = exportGroup.PathName.RemoveAllPathPrefixes();
+            }
+
             NetFieldExportGroupMap[group] = exportGroup;
             NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = group;
         }
@@ -162,7 +167,7 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="group"></param>
         /// <returns>true if ClassNetCache was found, false otherwise</returns>
-        public bool TryGetClassNetCache(string group, out NetFieldExportGroup netFieldExportGroup)
+        public bool TryGetClassNetCache(string group, out NetFieldExportGroup netFieldExportGroup, bool useFullName)
         {
             if (group == null)
             {
@@ -172,7 +177,7 @@ namespace Unreal.Core.Models
 
             if (!_cleanedClassNetCache.TryGetValue(group, out var classNetCachePath))
             {
-                classNetCachePath = $"{group.RemoveAllPathPrefixes()}_ClassNetCache";
+                classNetCachePath = useFullName ? $"{group}_ClassNetCache" : $"{group.RemoveAllPathPrefixes()}_ClassNetCache";
                 _cleanedClassNetCache[group] = classNetCachePath;
             }
 
@@ -218,8 +223,9 @@ namespace Unreal.Core.Models
             NetFieldExportGroupIndexToGroup.Clear();
             NetFieldExportGroupMap.Clear();
             NetGuidToPathName.Clear();
-            ObjectLookup.Clear();
+            //ObjectLookup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
+            _networkGameplayTagNodeIndex = null;
 
             _archTypeToExportGroup.Clear();
             _cleanedPaths.Clear();

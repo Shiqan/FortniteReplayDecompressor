@@ -17,7 +17,6 @@
   <ItemGroup>
     <PackageReference Include="FastMember" Version="1.5.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.3" />
-    <PackageReference Include="Unreal.Encryption" Version="1.0.2" />
   </ItemGroup>
   
   <ItemGroup>
@@ -25,5 +24,9 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
   </ItemGroup>
 </Project>

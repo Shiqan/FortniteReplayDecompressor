@@ -12,8 +12,8 @@ namespace Unreal.Core
     {
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
-        public NetBitReader(bool[] input) : base(input) { }
-        public NetBitReader(bool[] input, int bitCount) : base(input, bitCount) { }
+        public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }
+        public NetBitReader(ReadOnlySpan<byte> input, int bitCount) : base(input.ToArray(), bitCount) { }
 
         public int SerializePropertyInt()
         {
@@ -133,7 +133,7 @@ namespace Unreal.Core
             //int maxDelta = (1 << (numBits - 0)) -1;
 
             var delta = ReadSerializedInt(serIntMax);
-            float unscaledValue = unchecked((int)delta) - bias;
+            float unscaledValue = (int)delta - bias;
 
             if (maxValue > maxBitValue)
             {
@@ -304,9 +304,7 @@ namespace Unreal.Core
                 if (encoded)
                 {
                     var encodedSize = ReadByte();
-
-                    // https://github.com/dotnet/corefx/issues/10013
-                    return BitConverter.ToString(ReadBytes(encodedSize)).Replace("-", "");
+                    return ReadBytesToString(encodedSize);
                 }
                 else
                 {

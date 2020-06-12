@@ -157,7 +157,7 @@ namespace Unreal.Core.Test
         [Fact]
         public void ReadBooleanFieldTest()
         {
-            var reader = new NetBitReader(new bool[] { true });
+            var reader = new NetBitReader(new byte[] { 0x01 }, 1);
             var export = new NetFieldExport()
             {
                 Handle = 0,

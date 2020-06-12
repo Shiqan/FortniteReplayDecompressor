@@ -8,19 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
-    <PackageReference Include="FortniteReplayReader" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Replays\season11.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\season12.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Replays\season6.10.replay">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
+    <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
+    <ProjectReference Include="..\Unreal.Core\Unreal.Core.csproj" />
+    <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
   </ItemGroup>
 
 </Project>

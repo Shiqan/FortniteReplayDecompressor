@@ -10,7 +10,7 @@ namespace Unreal.Core
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Serialization/Archive.h
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Serialization/Archive.cpp
     /// </summary>
-    public abstract class FArchive
+    public abstract class FArchive : IDisposable
     {
         /// <summary>
         /// <see cref="EngineNetworkVersionHistory"/> of current Archive.
@@ -252,14 +252,14 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="byteCount">The number of bytes to read.</param>
         /// <returns>A byte array containing data read from the underlying stream.</returns>
-        public abstract byte[] ReadBytes(int byteCount);
+        public abstract ReadOnlySpan<byte> ReadBytes(int byteCount);
 
         /// <summary>
         /// Reads the specified number of bytes from the current stream into a byte array and advances the current position by that number of bytes.
         /// </summary>
         /// <param name="byteCount">The number of bytes to read.</param>
         /// <returns>A byte array containing data read from the underlying stream.</returns>
-        public abstract byte[] ReadBytes(uint byteCount);
+        public abstract ReadOnlySpan<byte> ReadBytes(uint byteCount);
 
         /// <summary>
         /// Advences the current stream by <paramref name="byteCount"/> bytes.
@@ -280,5 +280,15 @@ namespace Unreal.Core
         /// <param name="seekOrigin">A value of type <see cref="SeekOrigin"/> indicating the reference point used to obtain the new position.</param>
         /// <returns></returns>
         public abstract void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin);
+
+        protected virtual void Dispose(bool disposing)
+        {
+
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
     }
 }

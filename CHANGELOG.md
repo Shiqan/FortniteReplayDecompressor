@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.1.0] - 2020-06-07
+## [1.1.0] - 2020-06-12
 ### Changed
 - Performance improvements
+- Add additional properties to PlayerData and TeamData
 
 ## [1.0.4] - 2020-04-26
 ### Changed

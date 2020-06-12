@@ -75,6 +75,12 @@ namespace Unreal.Core
             _netFieldParser = new NetFieldParser(_netGuidCache, mode);
         }
 
+        /// <summary>
+        /// Parses the entire replay. 
+        /// It first parses the info section, and then all chunks.
+        /// </summary>
+        /// <param name="archive"></param>
+        /// <returns><typeparamref name="T"/></returns>
         public virtual T ReadReplay(FArchive archive)
         {
             Replay = new T();
@@ -87,6 +93,10 @@ namespace Unreal.Core
             return Replay;
         }
 
+        /// <summary>
+        /// Reset everything back to initial values.
+        /// Required to call after parsing a replay.
+        /// </summary>
         protected virtual void Cleanup()
         {
             InReliable = 0;
@@ -184,7 +194,7 @@ namespace Unreal.Core
                     Flags = binaryArchive.ReadByte()
                 };
 
-                _netGuidCache.ObjectLookup[guid] = cacheObject;
+                //_netGuidCache.ObjectLookup[guid] = cacheObject;
             }
 
             // SerializeNetFieldExportGroupMap 
@@ -875,7 +885,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
         /// </summary>
-        /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         public virtual void ReceivedRawBunch(DataBunch bunch)
         {
@@ -889,7 +898,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L517
         /// </summary>
-        /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         public virtual void ReceivedNextBunch(DataBunch bunch)
         {
@@ -1034,7 +1042,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L348
         /// </summary>
-        /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         public virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
@@ -1058,7 +1065,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298
         /// </summary>
-        /// <param name="bitReader"></param>
         /// <param name="bunch"></param>
         public virtual void ReceivedActorBunch(DataBunch bunch)
         {
@@ -1152,10 +1158,6 @@ namespace Unreal.Core
                 channel.Actor = inActor;
                 OnChannelOpened(channel.ChannelIndex, inActor.ActorNetGUID);
 
-                //SetChannelActor(NewChannelActor);
-
-                //NotifyActorChannelOpen(Actor, Bunch);
-
                 // OnActorChannelOpen
                 // see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338
                 if (_netGuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
@@ -1165,14 +1167,7 @@ namespace Unreal.Core
                         var netPlayerIndex = bunch.Archive.ReadByte();
                     }
                 }
-
-                //RepFlags.bNetInitial = true;
             }
-
-            // RepFlags.bNetOwner = true; // ActorConnection == Connection is always true??
-
-            //RepFlags.bIgnoreRPCs = Bunch.bIgnoreRPCs;
-            //RepFlags.bSkipRoleSwap = bSkipRoleSwap;
 
             //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
@@ -1439,9 +1434,7 @@ namespace Unreal.Core
             // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
             // DeltaSerializeFastArrayProperty
 
-            //---------------
             // Read header
-            //---------------
             var header = NetDeltaSerializeHeader(reader);
 
             if (reader.IsError)
@@ -1449,9 +1442,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            //---------------
             // Read deleted elements
-            //---------------
             if (header.NumDeletes > 0)
             {
                 for (var i = 0; i < header.NumDeletes; ++i)
@@ -1464,10 +1455,8 @@ namespace Unreal.Core
                     });
                 }
             }
-
-            //---------------
+            
             // Read Changed/New elements
-            //---------------
             for (var i = 0; i < header.NumChanged; ++i)
             {
                 var elementIndex = reader.ReadInt32();

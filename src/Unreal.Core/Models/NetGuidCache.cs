@@ -13,7 +13,7 @@ namespace Unreal.Core.Models
         {
         }
 
-        public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
+        //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>
         /// Maps net field export group name to the respective FNetFieldExportGroup
@@ -223,7 +223,7 @@ namespace Unreal.Core.Models
             NetFieldExportGroupIndexToGroup.Clear();
             NetFieldExportGroupMap.Clear();
             NetGuidToPathName.Clear();
-            ObjectLookup.Clear();
+            //ObjectLookup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
             _networkGameplayTagNodeIndex = null;
 

@@ -49,6 +49,7 @@ jobs:
     
     - name: Update Unreal.Encryption
       run: sed -i "s/ProjectReference Include=\"..\\\OozSharp\\\OozSharp.csproj\"/PackageReference Include=\"OozSharp\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Encryption/Unreal.Encryption.csproj
+    - name: Pack Unreal.Encryption
       run: dotnet pack ./src/Unreal.Encryption/Unreal.Encryption.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
     - name: Publish Unreal.Encryption
       run: dotnet nuget push ./src/Unreal.Encryption/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1

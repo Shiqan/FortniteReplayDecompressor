@@ -22,11 +22,12 @@ namespace ConsoleReader
 
             //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
             //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-            var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
+            var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 12\";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(logger, ParseMode.Minimal);
+            var reader = new ReplayReader(logger, ParseMode.Full);
+            long total = 0;
             foreach (var replayFile in replayFiles)
             {
                 sw.Restart();
@@ -40,7 +41,9 @@ namespace ConsoleReader
                 }
                 sw.Stop();
                 Console.WriteLine($"---- {replayFile} : done in {sw.ElapsedMilliseconds} milliseconds ----");
+                total += sw.ElapsedMilliseconds;
             }
+            Console.WriteLine($"total: {total / 1000} seconds ----");
 
             //var replayFile = "Replays/shootergame.replay";
             //var replayFile = "Replays/season6.10.replay";

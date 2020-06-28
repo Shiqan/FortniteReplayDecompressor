@@ -116,15 +116,12 @@ namespace Unreal.Core
 #if DEBUG
         public virtual void Debug(string filename, string directory, ReadOnlySpan<byte> data)
         {
-            if (IsDebugMode)
+            if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
             {
-                if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                File.WriteAllBytes($"{directory}/{filename}.dump", data.ToArray());
+                Directory.CreateDirectory(directory);
             }
+
+            File.WriteAllBytes($"{directory}/{filename}.dump", data.ToArray());
         }
 
         public void Debug(string filename, string line)
@@ -1455,7 +1452,7 @@ namespace Unreal.Core
                     });
                 }
             }
-            
+
             // Read Changed/New elements
             for (var i = 0; i < header.NumChanged; ++i)
             {
@@ -1552,7 +1549,7 @@ namespace Unreal.Core
 
                 if (export.Incompatible)
                 {
-                    _logger?.LogInformation("Incompatible export");
+                    _logger?.LogInformation($"Incompatible export {export.Name} for group {group.PathName}, numbits is {numBits}");
                     archive.SkipBits(numBits);
                     // We've already warned that this property doesn't load anymore
                     continue;
@@ -1567,7 +1564,13 @@ namespace Unreal.Core
                         NetworkVersion = archive.NetworkVersion
                     };
 
-                    _netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader);
+                    if (!_netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader))
+                    {
+                        // Set field incompatible since we couldnt (or didnt want to) parse it.
+                        export.Incompatible = true;
+                    }
+
+
                     if (cmdReader.IsError)
                     {
                         _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");

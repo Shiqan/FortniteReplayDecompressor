@@ -48,7 +48,7 @@ namespace Unreal.Core
                     };
 
                     _netFieldGroups[attribute.Path] = info;
-                    AddNetFieldInfo(type, info);
+                    AddNetFieldInfo(type, info, mode);
                 }
             }
 
@@ -60,7 +60,7 @@ namespace Unreal.Core
                 if (attribute.MinimalParseMode <= mode)
                 {
                     var info = _netFieldGroups[attribute.Path];
-                    AddNetFieldInfo(type, info);
+                    AddNetFieldInfo(type, info, mode);
                 }
             }
 
@@ -105,7 +105,7 @@ namespace Unreal.Core
             _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
         }
 
-        private void AddNetFieldInfo(Type type, NetFieldGroupInfo info)
+        private void AddNetFieldInfo(Type type, NetFieldGroupInfo info, ParseMode mode)
         {
             foreach (var property in type.GetProperties())
             {
@@ -119,6 +119,11 @@ namespace Unreal.Core
 
                 if (netFieldExportAttribute != null)
                 {
+                    if (netFieldExportAttribute.MinimalParseMode != null && netFieldExportAttribute.MinimalParseMode > mode)
+                    {
+                        continue;
+                    }
+
                     info.Properties[netFieldExportAttribute.Name] = new NetFieldInfo
                     {
                         MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
@@ -202,11 +207,11 @@ namespace Unreal.Core
         /// <param name="handle"></param>
         /// <param name="exportGroup"></param>
         /// <param name="netBitReader"></param>
-        public void ReadField(object obj, NetFieldExport export, uint handle, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
+        public bool ReadField(object obj, NetFieldExport export, uint handle, NetFieldExportGroup exportGroup, NetBitReader netBitReader)
         {
             if (!_netFieldGroups.TryGetValue(exportGroup.PathName, out var netGroupInfo))
             {
-                return;
+                return false;
             }
 
             NetFieldInfo netFieldInfo;
@@ -214,18 +219,19 @@ namespace Unreal.Core
             {
                 if (!netGroupInfo.Handles.TryGetValue(handle, out netFieldInfo))
                 {
-                    return;
+                    return false;
                 }
             }
             else
             {
                 if (!netGroupInfo.Properties.TryGetValue(export.Name, out netFieldInfo))
                 {
-                    return;
+                    return false;
                 }
             }
 
             SetType(obj, exportGroup, netFieldInfo, netBitReader);
+            return true;
         }
 
         private void SetType(object obj, NetFieldExportGroup exportGroup, NetFieldInfo netFieldInfo, NetBitReader netBitReader)

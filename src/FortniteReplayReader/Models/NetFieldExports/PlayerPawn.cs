@@ -43,7 +43,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("RemoteRole", RepLayoutCmdType.Ignore)]
         public int? RemoteRole { get; set; }
 
-        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
+        [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement, ParseMode.Full)]
         public FRepMovement? ReplicatedMovement { get; set; }
 
         [NetFieldExport("AttachParent", RepLayoutCmdType.Ignore)]

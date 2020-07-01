@@ -6,6 +6,7 @@ namespace Unreal.Core.Attributes
     public abstract class NetFieldAttribute : Attribute
     {
         public RepLayoutCmdType Type { get; set; }
+        public ParseMode? MinimalParseMode { get; set; }
     }
 
     /// <summary>
@@ -22,6 +23,13 @@ namespace Unreal.Core.Attributes
             Name = name;
             Type = type;
         }
+
+        public NetFieldExportAttribute(string name, RepLayoutCmdType type, ParseMode minimalParseMode)
+        {
+            Name = name;
+            Type = type;
+            MinimalParseMode = minimalParseMode;
+        }
     }
 
     /// <summary>
@@ -37,6 +45,13 @@ namespace Unreal.Core.Attributes
         {
             Handle = handle;
             Type = type;
+        }
+        
+        public NetFieldExportHandleAttribute(uint handle, RepLayoutCmdType type, ParseMode minimalParseMode)
+        {
+            Handle = handle;
+            Type = type;
+            MinimalParseMode = minimalParseMode;
         }
     }
 }

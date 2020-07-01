@@ -27,8 +27,6 @@ namespace FortniteReplayReader.Models
             HasStartedPlaying = playerState.bHasStartedPlaying;
             IsUsingAnonymousMode = playerState.bUsingAnonymousMode;
             IsUsingStreamerMode = playerState.bUsingStreamerMode;
-            HasEverSkydivedFromBus = playerState.bHasEverSkydivedFromBus;
-            HasEverSkydivedFromBusAndLanded = playerState.bHasEverSkydivedFromBusAndLanded;
 
             Cosmetics = new Cosmetics()
             {
@@ -75,11 +73,10 @@ namespace FortniteReplayReader.Models
         public FVector DeathLocation { get; set; }
         public float? DeathTime { get; set; }
 
-        public bool? HasEverSkydivedFromBus { get; set; }
-        public bool? HasEverSkydivedFromBusAndLanded { get; set; }
-
         public Cosmetics Cosmetics { get; set; }
         public uint? CurrentWeapon { get; internal set; }
+
+        public IList<PlayerMovement> Locations { get; set; } = new List<PlayerMovement>();
     }
 
     public class Cosmetics
@@ -102,5 +99,35 @@ namespace FortniteReplayReader.Models
         public IEnumerable<string> Dances { get; set; }
         public string MusicPack { get; set; }
         public string PetSkin { get; set; }
+    }
+
+    public class PlayerMovement
+    {
+        public FRepMovement? ReplicatedMovement { get; set; }
+        public float? ReplicatedWorldTimeSeconds { get; set; }
+        public float? LastUpdateTime { get; set; }
+
+        public bool? bIsCrouched { get; set; }
+        public bool? bIsSprinting { get; set; }
+        public bool? bIsJumping { get; set; }
+        public bool? bIsSlopeSliding { get; set; }
+
+        public bool? bIsZiplining { get; set; }
+        public bool? bIsTargeting { get; set; }
+
+        public bool? bIsDBNO { get; set; }
+
+        public bool? bIsHonking { get; set; }
+        public bool? bIsInAnyStorm { get; set; }
+
+        public bool? bIsWaitingForEmoteInteraction { get; set; }
+        public bool? bIsPlayingEmote { get; set; }
+
+        public bool? bIsSkydiving { get; set; }
+        public bool? bIsSkydivingFromLaunchPad { get; set; }
+        public bool? bIsSkydivingFromBus { get; set; }
+        public bool? bIsParachuteOpen { get; set; }
+        public bool? bIsParachuteForcedOpen { get; set; }
+        public bool? bIsInWaterVolume { get; set; }
     }
 }

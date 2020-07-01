@@ -338,6 +338,35 @@ namespace FortniteReplayReader
             {
                 playerState.CurrentWeapon = pawn.CurrentWeapon;
             }
+
+            if (pawn.ReplicatedMovement != null)
+            {
+                var newLocation = new PlayerMovement
+                {
+                    ReplicatedMovement = pawn.ReplicatedMovement,
+                    ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                    LastUpdateTime = pawn.ReplayLastTransformUpdateTimeStamp,
+                    bIsCrouched = pawn.bIsCrouched,
+                    bIsInAnyStorm = pawn.bIsInAnyStorm,
+                    bIsZiplining = pawn.bIsZiplining,
+                    bIsTargeting = pawn.bIsTargeting,
+                    bIsHonking = pawn.bIsHonking,
+                    bIsJumping = pawn.bIsJumping,
+                    bIsPlayingEmote = pawn.bIsPlayingEmote,
+                    bIsSprinting = pawn.bIsSprinting,
+                    bIsWaitingForEmoteInteraction = pawn.bIsWaitingForEmoteInteraction,
+                    bIsSlopeSliding = pawn.bIsSlopeSliding,
+                    bIsSkydiving = pawn.bIsSkydiving,
+                    bIsSkydivingFromLaunchPad = pawn.bIsSkydivingFromLaunchPad,
+                    bIsSkydivingFromBus = pawn.bIsSkydivingFromBus,
+                    bIsParachuteOpen = pawn.bIsParachuteOpen,
+                    bIsParachuteForcedOpen = pawn.bIsParachuteForcedOpen,
+                    bIsDBNO = pawn.bIsDBNO,
+                    bIsInWaterVolume = pawn.bIsInWaterVolume,
+                };
+                playerState.Locations.Add(newLocation);
+            }
+
         }
 
         public void UpdateInventory(uint channelIndex, FortInventory fortInventory)

@@ -412,7 +412,7 @@ namespace Unreal.Core
             float yaw = 0;
             float roll = 0;
 
-            if (ReadBit()) // Pitch
+            if (ReadBit())
             {
                 pitch = ReadUInt16() * 360 / 65536;
             }

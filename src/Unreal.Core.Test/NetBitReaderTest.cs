@@ -1,3 +1,4 @@
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Xunit;
 
@@ -70,15 +71,32 @@ namespace Unreal.Core.Test
             Assert.True(reader.AtEnd());
         }
 
-        //[Theory]
-        //[InlineData(new byte[] { }, 10, 24, 0f)]
-        //public void ReadFixedCompressedFloatTest(byte[] rawData, int maxValue, int numBits, float expected)
-        //{
-        //    var reader = new NetBitReader(rawData);
-        //    var result = reader.ReadFixedCompressedFloat(maxValue, numBits);
-        //    Assert.Equal(expected, result);
-        //    Assert.False(reader.IsError);
-        //    Assert.True(reader.AtEnd());
-        //}
+
+        [Theory]
+        [InlineData(new byte[] { 0x00, 0x00, 0x00, 0x44, 0x00, 0x00, 0x00, 0x44 }, 512, 512)]
+        [InlineData(new byte[] { 0x80, 0x00, 0xA0, 0x48, 0x30, 0x1F, 0x9E, 0x48 }, 327684, 323833.5)]
+        public void SerializePropertyVector2DTest(byte[] rawData, float x, float y)
+        {
+            var reader = new NetBitReader(rawData);
+            var result = reader.SerializePropertyVector2D();
+            var expected = new FVector2D(x, y);
+
+            Assert.Equal(expected, result);
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
+
+        [Theory]
+        [InlineData(new byte[] { 0x52, 0xEB }, 0.8384655, 1, 16)]
+        [InlineData(new byte[] { 0x99, 0xA8 }, 0.31717888, 1, 16)]
+        [InlineData(new byte[] { 0xB8, 0xB8 }, 0.44312876, 1, 16)]
+        public void ReadFixedCompressedFloatTest(byte[] rawData, float expected, int maxValue, int numBits)
+        {
+            var reader = new NetBitReader(rawData);
+            var result = reader.ReadFixedCompressedFloat(maxValue, numBits);
+            Assert.Equal(expected, result);
+            Assert.False(reader.IsError);
+            Assert.True(reader.AtEnd());
+        }
     }
 }

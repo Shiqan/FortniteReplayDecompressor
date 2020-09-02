@@ -56,6 +56,7 @@ namespace Unreal.Core.Models
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
+        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
         private NetFieldExportGroup _networkGameplayTagNodeIndex { get; set; }
 
         /// <summary>
@@ -114,6 +115,12 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
+                // Don't need to recheck. Some export groups are added later though
+                if (_failedPaths.Contains(path))
+                {
+                    return null;
+                }
+
                 if (NetFieldExportGroupMapPathFixed.TryGetValue(netguid, out group))
                 {
                     _archTypeToExportGroup[netguid] = NetFieldExportGroupMapPathFixed[netguid];
@@ -156,6 +163,7 @@ namespace Unreal.Core.Models
                     }
                 }
 
+                _failedPaths.Add(path);
                 return null;
             }
 
@@ -230,6 +238,7 @@ namespace Unreal.Core.Models
             _archTypeToExportGroup.Clear();
             _cleanedPaths.Clear();
             _cleanedClassNetCache.Clear();
+            _failedPaths.Clear();
         }
     }
 }

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.2] - 2020-08-09
+### Added
+- MatchEndTime to GameData
+
+### Changed
+- Small performance improvement by skipping already failed paths
+- Fix bug with random cosmetics
+
+
 ## [1.1.1] - 2020-07-01
 ### Added
 - Player locations on ParseMode.Full
@@ -46,4 +55,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.0.3]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.0.3
 [1.0.4]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.0.4
 [1.1.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.0
-[1.1.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.1
+[1.1.1]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.1
+[1.1.2]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.2

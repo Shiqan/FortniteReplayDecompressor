@@ -41,7 +41,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public DebuggingObject InitialOverlappingVehicles { get; set; }
     }
 
-    [NetFieldExportClassNetCache("B_Prj_Meatball_Missile_C_ClassNetCache")]
+    [NetFieldExportClassNetCache("B_Prj_Meatball_Missile_C_ClassNetCache", minimalParseMode: ParseMode.Debug)]
     public class BoatMissleClassNetCache : BaseExplosion
     {
     }

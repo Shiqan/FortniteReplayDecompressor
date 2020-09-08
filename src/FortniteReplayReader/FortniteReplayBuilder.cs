@@ -106,6 +106,7 @@ namespace FortniteReplayReader
         {
             GameData.GameSessionId ??= state?.GameSessionId;
             GameData.UtcTimeStartedMatch ??= state.UtcTimeStartedMatch?.Time;
+            GameData.MatchEndTime ??= state.EndGameStartTime;
             GameData.MapInfo ??= state.MapInfo?.Name;
 
             GameData.IsLargeTeamGame ??= state.bIsLargeTeamGame;
@@ -288,15 +289,13 @@ namespace FortniteReplayReader
 
         public void UpdatePlayerPawn(uint channelIndex, PlayerPawn pawn)
         {
-            if (!_pawnChannelToStateChannel.TryGetValue(channelIndex, out var stateChannelIndex))
-            {
-                if (pawn.PlayerState == null)
-                {
-                    return;
-                }
+            PlayerData playerState;
 
+            if (pawn.PlayerState.HasValue)
+            {
+                // Update _pawnChannelToStateChannel everytime we receive a PlayerState value for a given channel
                 var actorId = pawn.PlayerState.Value;
-                if (_actorToChannel.TryGetValue(actorId, out stateChannelIndex))
+                if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
                 {
                     _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
                 }
@@ -316,9 +315,17 @@ namespace FortniteReplayReader
 
                     return;
                 }
-            }
 
-            var playerState = _players[stateChannelIndex];
+                playerState = _players[stateChannelIndex];
+
+            }
+            else
+            {
+                if (!TryGetPlayerDataFromPawn(channelIndex, out playerState))
+                {
+                    return;
+                }
+            }
 
             playerState.Cosmetics.Character ??= pawn.Character?.Name;
             playerState.Cosmetics.BannerColorId ??= pawn.BannerColorId;

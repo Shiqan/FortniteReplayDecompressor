@@ -153,7 +153,8 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using var binaryArchive = Decompress(archive, info.SizeInBytes);
+            using var decrypted = DecryptBuffer(archive, (int)info.SizeInBytes);
+            using var binaryArchive = Decompress(decrypted);
 
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
@@ -314,7 +315,7 @@ namespace Unreal.Core
             }
 
             using var decrypted = DecryptBuffer(archive, (int)info.Length);
-            using var binaryArchive = Decompress(decrypted, memorySizeInBytes);
+            using var binaryArchive = Decompress(decrypted);
             while (!binaryArchive.AtEnd())
             {
                 var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
@@ -825,14 +826,7 @@ namespace Unreal.Core
 
                     if (flags.HasFlag(ExportFlags.bHasNetworkChecksum))
                     {
-                        try
-                        {
-                            var networkChecksum = archive.ReadUInt32();
-                        }
-                        catch
-                        {
-                            _logger.LogInformation("hoi");
-                        }
+                        var networkChecksum = archive.ReadUInt32();
                     }
 
                     if (isExportingNetGUIDBunch)
@@ -1596,6 +1590,9 @@ namespace Unreal.Core
                 catch (Exception ex)
                 {
                     _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
+#if DEBUG
+                    Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}, bits: {numBits}) threw exception {ex.Message}");
+#endif
                 }
             }
 
@@ -2069,9 +2066,8 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
         /// </summary>
         /// <param name="archive"></param>
-        /// <param name="size"></param>
         /// <returns></returns>
-        protected virtual FArchive Decompress(FArchive archive, int size)
+        protected virtual FArchive Decompress(FArchive archive)
         {
             if (!Replay.Info.IsCompressed)
             {

@@ -106,6 +106,7 @@ namespace FortniteReplayReader
         {
             GameData.GameSessionId ??= state?.GameSessionId;
             GameData.UtcTimeStartedMatch ??= state.UtcTimeStartedMatch?.Time;
+            GameData.MatchEndTime ??= state.EndGameStartTime;
             GameData.MapInfo ??= state.MapInfo?.Name;
 
             GameData.IsLargeTeamGame ??= state.bIsLargeTeamGame;

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Core.Test.Mocks;
 using Xunit;
@@ -44,10 +45,20 @@ namespace Unreal.Core.Test
             using var stream = new MemoryStream(rawData);
             using var archive = new Unreal.Core.BinaryReader(stream);
             var reader = new MockReplayReader();
+            reader.SetReplay(new MockReplay
+            {
+                Header = new ReplayHeader
+                {
+                    EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO,
+                    NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
+                    Flags = ReplayHeaderFlags.HasStreamingFixes
+                }
+            });
+
             var result = reader.ReadPacket(archive);
             Assert.True(archive.AtEnd());
             Assert.False(archive.IsError);
-            Assert.Equal(state, result.State);
+            Assert.Equal(state, result);
         }
     }
 }

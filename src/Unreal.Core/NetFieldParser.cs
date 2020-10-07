@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unreal.Core.Attributes;
-using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
@@ -14,15 +14,15 @@ namespace Unreal.Core
     /// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
     /// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
     /// </summary>
-    public partial class NetFieldParser
+    public class NetFieldParser
     {
         private readonly NetGuidCache GuidCache;
         public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
 
-        private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        private Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
-        private CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
+        private readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
+        private readonly Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
+        private readonly CompiledLinqCache _linqCache = new CompiledLinqCache();
 
         /// <summary>
         /// Create a NetFieldParser, which will load all <see cref="NetFieldExportGroup"/> in the <see cref="AppDomain.CurrentDomain"/>.
@@ -30,7 +30,7 @@ namespace Unreal.Core
         /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
         /// <param name="mode"></param>
         /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
-        public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
+        public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "Reader")
         {
             GuidCache = cache;
 
@@ -430,7 +430,7 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    var cmdReader = new NetBitReader(netBitReader.ReadBits(numBits), (int) numBits)
+                    var cmdReader = new NetBitReader(netBitReader.ReadBits(numBits), (int)numBits)
                     {
                         EngineNetworkVersion = netBitReader.EngineNetworkVersion,
                         NetworkVersion = netBitReader.NetworkVersion
@@ -470,7 +470,6 @@ namespace Unreal.Core
         /// Used as a workaround for RPC structs.
         /// </summary>
         /// <param name="type"></param>
-        /// <returns></returns>
         public IProperty CreatePropertyType(Type type)
         {
             return (IProperty)_linqCache.CreateObject(type);

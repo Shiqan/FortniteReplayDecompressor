@@ -1,6 +1,5 @@
-using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models;
 using Unreal.Core;
-using Unreal.Core.Models;
 using Xunit;
 
 namespace FortniteReplayReader.Test

@@ -1,12 +1,11 @@
-﻿using System;
-using Unreal.Core;
+﻿using System.Collections.Generic;
 using Unreal.Core.Models.Contracts;
 
 namespace FortniteReplayReader.Models
 {
     public class FAthenaPawnReplayData : IProperty
     {
-        public ReadOnlyMemory<byte> EncryptedReplayData { get; private set; }
+        public IEnumerable<byte> EncryptedReplayData { get; private set; }
 
         public void Serialize(INetBitReader reader)
         {

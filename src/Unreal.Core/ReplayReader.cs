@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 using Unreal.Encryption;
 
@@ -1053,7 +1053,7 @@ namespace Unreal.Core
             var bWasSerialized = archive.ReadBit();
             if (bWasSerialized)
             {
-                var bShouldQuantize = (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO) ? true : archive.ReadBit();
+                var bShouldQuantize = (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO) || archive.ReadBit();
                 return bShouldQuantize ? archive.ReadPackedVector(10, 24) : archive.ReadVector();
             }
 
@@ -1767,12 +1767,12 @@ namespace Unreal.Core
 
                 var bControl = bitReader.ReadBit();
                 bunch.PacketId = InPacketId;
-                bunch.bOpen = bControl ? bitReader.ReadBit() : false;
-                bunch.bClose = bControl ? bitReader.ReadBit() : false;
+                bunch.bOpen = bControl && bitReader.ReadBit();
+                bunch.bClose = bControl && bitReader.ReadBit();
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
-                    bunch.bDormant = bunch.bClose ? bitReader.ReadBit() : false;
+                    bunch.bDormant = bunch.bClose && bitReader.ReadBit();
                     bunch.CloseReason = bunch.bDormant ? ChannelCloseReason.Dormancy : ChannelCloseReason.Destroyed;
                 }
                 else
@@ -1812,8 +1812,8 @@ namespace Unreal.Core
                     bunch.ChSequence = 0;
                 }
 
-                bunch.bPartialInitial = bunch.bPartial ? bitReader.ReadBit() : false;
-                bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
+                bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
+                bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
                 var chType = ChannelType.None;
                 var chName = ChannelName.None;

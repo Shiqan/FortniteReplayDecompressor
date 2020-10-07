@@ -1,9 +1,6 @@
-﻿using System;
-using System.IO;
-using Unreal.Core;
-using Unreal.Core.Models.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
-namespace FortniteReplayReader.Models.NetFieldExports
+namespace FortniteReplayReader.Models
 {
     /// <summary>
     /// 

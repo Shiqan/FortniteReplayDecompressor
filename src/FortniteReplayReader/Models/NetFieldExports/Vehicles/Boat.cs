@@ -1,6 +1,6 @@
 ﻿using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Unreal.Core.Attributes;
-using Unreal.Core.Contracts;
+
 using Unreal.Core.Models;
 using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;

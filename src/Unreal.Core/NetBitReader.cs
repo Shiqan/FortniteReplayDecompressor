@@ -1,5 +1,6 @@
 ﻿using System;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
@@ -8,7 +9,7 @@ namespace Unreal.Core
     /// A <see cref="BitReader"/> used for reading everything related to RepLayout. 
     /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L303
     /// </summary>
-    public class NetBitReader : BitReader
+    public class NetBitReader : BitReader, INetBitReader
     {
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
@@ -25,7 +26,7 @@ namespace Unreal.Core
             return ReadUInt32();
         }
 
-        public uint SerializePropertyUInt16()
+        public ushort SerializePropertyUInt16()
         {
             return ReadUInt16();
         }
@@ -167,7 +168,7 @@ namespace Unreal.Core
             return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
         }
 
-        public int SerializePropertyByte()
+        public byte SerializePropertyByte()
         {
             return ReadByte();
         }
@@ -203,45 +204,7 @@ namespace Unreal.Core
         public uint SerializePropertyObject()
         {
             //InternalLoadObject(); // TODO make available in archive
-
             return ReadIntPacked();
-
-            //if (!netGuid.IsValid())
-            //{
-            //    return;
-            //}
-
-            //if (netGuid.IsDefault() || exportGUIDs)
-            //{
-            //    var flags = archive.ReadByteAsEnum<ExportFlags>();
-
-            //    // outerguid
-            //    if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
-            //    {
-            //        var outerGuid = InternalLoadObject(archive, true); // TODO: archetype?
-
-            //        var pathName = archive.ReadFString();
-
-            //        if (!NetGuidCache.ContainsKey(netGuid.Value))
-            //        {
-            //            NetGuidCache.Add(netGuid.Value, pathName);
-            //        }
-
-            //        if (flags >= ExportFlags.bHasNetworkChecksum)
-            //        {
-            //            var networkChecksum = archive.ReadUInt32();
-            //        }
-
-            //        return netGuid;
-            //    }
-            //}
-
-            //return netGuid;
-
-            //UObject* Object = GetObjectPropertyValue(Data);
-            //bool Result = Map->SerializeObject(Ar, PropertyClass, Object);
-            //SetObjectPropertyValue(Data, Object);
-            //return Result;
         }
 
 

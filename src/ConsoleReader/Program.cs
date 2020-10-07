@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Unreal.Core;
 using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader
@@ -13,6 +14,12 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
+            var test = new HelloWorldGenerated.RandomClass();
+            test.Hello();
+
+            var test2 = new Unreal.Core.NetFieldParserGenerated();
+            var result = test2.CreateType("/Game/Athena/Athena_GameState.Athena_GameState_C");
+
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()

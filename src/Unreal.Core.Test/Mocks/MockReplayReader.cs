@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Test.Mocks

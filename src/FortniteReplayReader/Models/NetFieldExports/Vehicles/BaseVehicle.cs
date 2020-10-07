@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
@@ -9,13 +10,13 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
     public class SeatComponent : INetFieldExportGroup
     {
         [NetFieldExport("PlayerSlots", RepLayoutCmdType.Property)]
-        public DebuggingObject PlayerSlots { get; set; }
+        public object PlayerSlots { get; set; }
 
         [NetFieldExport("PlayerEntryTime", RepLayoutCmdType.Property)]
-        public DebuggingObject PlayerEntryTime { get; set; }
+        public object PlayerEntryTime { get; set; }
 
         [NetFieldExport("WeaponComponent", RepLayoutCmdType.Property)]
-        public DebuggingObject WeaponComponent { get; set; }
+        public object WeaponComponent { get; set; }
     }
 
     [NetFieldExportGroup("/Script/FortniteGame.FortVehicleSeatWeaponComponent", minimalParseMode: ParseMode.Ignore)]
@@ -25,7 +26,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public bool bWeaponEquipped { get; set; }
 
         [NetFieldExport("AmmoInClip", RepLayoutCmdType.Property)]
-        public DebuggingObject AmmoInClip { get; set; }
+        public object AmmoInClip { get; set; }
 
         [NetFieldExport("LastFireTime", RepLayoutCmdType.PropertyFloat)]
         public float LastFireTime { get; set; }

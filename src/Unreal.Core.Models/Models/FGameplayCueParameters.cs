@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -110,7 +110,7 @@ namespace Unreal.Core.Models
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L789
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             const byte NUM_LEVEL_BITS = 5; // need to bump this up to support 20 levels for AbilityLevel
             // const byte MAX_LEVEL = (1 << NUM_LEVEL_BITS) - 1;

@@ -1,10 +1,10 @@
-﻿namespace Unreal.Core.Contracts
+﻿namespace Unreal.Core.Models.Contracts
 {
     /// <summary>
     /// Interface to indicate properties that can be (de)serialized.
     /// </summary>
     public interface IProperty
     {
-        void Serialize(NetBitReader reader);
+        void Serialize(INetBitReader reader);
     }
 }

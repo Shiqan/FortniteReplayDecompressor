@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -8,13 +8,23 @@ namespace Unreal.Core.Models
     /// </summary>
     public class FGameplayTagContainer : IProperty, IResolvable
     {
+        public FGameplayTagContainer()
+        {
+
+        }
+
+        public FGameplayTagContainer(INetBitReader reader)
+        {
+            Serialize(reader);
+        }
+
         public FGameplayTag[] Tags { get; private set; }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Private/GameplayTagContainer.cpp#L970
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             // 1st bit to indicate empty tag container or not (empty tag containers are frequently replicated). Early out if empty.
             if (reader.ReadBit())
@@ -30,7 +40,7 @@ namespace Unreal.Core.Models
             }
         }
 
-        public void Resolve(NetGuidCache cache)
+        public void Resolve(INetGuidCache cache)
         {
             if (Tags == null) return;
 

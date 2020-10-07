@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -7,9 +7,19 @@ namespace Unreal.Core.Models
     /// </summary>
     public class ItemDefinition : NetworkGUID, IResolvable
     {
+        public ItemDefinition() : base()
+        {
+
+        }
+
+        public ItemDefinition(INetBitReader reader) : base(reader)
+        {
+
+        }
+
         public string Name { get; set; }
 
-        public void Resolve(NetGuidCache cache)
+        public void Resolve(INetGuidCache cache)
         {
             if (IsValid())
             {

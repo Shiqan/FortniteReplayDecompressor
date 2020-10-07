@@ -1,5 +1,5 @@
 ﻿using System;
-using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -52,7 +52,7 @@ namespace Unreal.Core.Models
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L177
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             var validData = reader.ReadBit();
 
@@ -79,7 +79,7 @@ namespace Unreal.Core.Models
                 if ((RepBits & (1 << 4)) > 0)
                 {
                     // SafeNetSerializeTArray_HeaderOnly
-                    var bitCount = (int)Math.Ceiling(Math.Log2(31));
+                    var bitCount = (int)Math.Ceiling(Math.Log(31, 2));
                     var arrayNum = reader.ReadBitsToInt(bitCount);
 
                     // SafeNetSerializeTArray_Default

@@ -51,6 +51,6 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Allows tuning the compression level for replicated rotation. You should only need to change this from the default if you see visual artifacts.
         /// </summary>
-        public RotatorQuantization RotationQuantizationLevel { get; set;}
+        public RotatorQuantization RotationQuantizationLevel { get; set; }
     }
 }

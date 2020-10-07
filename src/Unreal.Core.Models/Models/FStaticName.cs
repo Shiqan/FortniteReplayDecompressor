@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
@@ -7,7 +7,7 @@ namespace Unreal.Core.Models
     {
         public string Value { get; private set; }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             var isHardcoded = reader.ReadBoolean();
 

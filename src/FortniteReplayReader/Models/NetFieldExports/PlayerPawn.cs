@@ -2,6 +2,7 @@
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -437,7 +438,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public ActorGuid DBNOHoister { get; set; }
 
         [NetFieldExport("DBNOCarryEvent", RepLayoutCmdType.Ignore)]
-        public DebuggingObject DBNOCarryEvent { get; set; }
+        public object DBNOCarryEvent { get; set; }
 
         [NetFieldExport("Backpack", RepLayoutCmdType.Property)]
         public ItemDefinition Backpack { get; set; }

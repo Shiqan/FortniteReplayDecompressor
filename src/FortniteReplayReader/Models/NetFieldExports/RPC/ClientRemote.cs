@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.RPC
@@ -18,7 +19,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.RPC
         public int Owner { get; set; }
         
         //[NetFieldExport("MarkerType", RepLayoutCmdType.Ignore)]
-        //public DebuggingObject MarkerType { get; set; }
+        //public object MarkerType { get; set; }
         
         [NetFieldExport("WorldPosition", RepLayoutCmdType.PropertyVector)]
         public FVector WorldPosition { get; set; }
@@ -36,7 +37,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.RPC
         public int ItemCount { get; set; }
         
         //[NetFieldExport("MarkedActorClass", RepLayoutCmdType.Ignore)]
-        //public DebuggingObject MarkedActorClass { get; set; }
+        //public object MarkedActorClass { get; set; }
         
         [NetFieldExport("MarkedActor", RepLayoutCmdType.PropertyObject)]
         public uint MarkedActor { get; set; }
@@ -48,7 +49,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.RPC
         public FText DisplayName { get; set; }
 
         //[NetFieldExport("CustomIndicatorClass", RepLayoutCmdType.Ignore)]
-        //public DebuggingObject CustomIndicatorClass { get; set; }
+        //public object CustomIndicatorClass { get; set; }
 
         [NetFieldExport("Icon", RepLayoutCmdType.PropertyString)]
         public string Icon { get; set; }
@@ -66,10 +67,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.RPC
         public float A { get; set; }
         
         //[NetFieldExport("Sound", RepLayoutCmdType.Ignore)]
-        //public DebuggingObject Sound { get; set; }
+        //public object Sound { get; set; }
         
         //[NetFieldExport("ScreenClamping", RepLayoutCmdType.Ignore)]
-        //public DebuggingObject ScreenClamping { get; set; }
+        //public object ScreenClamping { get; set; }
     }
     
     [NetFieldExportGroup("/Script/FortniteGame.FortBroadcastRemoteClientInfo:ClientRemotePlayerRemoveMapMarker", minimalParseMode: ParseMode.Debug)]

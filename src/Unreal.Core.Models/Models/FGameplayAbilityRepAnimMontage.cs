@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -65,7 +65,7 @@ namespace Unreal.Core.Models
         /// </summary>
         public int SectionIdToPlay { get; private set; }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             var repPosition = reader.ReadBoolean();
 

@@ -1,5 +1,4 @@
-﻿using Unreal.Core.Contracts;
-using Unreal.Core.Models.Enums;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -7,7 +6,7 @@ namespace Unreal.Core.Models
     {
         public string Name { get; private set; }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             Name = reader.SerializePropertyName();
         }

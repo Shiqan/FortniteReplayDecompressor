@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -12,7 +12,7 @@ namespace Unreal.Core.Models
 
         }
 
-        public FGameplayTag(NetBitReader reader)
+        public FGameplayTag(INetBitReader reader)
         {
             Serialize(reader);
         }
@@ -24,12 +24,12 @@ namespace Unreal.Core.Models
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Private/GameplayTagContainer.cpp#L1210
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             TagIndex = reader.ReadIntPacked();
         }
 
-        public void Resolve(NetGuidCache cache)
+        public void Resolve(INetGuidCache cache)
         {
             if (cache.TryGetTagName(TagIndex, out var name))
             {

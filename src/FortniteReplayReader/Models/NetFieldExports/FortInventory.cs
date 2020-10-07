@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -82,10 +83,10 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public uint? WrapOverride { get; set; }
 
         [NetFieldExport("AlterationInstances", RepLayoutCmdType.Ignore)]
-        public DebuggingObject[] AlterationInstances { get; set; }
+        public object[] AlterationInstances { get; set; }
 
         [NetFieldExport("GenericAttributeValues", RepLayoutCmdType.Ignore)]
-        public DebuggingObject[] GenericAttributeValues { get; set; }
+        public object[] GenericAttributeValues { get; set; }
 
         [NetFieldExport("ReplayPawn", RepLayoutCmdType.PropertyObject)]
         public uint? ReplayPawn { get; set; }

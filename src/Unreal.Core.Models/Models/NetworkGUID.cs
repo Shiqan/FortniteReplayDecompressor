@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -7,6 +7,16 @@ namespace Unreal.Core.Models
     /// </summary>
     public class NetworkGUID : IProperty
     {
+        public NetworkGUID()
+        {
+
+        }
+
+        public NetworkGUID(INetBitReader reader)
+        {
+            Serialize(reader);
+        }
+
         public uint Value { get; set; }
 
         public bool IsValid()
@@ -24,7 +34,7 @@ namespace Unreal.Core.Models
             return Value == 1;
         }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             Value = reader.ReadIntPacked();
         }

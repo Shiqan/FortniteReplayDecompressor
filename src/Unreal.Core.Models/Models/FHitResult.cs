@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -12,7 +12,7 @@ namespace Unreal.Core.Models
 
         }
 
-        public FHitResult(NetBitReader reader)
+        public FHitResult(INetBitReader reader)
         {
             Serialize(reader);
         }
@@ -110,21 +110,21 @@ namespace Unreal.Core.Models
         /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(7)[0];
+            //var flags = reader.ReadBits(7)[0];
 
             // Most of the time the vectors are the same values, use that as an optimization
-            BlockingHit = (flags & (1 << 0)) >= 1;
-            StartPenetrating = (flags & (1 << 1)) >= 1;
-            bool bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
-            bool bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
+            BlockingHit = reader.ReadBit();
+            StartPenetrating = reader.ReadBit();
+            bool bImpactPointEqualsLocation = reader.ReadBit();
+            bool bImpactNormalEqualsNormal = reader.ReadBit();
 
             // Often times the indexes are invalid, use that as an optimization
-            bool bInvalidItem = (flags & (1 << 4)) >= 1;
-            bool bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
-            bool bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
+            bool bInvalidItem = reader.ReadBit();
+            bool bInvalidFaceIndex = reader.ReadBit();
+            bool bNoPenetrationDepth = reader.ReadBit();
 
             Time = reader.ReadSingle();
 

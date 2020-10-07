@@ -15,23 +15,23 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
         public int ResourceType { get; set; }
 
         [NetFieldExport("ProxyGameplayCueDamagePhysicalMagnitude", RepLayoutCmdType.Ignore)]
-        public DebuggingObject ProxyGameplayCueDamagePhysicalMagnitude { get; set; }
+        public object ProxyGameplayCueDamagePhysicalMagnitude { get; set; }
 
         [NetFieldExport("EffectContext", RepLayoutCmdType.Ignore)]
-        public DebuggingObject EffectContext { get; set; }
+        public object EffectContext { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Containers/Creative_Tiered_Chest.Creative_Tiered_Chest_C", minimalParseMode: ParseMode.Debug)]
     public class CreativeChest : Chest
     {
         [NetFieldExport("SpawnItems", RepLayoutCmdType.Property)]
-        public DebuggingObject SpawnItems { get; set; }
+        public object SpawnItems { get; set; }
 
         [NetFieldExport("PrimaryAssetName", RepLayoutCmdType.Property)]
-        public DebuggingObject PrimaryAssetName { get; set; }
+        public object PrimaryAssetName { get; set; }
 
         [NetFieldExport("Quantity", RepLayoutCmdType.Property)]
-        public DebuggingObject Quantity { get; set; }
+        public object Quantity { get; set; }
     }
 
     [NetFieldExportGroup("/Game/Building/ActorBlueprints/Containers/Tiered_Chest_Athena_FactionChest_NoLocks.Tiered_Chest_Athena_FactionChest_NoLocks_C", minimalParseMode: ParseMode.Debug)]

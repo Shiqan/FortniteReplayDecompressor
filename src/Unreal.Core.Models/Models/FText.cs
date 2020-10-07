@@ -1,5 +1,5 @@
 ﻿using System;
-using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -8,6 +8,16 @@ namespace Unreal.Core.Models
     /// </summary>
     public class FText : IProperty
     {
+        public FText()
+        {
+
+        }
+
+        public FText(INetBitReader reader)
+        {
+            Serialize(reader);
+        }
+
         public string Namespace { get; set; }
         public string Text { get; set; }
 
@@ -15,7 +25,7 @@ namespace Unreal.Core.Models
         /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/Text.cpp#L794
         /// </summary>
         /// <param name="reader"></param>
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             //var flags = reader.ReadInt32();
             //var historyType = reader.ReadByteAsEnum<ETextHistoryType>();

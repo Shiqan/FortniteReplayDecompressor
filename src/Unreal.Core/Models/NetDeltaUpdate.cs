@@ -1,4 +1,5 @@
 ﻿using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {

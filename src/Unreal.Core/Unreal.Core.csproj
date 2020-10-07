@@ -27,6 +27,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\Unreal.Core.Models\Unreal.Core.Models.csproj" />
     <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
   </ItemGroup>
 </Project>

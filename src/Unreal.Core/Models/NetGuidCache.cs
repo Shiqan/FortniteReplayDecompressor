@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Unreal.Core.Extensions;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
     /// <summary>
     /// Class to track all NetGuids being loaded during a replay.
     /// </summary>
-    public partial class NetGuidCache
+    public partial class NetGuidCache : INetGuidCache
     {
         public NetGuidCache()
         {
@@ -16,22 +17,22 @@ namespace Unreal.Core.Models
         //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>
-        /// Maps net field export group name to the respective FNetFieldExportGroup
+        /// Maps <see cref="NetFieldExportGroup.PathName"/> to the respective <see cref="NetFieldExportGroup"/>
         /// </summary>
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
 
         /// <summary>
-        /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
+        /// Maps assigned <see cref="NetFieldExportGroup.PathNameIndex"/> to the respective <see cref="NetFieldExportGroup.PathName"/>.
         /// </summary>
         public Dictionary<uint, string> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, string>();
 
         /// <summary>
-        /// Maps netguid to the respective FNetFieldExportGroup name.
+        /// Maps <see cref="NetworkGUID"/> to the respective <see cref="NetFieldExportGroup.PathName"/>.
         /// </summary>
         public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
 
         /// <summary>
-        /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
+        /// Maps <see cref="NetworkGUID"/> to the respective <see cref="NetFieldExportGroup"/>.
         /// </summary>
         public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
 
@@ -53,10 +54,25 @@ namespace Unreal.Core.Models
             }
         }
 
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
-        private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
-        private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
-        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
+        /// <summary>
+        /// Mapping of a netguid to a specific <see cref="NetFieldExportGroup"/>
+        /// </summary>
+        private readonly Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
+
+        /// <summary>
+        /// Mapping of <see cref="NetFieldExportGroup.PathNameIndex"/> to a cleaned path (without prefixes etc)
+        /// </summary>
+        private readonly Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
+
+        /// <summary>
+        /// Mapping of a <see cref="NetFieldExportGroup.PathName"/> to the related ClassNetCache path of that PathName
+        /// </summary>
+        private readonly Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Keep track of all <see cref="NetFieldExportGroup.PathName"/> that didn't find an export group so we dont have to look them up anymore
+        /// </summary>
+        private readonly HashSet<string> _failedPaths = new HashSet<string>();
         private NetFieldExportGroup _networkGameplayTagNodeIndex { get; set; }
 
         /// <summary>

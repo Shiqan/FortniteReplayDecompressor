@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
@@ -56,10 +57,10 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public ActorGuid EditingPlayer { get; set; }
 
         [NetFieldExport("ProxyGameplayCueDamagePhysicalMagnitude", RepLayoutCmdType.Ignore)]
-        public DebuggingObject ProxyGameplayCueDamagePhysicalMagnitude { get; set; }
+        public object ProxyGameplayCueDamagePhysicalMagnitude { get; set; }
 
         [NetFieldExport("EffectContext", RepLayoutCmdType.Ignore)]
-        public DebuggingObject EffectContext { get; set; }
+        public object EffectContext { get; set; }
 
         [NetFieldExport("bAttachmentPlacementBlockedFront", RepLayoutCmdType.PropertyBool)]
         public bool? bAttachmentPlacementBlockedFront { get; set; }
@@ -77,6 +78,6 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public bool? Gnomed { get; set; }
 
         [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Property)]
-        public DebuggingObject InitialOverlappingVehicles { get; set; }
+        public object InitialOverlappingVehicles { get; set; }
     }
 }

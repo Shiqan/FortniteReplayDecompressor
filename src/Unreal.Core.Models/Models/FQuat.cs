@@ -1,4 +1,4 @@
-﻿using Unreal.Core.Contracts;
+﻿using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -13,7 +13,7 @@ namespace Unreal.Core.Models
         public float W { get; private set; }
 
         //bool FQuat::NetSerialize(FArchive& Ar, class UPackageMap*, bool& bOutSuccess)
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             X = reader.ReadSingle();
             Y = reader.ReadSingle();

@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Items
@@ -17,7 +18,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Items
         public int Role { get; set; }
 
         [NetFieldExport("ForceMetadataRelevant", RepLayoutCmdType.Ignore)]
-        public DebuggingObject ForceMetadataRelevant { get; set; }
+        public object ForceMetadataRelevant { get; set; }
 
         [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
         public bool bDestroyed { get; set; }

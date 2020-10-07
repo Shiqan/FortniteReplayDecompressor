@@ -1,5 +1,5 @@
 ﻿using System;
-using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core.Models
 {
@@ -7,7 +7,7 @@ namespace Unreal.Core.Models
     {
         public DateTime Time { get; private set; }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             Time = new DateTime((long)reader.ReadUInt64());
         }

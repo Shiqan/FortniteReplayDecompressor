@@ -1,6 +1,7 @@
 ﻿using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -9,6 +10,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
     public class MutatorList : INetFieldExportGroup
     {
         [NetFieldExport("OverrideMode", RepLayoutCmdType.Property)]
-        public DebuggingObject OverrideMode { get; set; }
+        public object OverrideMode { get; set; }
     }
 }

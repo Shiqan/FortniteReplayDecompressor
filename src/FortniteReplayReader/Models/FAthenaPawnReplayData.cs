@@ -1,6 +1,6 @@
 ﻿using System;
 using Unreal.Core;
-using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace FortniteReplayReader.Models
 {
@@ -8,9 +8,9 @@ namespace FortniteReplayReader.Models
     {
         public ReadOnlyMemory<byte> EncryptedReplayData { get; private set; }
 
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
-            reader.Seek(0, System.IO.SeekOrigin.End);
+            //reader.Seek(0, System.IO.SeekOrigin.End);
         }
     }
 }

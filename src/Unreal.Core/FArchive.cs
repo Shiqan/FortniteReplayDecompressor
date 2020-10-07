@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -42,7 +41,7 @@ namespace Unreal.Core
         /// </summary>
         public abstract int Position { get; protected set; }
         public bool IsError { get; protected set; } = false;
-        
+
         /// <summary>
         /// Set <see cref="IsError"/> to true.
         /// </summary>

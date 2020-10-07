@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Weapons
     public class Minigun : BaseWeapon
     {
         [NetFieldExport("ChargeStatusPack", RepLayoutCmdType.Property)]
-        public DebuggingObject ChargeStatusPack { get; set; }
+        public object ChargeStatusPack { get; set; }
 
         [NetFieldExport("CurrentSpinAudioComponent", RepLayoutCmdType.Property)]
         public NetworkGUID CurrentSpinAudioComponent { get; set; }

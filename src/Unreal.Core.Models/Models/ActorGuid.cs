@@ -1,6 +1,4 @@
-﻿using Unreal.Core.Contracts;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     /// <summary>
     /// Just a wrapper class for <see cref="NetworkGUID"/>

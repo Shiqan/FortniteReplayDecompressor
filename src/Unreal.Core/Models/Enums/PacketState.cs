@@ -7,6 +7,6 @@
     {
         Success,    // A packet was read successfully and there may be more in the frame archive.
         End,        // No more data is present in the archive.
-        Error,		// An error occurred while reading.
+        Error,      // An error occurred while reading.
     }
 }

@@ -2,6 +2,7 @@
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
@@ -38,7 +39,7 @@ namespace FortniteReplayReader.Models.NetFieldExports.Vehicles
         public int SurfaceTypeVehicleOn { get; set; }
 
         [NetFieldExport("InitialOverlappingVehicles", RepLayoutCmdType.Property)]
-        public DebuggingObject InitialOverlappingVehicles { get; set; }
+        public object InitialOverlappingVehicles { get; set; }
     }
 
     [NetFieldExportClassNetCache("B_Prj_Meatball_Missile_C_ClassNetCache", minimalParseMode: ParseMode.Debug)]

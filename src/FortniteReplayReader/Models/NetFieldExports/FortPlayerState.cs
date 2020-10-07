@@ -1,7 +1,9 @@
 ﻿using FortniteReplayReader.Models.NetFieldExports.RPC;
+using Unreal.Core;
 using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 using Unreal.Core.Models.Enums;
 
 namespace FortniteReplayReader.Models.NetFieldExports
@@ -191,6 +193,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("bDBNO", RepLayoutCmdType.PropertyBool)]
         public bool? bDBNO { get; set; }
 
+        [NetFieldExport("bWasDBNOOnDeath", RepLayoutCmdType.PropertyBool)]
+        public bool? bWasDBNOOnDeath { get; set; }
+
         [NetFieldExport("DeathCause", RepLayoutCmdType.Enum)]
         public int? DeathCause { get; set; }
 
@@ -227,8 +232,11 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
         public FVector DeathLocation { get; set; }
 
+        [NetFieldExport("Location", RepLayoutCmdType.PropertyVector)]
+        public FVector Location { get; set; }
+
         [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Ignore)]
-        public DebuggingObject SimulatedAttributes { get; set; }
+        public object SimulatedAttributes { get; set; }
 
         [NetFieldExport("KickedFromSessionReason", RepLayoutCmdType.Enum)]
         public int? KickedFromSessionReason { get; set; }
@@ -238,5 +246,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bIsAnAthenaGameParticipant", RepLayoutCmdType.PropertyBool)]
         public bool? bIsAnAthenaGameParticipant { get; set; }
+
+        [NetFieldExport("bInGliderRedeploy", RepLayoutCmdType.PropertyBool)]
+        public bool? bInGliderRedeploy { get; set; }
     }
 }

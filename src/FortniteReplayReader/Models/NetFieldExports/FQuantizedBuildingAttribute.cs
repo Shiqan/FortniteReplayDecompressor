@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Unreal.Core;
-using Unreal.Core.Contracts;
+using Unreal.Core.Models.Contracts;
 
 namespace FortniteReplayReader.Models.NetFieldExports
 {
@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
     /// </summary>
     public class FQuantizedBuildingAttribute : IProperty
     {
-        public void Serialize(NetBitReader reader)
+        public void Serialize(INetBitReader reader)
         {
             //throw new NotImplementedException();
         }

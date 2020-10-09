@@ -41,6 +41,7 @@ namespace Unreal.Core
 
         public NetGuidCache _netGuidCache;
         public NetFieldParser _netFieldParser;
+        //public INetFieldParser _netFieldParser;
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
@@ -66,8 +67,10 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
+        //public ReplayReader(INetFieldParser parser, ILogger logger, ParseMode mode)
         public ReplayReader(ILogger logger, ParseMode mode)
         {
+            //_netFieldParser = parser;
             _logger = logger;
             _parseMode = mode;
 
@@ -1124,6 +1127,7 @@ namespace Unreal.Core
                 // see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338
                 if (_netGuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
                 {
+                    //if (_netFieldParser.IsPlayerController(path))
                     if (_netFieldParser.PlayerControllerGroups.Contains(path))
                     {
                         var netPlayerIndex = bunch.Archive.ReadByte();

@@ -1,4 +1,5 @@
-﻿using Unreal.Core.Models.Contracts;
+﻿using Unreal.Core.Models;
+using Unreal.Core.Models.Contracts;
 
 namespace Unreal.Core
 {
@@ -29,6 +30,6 @@ namespace Unreal.Core
         /// Create a new instance of the INetFieldExportGroup associated with this <paramref name="group"/>.
         /// </summary>
         /// <param name="group"></param>
-        public INetFieldExportGroup CreateType(string group);
+        public INetFieldExportGroupAdapter CreateType(string group);
     }
 }

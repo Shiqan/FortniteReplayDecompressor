@@ -53,11 +53,11 @@ namespace HelloWorldGenerated
             context.AddSource("helloWorldGenerated", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
 
 
-            context.AddSource("NetFieldParserGenerated", SourceText.From(CreateNetFieldParser(visitor.Symbols), Encoding.UTF8));
+            context.AddSource("NetFieldParserGenerated", SourceText.From(CreateNetFieldParser(visitor), Encoding.UTF8));
 
             foreach (var sym in visitor.Symbols)
             {
-                context.AddSource($"{sym.Name}AdapterGenerated", SourceText.From(AddReadFieldMethod(sym), Encoding.UTF8));
+                context.AddSource($"{sym.Name}AdapterGenerated", SourceText.From(AddAdapters(sym), Encoding.UTF8));
             }
         }
 
@@ -66,15 +66,30 @@ namespace HelloWorldGenerated
             //
         }
 
-        private string CreateNetFieldParser(IEnumerable<INamedTypeSymbol> symbols)
+        private string CreateNetFieldParser(GetAllSymbolsVisitor visitor)
         {
+            var symbols = visitor.Symbols;
+
             StringBuilder source = new StringBuilder(@"
-            using Unreal.Core.Models.Contracts;
             using Unreal.Core.Models;
+            using Unreal.Core.Models.Contracts;
             using System.Collections.Generic;
             ");
 
             var netFieldExportGroups = symbols.Where(symbol => symbol.GetAttributes().Any(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")));
+
+
+            var playerControllers = netFieldExportGroups.Where(symbol => symbol.GetAttributes().Any(attr => attr.AttributeClass.Name.Equals("PlayerControllerAttribute"))).Select(symbol =>
+                symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("PlayerControllerAttribute")).ConstructorArguments[0].Value
+            ).Select(path => $"\"{path}\"");
+
+            var netFieldGroups = netFieldExportGroups.Select(symbol =>
+                symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[0].Value
+            ).Select(path => $"\"{path}\"");
+
+            var classNetCaches = visitor.ClassNetCacheSymbols.Select(symbol =>
+                symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportClassNetCacheAttribute")).ConstructorArguments[0].Value
+            ).Select(path => $"\"{path}\"");
 
             foreach (var ns in GetUniqueNamespaces(netFieldExportGroups))
             {
@@ -86,9 +101,9 @@ namespace HelloWorldGenerated
             {{
                 public class NetFieldParserGenerated : INetFieldParser
                 {{
-                    private HashSet<string> _playerControllers {{ get; set; }} = new HashSet<string>();
-                    private HashSet<string> _netFieldGroups {{ get; set; }} = new HashSet<string>();
-                    private HashSet<string> _classNetCaches {{ get; set; }} = new HashSet<string>();
+                    private static HashSet<string> _playerControllers = new HashSet<string>() {{ {string.Join(",", playerControllers)} }};
+                    private static HashSet<string> _netFieldGroups = new HashSet<string>() {{ {string.Join(",", netFieldGroups)} }};
+                    private static HashSet<string> _classNetCaches = new HashSet<string>() {{ {string.Join(",", classNetCaches)} }};
                     
                     public bool IsPlayerController(string group)
                     {{
@@ -105,7 +120,7 @@ namespace HelloWorldGenerated
                         return _netFieldGroups.Contains(group);
                     }}
 
-                    public INetFieldExportGroup CreateType(string path)
+                    public INetFieldExportGroupAdapter CreateType(string path)
                     {{
                         switch (path)
                         {{
@@ -148,7 +163,7 @@ namespace HelloWorldGenerated
             var path = (string)attrs.ConstructorArguments[0].Value;
             source.Append($@"
                 case ""{path}"":
-                    return new {classSymbol.Name}();
+                    return new {classSymbol.Name}Adapter();
             ");
             return source.ToString();
         }
@@ -157,7 +172,7 @@ namespace HelloWorldGenerated
         /// Adds a ReadField(string field, INetBitReader reader) method to each (partial) class marked with NetFieldExportGroup.
         /// </summary>
         /// <param name="classSymbol"></param>
-        private string AddReadFieldMethod(INamedTypeSymbol classSymbol)
+        private string AddAdapters(INamedTypeSymbol classSymbol)
         {
             var attrs = classSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute"));
             if (attrs == null)
@@ -182,9 +197,10 @@ namespace HelloWorldGenerated
             source.Append($@"
             namespace {namespaceName}
             {{
-                public class {classSymbol.Name}Adapter : NetFieldExportGroupAdapter<{classSymbol.Name}>
+                public class {classSymbol.Name}Adapter : INetFieldExportGroupAdapter<{classSymbol.Name}>
                 {{
-                    public override void ReadField(string field, INetBitReader netBitReader) 
+                    public {classSymbol.Name} Data {{ get; set; }}
+                    public void ReadField(string field, INetBitReader netBitReader) 
                     {{
                         switch (field)
                         {{
@@ -287,7 +303,6 @@ namespace HelloWorldGenerated
                 return "";
             }
 
-
             var namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
             StringBuilder source = new StringBuilder();
@@ -300,7 +315,6 @@ namespace HelloWorldGenerated
 
             source.Append($@"Console.WriteLine(""{path}"");");
             source.Append($@"Console.WriteLine(""{parseMode}"");");
-
 
             foreach (var ns in GetUniqueNamespaces(GetAllProperties(classSymbol)))
             {
@@ -380,6 +394,7 @@ namespace HelloWorldGenerated
         class GetAllSymbolsVisitor : SymbolVisitor
         {
             public List<INamedTypeSymbol> Symbols { get; set; } = new List<INamedTypeSymbol>();
+            public List<INamedTypeSymbol> ClassNetCacheSymbols { get; set; } = new List<INamedTypeSymbol>();
 
             public override void VisitNamespace(INamespaceSymbol symbol)
             {
@@ -394,6 +409,11 @@ namespace HelloWorldGenerated
                 if (symbol.GetAttributes().Any(i => i.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")))
                 {
                     Symbols.Add(symbol);
+                }
+
+                if (symbol.GetAttributes().Any(i => i.AttributeClass.Name.Equals("NetFieldExportClassNetCacheAttribute")))
+                {
+                    ClassNetCacheSymbols.Add(symbol);
                 }
             }
         }

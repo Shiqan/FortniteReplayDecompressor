@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -37,11 +38,17 @@ namespace HelloWorldGenerated
             Console.WriteLine(""--------------- START"");
 ");
 
-            foreach (var sym in visitor.Symbols)
-            {
-                sourceBuilder.Append(TestAdapters(sym));
-                sourceBuilder.Append($@"Console.WriteLine(""\n"");");
-            }
+            //foreach (var sym in visitor.Symbols)
+            //{
+            //    sourceBuilder.Append(TestAdapters(sym));
+            //    sourceBuilder.Append($@"Console.WriteLine(""\n"");");
+            //}
+
+            //foreach (var sym in visitor.ClassNetCacheSymbols)
+            //{
+            //    sourceBuilder.Append(TestClassNetCache(sym));
+            //    sourceBuilder.Append($@"Console.WriteLine(""\n"");");
+            //}
 
             sourceBuilder.Append($@"Console.WriteLine(""--------------- END"");");
 
@@ -76,7 +83,7 @@ namespace HelloWorldGenerated
             using System.Collections.Generic;
             ");
 
-            var netFieldExportGroups = symbols.Where(symbol => symbol.GetAttributes().Any(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")));
+            var netFieldExportGroups = symbols.Where(symbol => !((ParseMode) symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[1].Value).Equals(ParseMode.Ignore));
 
 
             var playerControllers = netFieldExportGroups.Where(symbol => symbol.GetAttributes().Any(attr => attr.AttributeClass.Name.Equals("PlayerControllerAttribute"))).Select(symbol =>
@@ -87,9 +94,7 @@ namespace HelloWorldGenerated
                 symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[0].Value
             ).Select(path => $"\"{path}\"");
 
-            var classNetCaches = visitor.ClassNetCacheSymbols.Select(symbol =>
-                symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportClassNetCacheAttribute")).ConstructorArguments[0].Value
-            ).Select(path => $"\"{path}\"");
+            var classNetCaches = AddClassNetCacheProperties(visitor.ClassNetCacheSymbols);
 
             foreach (var ns in GetUniqueNamespaces(netFieldExportGroups))
             {
@@ -103,7 +108,7 @@ namespace HelloWorldGenerated
                 {{
                     private static HashSet<string> _playerControllers = new HashSet<string>() {{ {string.Join(",", playerControllers)} }};
                     private static HashSet<string> _netFieldGroups = new HashSet<string>() {{ {string.Join(",", netFieldGroups)} }};
-                    private static HashSet<string> _classNetCaches = new HashSet<string>() {{ {string.Join(",", classNetCaches)} }};
+                    private static Dictionary<string, Dictionary<string, ClassNetCacheProperty>> _classNetCaches = new Dictionary<string, Dictionary<string, ClassNetCacheProperty>> {{ { classNetCaches } }};
                     
                     public bool IsPlayerController(string group)
                     {{
@@ -112,7 +117,7 @@ namespace HelloWorldGenerated
 
                     public bool WillReadClassNetCache(string group)
                     {{
-                        return _classNetCaches.Contains(group);
+                        return _classNetCaches.ContainsKey(group);
                     }}
 
                     public bool WillReadType(string group)
@@ -132,10 +137,21 @@ namespace HelloWorldGenerated
             }
 
             source.Append(@"
-                default:
-                    return null;
+                    default:
+                        return null;
+                    }
                 }
-            }");
+
+                public bool TryGetClassNetCacheProperty(string property, string group, out ClassNetCacheProperty info)
+                {
+                    info = null;
+                    if (_classNetCaches.TryGetValue(group, out var groupInfo))
+                    {
+                        return groupInfo.TryGetValue(property, out info);
+                    }
+                    return false;
+                }"
+            );
 
             source.Append(@"
                 }
@@ -151,7 +167,6 @@ namespace HelloWorldGenerated
         /// <param name="classSymbol"></param>
         private string AddToCreateType(INamedTypeSymbol classSymbol)
         {
-            // begin building the generated source
             var source = new StringBuilder();
 
             var attrs = classSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute"));
@@ -161,11 +176,74 @@ namespace HelloWorldGenerated
             }
 
             var path = (string)attrs.ConstructorArguments[0].Value;
+            var mode = (ParseMode)attrs.ConstructorArguments[1].Value;
+
+            if (mode.Equals(ParseMode.Ignore))
+            {
+                return "";
+            }
+
             source.Append($@"
                 case ""{path}"":
                     return new {classSymbol.Name}Adapter();
             ");
             return source.ToString();
+        }
+
+        private string AddClassNetCacheProperties(IEnumerable<INamedTypeSymbol> symbols)
+        {
+            var classNetCaches = new List<string>();
+            foreach (var symbol in symbols)
+            {
+                var attrs = symbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportClassNetCacheAttribute"));
+                if (attrs == null)
+                {
+                    continue;
+                }
+
+                var path = (string) attrs.ConstructorArguments[0].Value;
+                var mode = (ParseMode) attrs.ConstructorArguments[1].Value;
+
+                if (mode.Equals(ParseMode.Ignore))
+                {
+                    continue;
+                }
+
+                var properties = new List<string>();
+                foreach (var property in GetAllProperties(symbol))
+                {
+                    var rpc = property.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportRPCAttribute"));
+                    if (rpc != null)
+                    {
+                        var propertySource = new StringBuilder();
+
+                        var name = (string)rpc.ConstructorArguments[0].Value;
+                        var pathname = (string)rpc.ConstructorArguments[1].Value;
+                        var function = rpc.ConstructorArguments[2].Value.ToString().ToLower();
+                        var checksum = rpc.ConstructorArguments[3].Value.ToString().ToLower();
+                        var customStuct = rpc.ConstructorArguments[4].Value.ToString().ToLower();
+
+                        propertySource.Append($@"
+                            {{ ""{name}"", new ClassNetCacheProperty {{
+                                    Name = ""{name}"",
+                                    PathName = ""{pathname}"",
+                                    EnablePropertyChecksum = {checksum},
+                                    IsCustomStruct = {customStuct},
+                                    IsFunction = {function}
+                                }}
+                            }}
+                        ");
+                        properties.Add(propertySource.ToString());
+                    }
+                }
+
+                if (properties.Any())
+                {
+                    classNetCaches.Add($@"{{ ""{path}"", new Dictionary<string, ClassNetCacheProperty> {{ {string.Join(",", properties)} }} }}");
+                }
+            }
+
+            return string.Join(",", classNetCaches);
         }
 
         /// <summary>
@@ -293,6 +371,48 @@ namespace HelloWorldGenerated
             }
 
             return "";
+        }
+
+        private static string TestClassNetCache(INamedTypeSymbol classSymbol)
+        {
+            var attrs = classSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportClassNetCacheAttribute"));
+            if (attrs == null)
+            {
+                return "";
+            }
+
+            StringBuilder source = new StringBuilder();
+
+            var path = (string) attrs.ConstructorArguments[0].Value;
+            var mode = (ParseMode) attrs.ConstructorArguments[1].Value;
+
+            source.Append($@"Console.WriteLine(""{path}"");");
+            source.Append($@"Console.WriteLine(""{mode}"");");
+
+            var properties = new List<string>();
+            foreach (var property in GetAllProperties(classSymbol))
+            {
+                var rpc = property.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.Name.Equals("NetFieldExportRPCAttribute"));
+                if (rpc != null)
+                {
+                    var args = rpc.ConstructorArguments.Count();
+                    var name = (string)rpc.ConstructorArguments[0].Value;
+                    var pathname = (string)rpc.ConstructorArguments[1].Value;
+                    var function = rpc.ConstructorArguments[2].Value;
+                    var checksum = rpc.ConstructorArguments[3].Value;
+                    var customStuct = rpc.ConstructorArguments[4].Value.ToString().ToLower();
+
+
+                    source.Append($@"Console.WriteLine(""{args}"");");
+                    source.Append($@"Console.WriteLine(""{name}"");");
+                    source.Append($@"Console.WriteLine(""{pathname}"");");
+                    source.Append($@"Console.WriteLine(""{function}"");");
+                    source.Append($@"Console.WriteLine(""{checksum}"");");
+                    source.Append($@"Console.WriteLine(""{customStuct}"");");
+                }
+            }
+
+            return source.ToString();
         }
 
         private static string TestAdapters(INamedTypeSymbol classSymbol)

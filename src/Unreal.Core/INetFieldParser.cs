@@ -27,6 +27,13 @@ namespace Unreal.Core
         public bool WillReadType(string group);
 
         /// <summary>
+        /// Returns whether or not the property of this classnetcache was found.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns>true if classnetcache property was found, false otherwise</returns>
+        public bool TryGetClassNetCacheProperty(string property, string group, out ClassNetCacheProperty info);
+
+        /// <summary>
         /// Create a new instance of the INetFieldExportGroup associated with this <paramref name="group"/>.
         /// </summary>
         /// <param name="group"></param>

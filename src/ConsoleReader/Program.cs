@@ -73,38 +73,5 @@ namespace ConsoleReader
             //Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
             Console.ReadLine();
         }
-
-        public class NetFieldparserTest : INetFieldParser
-        {
-            public INetFieldExportGroupAdapter CreateType(string group)
-            {
-                return new TestAdapter();
-            }
-
-            public bool IsPlayerController(string group)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool WillReadClassNetCache(string group)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool WillReadType(string group)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class TestAdapter : INetFieldExportGroupAdapter<Aircraft>
-        {
-            public Aircraft Data { get; set; }
-
-            public void ReadField(string field, INetBitReader netBitReader)
-            {
-                throw new NotImplementedException();
-            }
-        }
     }
 }

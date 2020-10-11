@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Unreal.Core;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Contracts;
@@ -18,11 +19,11 @@ namespace ConsoleReader
     {
         static void Main(string[] args)
         {
-            var test = new HelloWorldGenerated.RandomClass();
-            test.Hello();
+            //var test = new HelloWorldGenerated.RandomClass();
+            //test.Hello();
 
-            var test2 = new Unreal.Core.NetFieldParserGenerated();
-            var result = test2.CreateType("/Game/Athena/Athena_GameState.Athena_GameState_C");
+            var netFieldParser = new Unreal.Core.NetFieldParserGenerated();
+            //var result = netFieldParser.CreateType("/Game/Athena/Athena_GameState.Athena_GameState_C");
 
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
@@ -37,7 +38,7 @@ namespace ConsoleReader
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(logger, ParseMode.Full);
+            var reader = new ReplayReader(netFieldParser, logger, ParseMode.Full);
             long total = 0;
             foreach (var replayFile in replayFiles)
             {
@@ -73,5 +74,12 @@ namespace ConsoleReader
             //Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
             Console.ReadLine();
         }
+    }
+
+    public interface IAdapter
+    {
+        INetFieldExportGroup GetData();
+        void ReadField(string a, string b);
+
     }
 }

@@ -277,7 +277,13 @@ namespace HelloWorldGenerated
             {{
                 public class {classSymbol.Name}Adapter : INetFieldExportGroupAdapter<{classSymbol.Name}>
                 {{
-                    public {classSymbol.Name} Data {{ get; set; }}
+                    public {classSymbol.Name} Data {{ get; set; }} = new {classSymbol.Name}();
+
+                    public INetFieldExportGroup GetData()
+                    {{
+                        return Data;
+                    }}
+
                     public void ReadField(string field, INetBitReader netBitReader) 
                     {{
                         switch (field)

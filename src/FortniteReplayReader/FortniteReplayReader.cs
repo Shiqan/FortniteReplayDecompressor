@@ -23,7 +23,7 @@ namespace FortniteReplayReader
     {
         private FortniteReplayBuilder Builder;
 
-        public ReplayReader(ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(logger, parseMode)
+        public ReplayReader(INetFieldParser parser, ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(parser, logger, parseMode)
         {
         }
 

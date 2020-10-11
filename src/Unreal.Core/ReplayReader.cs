@@ -40,8 +40,8 @@ namespace Unreal.Core
         protected bool IsDebugMode => _parseMode == ParseMode.Debug;
 
         public NetGuidCache _netGuidCache;
-        public NetFieldParser _netFieldParser;
-        //public INetFieldParser _netFieldParser;
+        //public NetFieldParser _netFieldParser;
+        public INetFieldParser _netFieldParser;
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
@@ -67,15 +67,15 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        //public ReplayReader(INetFieldParser parser, ILogger logger, ParseMode mode)
-        public ReplayReader(ILogger logger, ParseMode mode)
+        //public ReplayReader(ILogger logger, ParseMode mode)
+        public ReplayReader(INetFieldParser parser, ILogger logger, ParseMode mode)
         {
-            //_netFieldParser = parser;
+            _netFieldParser = parser;
             _logger = logger;
             _parseMode = mode;
 
             _netGuidCache = new NetGuidCache();
-            _netFieldParser = new NetFieldParser(_netGuidCache, mode);
+            //_netFieldParser = new NetFieldParser(_netGuidCache, mode);
         }
 
         /// <summary>
@@ -1127,8 +1127,8 @@ namespace Unreal.Core
                 // see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338
                 if (_netGuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
                 {
-                    //if (_netFieldParser.IsPlayerController(path))
-                    if (_netFieldParser.PlayerControllerGroups.Contains(path))
+                    //if (_netFieldParser.PlayerControllerGroups.Contains(path))
+                    if (_netFieldParser.IsPlayerController(path))
                     {
                         var netPlayerIndex = bunch.Archive.ReadByte();
                     }
@@ -1315,9 +1315,9 @@ namespace Unreal.Core
         /// <param name="fieldCache"></param>
         /// <param name="channelIndex"></param>
         /// <returns></returns>
-        public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldParser.ClassNetCachePropertyInfo fieldCache, uint channelIndex)
+        public virtual bool ReceiveCustomProperty(FBitArchive reader, ClassNetCacheProperty fieldCache, uint channelIndex)
         {
-            var export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
+            var export = _netFieldParser.CreateType(fieldCache.Name);
             if (export != null)
             {
                 var numBits = reader.GetBitsLeft();
@@ -1326,7 +1326,7 @@ namespace Unreal.Core
                     EngineNetworkVersion = reader.EngineNetworkVersion,
                     NetworkVersion = reader.NetworkVersion
                 };
-                export.Serialize(cmdReader);
+                export.ReadField(fieldCache.Name, cmdReader);
 
                 if (cmdReader.IsError)
                 {
@@ -1340,7 +1340,7 @@ namespace Unreal.Core
 
                 (export as IResolvable)?.Resolve(_netGuidCache);
 
-                OnExportRead(channelIndex, export as INetFieldExportGroup);
+                OnExportRead(channelIndex, export.GetData());
 
                 return true;
             }
@@ -1479,7 +1479,7 @@ namespace Unreal.Core
             }
 
             _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
-            exportGroup = _netFieldParser.CreateType(group?.PathName);
+            var adapter = _netFieldParser.CreateType(group?.PathName);
             var hasdata = false;
 
             while (true)
@@ -1533,11 +1533,13 @@ namespace Unreal.Core
                         NetworkVersion = archive.NetworkVersion
                     };
 
-                    if (!_netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader))
-                    {
-                        // Set field incompatible since we couldnt (or didnt want to) parse it.
-                        export.Incompatible = true;
-                    }
+                    adapter.ReadField(export.Name, cmdReader);
+
+                    //if (!_netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader))
+                    //{
+                    //    // Set field incompatible since we couldnt (or didnt want to) parse it.
+                    //    export.Incompatible = true;
+                    //}
 
 
                     if (cmdReader.IsError)
@@ -1571,6 +1573,7 @@ namespace Unreal.Core
                 }
             }
 
+            exportGroup = adapter.GetData();
             if (!netDeltaUpdate && hasdata)
             {
                 OnExportRead(channelIndex, exportGroup);

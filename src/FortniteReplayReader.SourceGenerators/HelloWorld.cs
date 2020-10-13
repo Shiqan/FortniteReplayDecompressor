@@ -348,6 +348,15 @@ namespace HelloWorldGenerated
                 var field = (string)attrs.ConstructorArguments[0].Value;
                 var repLayout = (RepLayoutCmdType)attrs.ConstructorArguments[1].Value;
 
+                if (repLayout.Equals(RepLayoutCmdType.Ignore))
+                {
+                    source.Append($@"
+                        case ""{field}"":
+                            break;
+                    ");
+                    return source.ToString();
+                }
+
                 var reader = repLayout switch
                 {
                     RepLayoutCmdType.PropertyBool => "netBitReader.SerializePropertyBool();",
@@ -387,7 +396,7 @@ namespace HelloWorldGenerated
 
                 source.Append($@"
                     case ""{field}"":
-                        Data.{propertySymbol.Name} = {reader};
+                        Data.{propertySymbol.Name} = {reader}
                         break;
                 ");
 

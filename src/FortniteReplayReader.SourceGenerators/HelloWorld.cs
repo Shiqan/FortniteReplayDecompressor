@@ -80,19 +80,23 @@ namespace HelloWorldGenerated
             StringBuilder source = new StringBuilder(@"
             using Unreal.Core.Models;
             using Unreal.Core.Models.Contracts;
+            using Unreal.Core.Models.Enums;
             using System.Collections.Generic;
             ");
 
-            var netFieldExportGroups = symbols.Where(symbol => !((ParseMode) symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[1].Value).Equals(ParseMode.Ignore));
-
+            var netFieldExportGroups = symbols.Where(symbol => !((ParseMode)symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[1].Value).Equals(ParseMode.Ignore));
 
             var playerControllers = netFieldExportGroups.Where(symbol => symbol.GetAttributes().Any(attr => attr.AttributeClass.Name.Equals("PlayerControllerAttribute"))).Select(symbol =>
                 symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("PlayerControllerAttribute")).ConstructorArguments[0].Value
             ).Select(path => $"\"{path}\"");
 
-            var netFieldGroups = netFieldExportGroups.Select(symbol =>
-                symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")).ConstructorArguments[0].Value
-            ).Select(path => $"\"{path}\"");
+            var netFieldGroups = netFieldExportGroups.Select(symbol => symbol.GetAttributes().First(attr => attr.AttributeClass.Name.Equals("NetFieldExportGroupAttribute")))
+                .Select(attr => new
+                {
+                    Path = attr.ConstructorArguments[0].Value,
+                    Mode = (ParseMode)attr.ConstructorArguments[1].Value,
+                })
+                .Select(group => $"{{ \"{group.Path}\", ParseMode.{group.Mode} }}");
 
             var classNetCaches = AddClassNetCacheProperties(visitor.ClassNetCacheSymbols);
 
@@ -107,22 +111,40 @@ namespace HelloWorldGenerated
                 public class NetFieldParserGenerated : INetFieldParser
                 {{
                     private static HashSet<string> _playerControllers = new HashSet<string>() {{ {string.Join(",", playerControllers)} }};
-                    private static HashSet<string> _netFieldGroups = new HashSet<string>() {{ {string.Join(",", netFieldGroups)} }};
-                    private static Dictionary<string, Dictionary<string, ClassNetCacheProperty>> _classNetCaches = new Dictionary<string, Dictionary<string, ClassNetCacheProperty>> {{ { classNetCaches } }};
+                    private static Dictionary<string, ParseMode> _netFieldGroups = new Dictionary<string, ParseMode>() {{ {string.Join(",", netFieldGroups)} }};
+                    private static Dictionary<string, ClassNetCache> _classNetCaches = new Dictionary<string, ClassNetCache> {{ { classNetCaches } }};
                     
                     public bool IsPlayerController(string group)
                     {{
                         return _playerControllers.Contains(group);
                     }}
 
-                    public bool WillReadClassNetCache(string group)
+                    public bool WillReadClassNetCache(string group, ParseMode mode)
                     {{
-                        return _classNetCaches.ContainsKey(group);
+                        if (_classNetCaches.TryGetValue(group, out var cache)) 
+                        {{
+                            return mode >= cache.Mode;
+                        }}
+                        return false;
                     }}
 
-                    public bool WillReadType(string group)
+                    public bool WillReadType(string group, ParseMode mode)
                     {{
-                        return _netFieldGroups.Contains(group);
+                        if (_netFieldGroups.TryGetValue(group, out var parseMode))
+                        {{
+                            return mode >= parseMode;
+                        }}
+                        return false;
+                    }}
+
+                    public bool TryGetClassNetCacheProperty(string property, string group, out ClassNetCacheProperty info)
+                    {{
+                        info = null;
+                        if (_classNetCaches.TryGetValue(group, out var cache))
+                        {{
+                            return cache.Properties.TryGetValue(property, out info);
+                        }}
+                        return false;
                     }}
 
                     public INetFieldExportGroupAdapter CreateType(string path)
@@ -140,16 +162,6 @@ namespace HelloWorldGenerated
                     default:
                         return null;
                     }
-                }
-
-                public bool TryGetClassNetCacheProperty(string property, string group, out ClassNetCacheProperty info)
-                {
-                    info = null;
-                    if (_classNetCaches.TryGetValue(group, out var groupInfo))
-                    {
-                        return groupInfo.TryGetValue(property, out info);
-                    }
-                    return false;
                 }"
             );
 
@@ -201,8 +213,8 @@ namespace HelloWorldGenerated
                     continue;
                 }
 
-                var path = (string) attrs.ConstructorArguments[0].Value;
-                var mode = (ParseMode) attrs.ConstructorArguments[1].Value;
+                var path = (string)attrs.ConstructorArguments[0].Value;
+                var mode = (ParseMode)attrs.ConstructorArguments[1].Value;
 
                 if (mode.Equals(ParseMode.Ignore))
                 {
@@ -239,7 +251,12 @@ namespace HelloWorldGenerated
 
                 if (properties.Any())
                 {
-                    classNetCaches.Add($@"{{ ""{path}"", new Dictionary<string, ClassNetCacheProperty> {{ {string.Join(",", properties)} }} }}");
+                    classNetCaches.Add($@"{{ ""{path}"", new ClassNetCache {{
+                            Name = ""{path}"",
+                            Mode = ParseMode.{mode},
+                            Properties = new Dictionary<string, ClassNetCacheProperty> {{ {string.Join(",", properties)} }}
+                        }}
+                    }}");
                 }
             }
 
@@ -284,7 +301,7 @@ namespace HelloWorldGenerated
                         return Data;
                     }}
 
-                    public void ReadField(string field, INetBitReader netBitReader) 
+                    public bool ReadField(string field, INetBitReader netBitReader) 
                     {{
                         switch (field)
                         {{
@@ -298,9 +315,10 @@ namespace HelloWorldGenerated
 
             source.Append(@"
                 default:
-                    // pass
-                    break;
+                    return false;
                 }
+
+                return true;
             }");
 
             source.Append(@"
@@ -389,8 +407,8 @@ namespace HelloWorldGenerated
 
             StringBuilder source = new StringBuilder();
 
-            var path = (string) attrs.ConstructorArguments[0].Value;
-            var mode = (ParseMode) attrs.ConstructorArguments[1].Value;
+            var path = (string)attrs.ConstructorArguments[0].Value;
+            var mode = (ParseMode)attrs.ConstructorArguments[1].Value;
 
             source.Append($@"Console.WriteLine(""{path}"");");
             source.Append($@"Console.WriteLine(""{mode}"");");

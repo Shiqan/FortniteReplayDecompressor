@@ -1,5 +1,6 @@
 ﻿using Unreal.Core.Models;
 using Unreal.Core.Models.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
@@ -16,15 +17,17 @@ namespace Unreal.Core
         /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
         /// </summary>
         /// <param name="group"></param>
+        /// <param name="mode"></param>
         /// <returns>true if group should be parsed further, false otherwise</returns>
-        public bool WillReadClassNetCache(string group);
+        public bool WillReadClassNetCache(string group, ParseMode mode);
 
         /// <summary>
         /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
         /// </summary>
         /// <param name="group"></param>
+        /// <param name="mode"></param>
         /// <returns>true if group should be parsed further, false otherwise</returns>
-        public bool WillReadType(string group);
+        public bool WillReadType(string group, ParseMode mode);
 
         /// <summary>
         /// Returns whether or not the property of this classnetcache was found.

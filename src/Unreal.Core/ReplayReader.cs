@@ -1227,7 +1227,7 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (!_netFieldParser.WillReadClassNetCache(classNetCache.PathName))
+                if (!_netFieldParser.WillReadClassNetCache(classNetCache.PathName, _parseMode))
                 {
                     continue;
                 }
@@ -1257,7 +1257,7 @@ namespace Unreal.Core
                         else
                         {
                             var group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
-                            if (!_netFieldParser.WillReadType(group.PathName))
+                            if (!_netFieldParser.WillReadType(group.PathName, _parseMode))
                             {
                                 continue;
                             }
@@ -1298,7 +1298,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!Channels[channelIndex].IsIgnoringChannel(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
+            if (!Channels[channelIndex].IsIgnoringChannel(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName, _parseMode) && !reader.AtEnd())
             {
                 _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
                 return false;
@@ -1456,7 +1456,7 @@ namespace Unreal.Core
                 return false;
             }
 
-            if (!_netFieldParser.WillReadType(group.PathName))
+            if (!_netFieldParser.WillReadType(group.PathName, _parseMode))
             {
                 _logger?.LogInformation($"Not reading type {group.PathName}");
                 Channels[channelIndex].IgnoreChannel(group.PathName);
@@ -1478,8 +1478,8 @@ namespace Unreal.Core
                 var doChecksum = archive.ReadBit();
             }
 
-            _logger?.LogDebug($"ReceiveProperties: group {group?.PathName}");
-            var adapter = _netFieldParser.CreateType(group?.PathName);
+            _logger?.LogDebug($"ReceiveProperties: group {group.PathName}");
+            var adapter = _netFieldParser.CreateType(group.PathName);
             var hasdata = false;
 
             while (true)
@@ -1533,12 +1533,14 @@ namespace Unreal.Core
                         NetworkVersion = archive.NetworkVersion
                     };
 
-                    adapter.ReadField(export.Name, cmdReader);
+                    if (!adapter.ReadField(export.Name, cmdReader))
+                    {
+                        // Set field incompatible since we couldnt (or didnt want to) parse it.
+                        export.Incompatible = true;
+                    }
 
                     //if (!_netFieldParser.ReadField(exportGroup, export, handle, group, cmdReader))
                     //{
-                    //    // Set field incompatible since we couldnt (or didnt want to) parse it.
-                    //    export.Incompatible = true;
                     //}
 
 

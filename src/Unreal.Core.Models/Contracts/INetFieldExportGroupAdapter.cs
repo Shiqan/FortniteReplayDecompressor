@@ -3,7 +3,7 @@
     public interface INetFieldExportGroupAdapter
     {
         INetFieldExportGroup GetData();
-        void ReadField(string field, INetBitReader netBitReader);
+        bool ReadField(string field, INetBitReader netBitReader);
     }
 
     public interface INetFieldExportGroupAdapter<T> : INetFieldExportGroupAdapter where T : INetFieldExportGroup

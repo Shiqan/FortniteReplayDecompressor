@@ -38,7 +38,7 @@ namespace ConsoleReader
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(netFieldParser, logger, ParseMode.Full);
+            var reader = new ReplayReader(netFieldParser, logger, ParseMode.Minimal);
             long total = 0;
             foreach (var replayFile in replayFiles)
             {

@@ -82,7 +82,7 @@ namespace Unreal.Core
         /// </summary>
         public FVector SerializePropertyVector()
         {
-            return ReadVector();
+            return ReadFVector();
         }
 
         /// <summary>

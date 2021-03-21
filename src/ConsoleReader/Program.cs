@@ -22,11 +22,12 @@ namespace ConsoleReader
 
             //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
             //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-            var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
+            //var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
+            var replayFilesFolder = @"D:\Downloads\Demos\";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(logger, ParseMode.Full);
+            var reader = new ReplayReader(logger, ParseMode.Debug);
             long total = 0;
             foreach (var replayFile in replayFiles)
             {

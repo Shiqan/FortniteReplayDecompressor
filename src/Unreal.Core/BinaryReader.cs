@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
@@ -158,6 +159,32 @@ namespace Unreal.Core
             var inString = ReadFString();
             var inNumber = ReadInt32();
             return inString;
+        }
+
+        public override FTransform ReadFTransfrom()
+        {
+            return new FTransform
+            {
+                Rotation = ReadFQuat(),
+                Translation = ReadFVector(),
+                Scale3D = ReadFVector(),
+            };
+        }
+
+        public override FQuat ReadFQuat()
+        {
+            return new FQuat
+            {
+                X = ReadSingle(),
+                Y = ReadSingle(),
+                Z = ReadSingle(),
+                W = ReadSingle()
+            };
+        }
+
+        public override FVector ReadFVector()
+        {
+            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }
 
         public override string ReadGUID()

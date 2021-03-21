@@ -691,10 +691,8 @@ namespace Unreal.Core
                 {
                     var packageName = archive.ReadFString();
                     var packageNameToLoad = archive.ReadFString();
-                    // FTransform
-                    //var levelTransform = reader.ReadFString();
-                    // filter duplicates
-                    throw new NotImplementedException("FTransform deserialize not implemented");
+                    //var levelTransform = archive.ReadFTransfrom();
+                    archive.ReadFTransfrom();
                 }
             }
 
@@ -1083,7 +1081,7 @@ namespace Unreal.Core
             if (bWasSerialized)
             {
                 var bShouldQuantize = (archive.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_OPTIONALLY_QUANTIZE_SPAWN_INFO) ? true : archive.ReadBit();
-                return bShouldQuantize ? archive.ReadPackedVector(10, 24) : archive.ReadVector();
+                return bShouldQuantize ? archive.ReadPackedVector(10, 24) : archive.ReadFVector();
             }
 
             return defaultVector;

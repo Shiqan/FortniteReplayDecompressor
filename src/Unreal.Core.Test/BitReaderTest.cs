@@ -298,7 +298,7 @@ namespace Unreal.Core.Test
         public void ReadVectorTest(byte[] rawData, float x, float y, float z)
         {
             var reader = new BitReader(rawData);
-            var result = reader.ReadVector();
+            var result = reader.ReadFVector();
 
             var expected = new FVector(x, y, z);
 

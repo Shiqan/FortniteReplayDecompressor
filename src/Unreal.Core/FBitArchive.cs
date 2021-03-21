@@ -59,13 +59,6 @@ namespace Unreal.Core
         /// <returns>uint</returns>
         public abstract uint ReadSerializedInt(int maxValue);
 
-
-        /// <summary>
-        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
-        /// </summary>
-        /// <returns>Vector</returns>
-        public abstract FVector ReadVector();
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
         /// </summary>

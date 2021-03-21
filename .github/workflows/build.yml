@@ -11,10 +11,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Setup .NET Core 3.1
+    - name: Setup .NET 5
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.100
+        dotnet-version: 5.0.103
     - name: Build
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Debug
     - name: Test

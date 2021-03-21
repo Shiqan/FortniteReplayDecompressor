@@ -258,6 +258,11 @@ namespace Unreal.Core
             return inString;
         }
 
+        public override FTransform ReadFTransfrom()
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ReadGUID()
         {
             return ReadBytesToString(16);
@@ -344,7 +349,12 @@ namespace Unreal.Core
             return value;
         }
 
-        public override FVector ReadVector()
+        public override FQuat ReadFQuat()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override FVector ReadFVector()
         {
             return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }

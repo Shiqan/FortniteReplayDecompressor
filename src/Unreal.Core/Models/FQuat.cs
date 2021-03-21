@@ -7,10 +7,10 @@ namespace Unreal.Core.Models
     /// </summary>
     public class FQuat : IProperty
     {
-        public float X { get; private set; }
-        public float Y { get; private set; }
-        public float Z { get; private set; }
-        public float W { get; private set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float W { get; set; }
 
         //bool FQuat::NetSerialize(FArchive& Ar, class UPackageMap*, bool& bOutSuccess)
         public void Serialize(NetBitReader reader)

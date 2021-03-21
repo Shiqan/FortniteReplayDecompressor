@@ -15,6 +15,7 @@ using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Encryption;
 
 namespace FortniteReplayReader
 {
@@ -339,6 +340,29 @@ namespace FortniteReplayReader
             };
 
             return decrypted;
+        }
+
+        protected override FArchive Decompress(FArchive archive)
+        {
+            if (!Replay.Info.IsCompressed)
+            {
+                return archive;
+            }
+
+            var decompressedSize = archive.ReadInt32();
+            var compressedSize = archive.ReadInt32();
+            var compressedBuffer = archive.ReadBytes(compressedSize);
+
+            _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
+            var output = Oodle.DecompressReplayData(compressedBuffer.ToArray(), decompressedSize);
+
+            return new Unreal.Core.BinaryReader(output.AsMemory())
+            {
+                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
+                NetworkVersion = Replay.Header.NetworkVersion,
+                ReplayHeaderFlags = Replay.Header.Flags,
+                ReplayVersion = Replay.Info.FileVersion
+            };
         }
     }
 }

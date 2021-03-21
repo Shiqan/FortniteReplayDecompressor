@@ -1,8 +1,11 @@
-﻿namespace Unreal.Core.Models.Enums
+﻿using System;
+
+namespace Unreal.Core.Models.Enums
 {
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L84
     /// </summary>
+    [Flags]
     public enum NetworkVersionHistory
     {
         HISTORY_REPLAY_INITIAL = 1,

@@ -25,8 +25,4 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Unreal.Encryption\Unreal.Encryption.csproj" />
-  </ItemGroup>
 </Project>

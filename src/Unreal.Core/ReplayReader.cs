@@ -7,7 +7,6 @@ using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
-using Unreal.Encryption;
 
 namespace Unreal.Core
 {
@@ -213,15 +212,7 @@ namespace Unreal.Core
 
             // SerializeDemoFrameFromQueuedDemoPackets
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1978
-            var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-            foreach (var packet in playbackPackets)
-            {
-                if (packet.State == PacketState.Success)
-                {
-                    packetIndex++;
-                    //ReceivedRawPacket(packet);
-                }
-            }
+            ReadDemoFrameIntoPlaybackPackets(binaryArchive);
             checkpointIndex++;
         }
 
@@ -318,17 +309,7 @@ namespace Unreal.Core
             using var binaryArchive = Decompress(decrypted);
             while (!binaryArchive.AtEnd())
             {
-                var playbackPackets = ReadDemoFrameIntoPlaybackPackets(binaryArchive);
-
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
-                foreach (var packet in playbackPackets)
-                {
-                    if (packet.State == PacketState.Success)
-                    {
-                        packetIndex++;
-                        ReceivedRawPacket(packet);
-                    }
-                }
+                ReadDemoFrameIntoPlaybackPackets(binaryArchive);
             }
             replayDataIndex++;
         }
@@ -476,32 +457,27 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3220
         /// </summary>
-        public virtual PlaybackPacket ReadPacket(FArchive archive)
+        public virtual PacketState ReadPacket(FArchive archive)
         {
-            var packet = new PlaybackPacket();
-
             var bufferSize = archive.ReadInt32();
             if (bufferSize == 0)
             {
-                packet.State = PacketState.End;
-                return packet;
+                return PacketState.End;
             }
             else if (bufferSize > 2048)
             {
                 _logger?.LogWarning("ReadPacket: OutBufferSize > 2048");
-                packet.State = PacketState.Error;
-                return packet;
+                return PacketState.Error;
             }
             else if (bufferSize < 0)
             {
                 _logger?.LogWarning("ReadPacket: OutBufferSize < 0");
-                packet.State = PacketState.Error;
-                return packet;
+                return PacketState.Error;
             }
 
-            packet.Data = archive.ReadBytes(bufferSize).ToArray();
-            packet.State = PacketState.Success;
-            return packet;
+            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3338
+            ReceivedRawPacket(archive.ReadBytes(bufferSize));
+            return PacketState.Success;
         }
 
         /// <summary>
@@ -725,10 +701,7 @@ namespace Unreal.Core
                     archive.ReadIntPacked();
                 }
 
-                var packet = ReadPacket(archive);
-                playbackPackets.Add(packet);
-
-                @continue = packet.State switch
+                @continue = ReadPacket(archive) switch
                 {
                     PacketState.End => false,
                     PacketState.Error => false,
@@ -778,7 +751,7 @@ namespace Unreal.Core
                 if (group != null && group.IsValidIndex(netField.Handle))
                 {
                     //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
-                    group.NetFieldExports[(int)netField.Handle] = netField;
+                    group.NetFieldExports[netField.Handle] = netField;
                 }
                 else
                 {
@@ -1541,7 +1514,7 @@ namespace Unreal.Core
 
                 if (export.Incompatible)
                 {
-                    _logger?.LogInformation($"Incompatible export {export.Name} for group {group.PathName}, numbits is {numBits}");
+                    _logger?.LogDebug($"Incompatible export {export.Name} for group {group.PathName}, numbits is {numBits}");
                     archive.SkipBits(numBits);
                     // We've already warned that this property doesn't load anymore
                     continue;
@@ -1724,13 +1697,13 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
         /// </summary>
         /// <param name="packet"></param>
-        public virtual void ReceivedRawPacket(PlaybackPacket packet)
+        public virtual void ReceivedRawPacket(ReadOnlySpan<byte> packet)
         {
-            var lastByte = packet.Data[^1];
+            var lastByte = packet[^1];
 
             if (lastByte != 0)
             {
-                var bitSize = (packet.Data.Length * 8) - 1;
+                var bitSize = (packet.Length * 8) - 1;
 
                 // Bit streaming, starts at the Least Significant Bit, and ends at the MSB.
                 while (!((lastByte & 0x80) >= 1))
@@ -1739,7 +1712,7 @@ namespace Unreal.Core
                     bitSize--;
                 }
 
-                var bitArchive = new BitReader(packet.Data, bitSize)
+                var bitArchive = new BitReader(packet, bitSize)
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
@@ -2075,16 +2048,9 @@ namespace Unreal.Core
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
-            var output = Oodle.DecompressReplayData(compressedBuffer.ToArray(), decompressedSize);
 
-            _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
-            return new Core.BinaryReader(output.AsMemory())
-            {
-                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                NetworkVersion = Replay.Header.NetworkVersion,
-                ReplayHeaderFlags = Replay.Header.Flags,
-                ReplayVersion = Replay.Info.FileVersion
-            };
+            _logger?.LogDebug($"Decompressing archive from {compressedSize} to {decompressedSize}.");
+            throw new NotImplementedException("Replay is marked as compressed. Make sure to implement this method to decompress the chunks");
         }
     }
 }

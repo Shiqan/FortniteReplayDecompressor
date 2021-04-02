@@ -177,22 +177,17 @@ namespace FortniteReplayReader
                 return;
             }
 
-            else if (info.Metadata == ReplayEventTypes.MATCH_STATS)
+            switch (info.Metadata)
             {
-                Replay.Stats = ParseMatchStats(decryptedArchive, info);
-                return;
-            }
-
-            else if (info.Metadata == ReplayEventTypes.TEAM_STATS)
-            {
-                Replay.TeamStats = ParseTeamStats(decryptedArchive, info);
-                return;
-            }
-
-            else if (info.Metadata == ReplayEventTypes.ENCRYPTION_KEY)
-            {
-                ParseEncryptionKeyEvent(decryptedArchive, info);
-                return;
+                case ReplayEventTypes.MATCH_STATS:
+                    Replay.Stats = ParseMatchStats(decryptedArchive, info);
+                    return;
+                case ReplayEventTypes.TEAM_STATS:
+                    Replay.TeamStats = ParseTeamStats(decryptedArchive, info);
+                    return;
+                case ReplayEventTypes.ENCRYPTION_KEY:
+                    ParseEncryptionKeyEvent(decryptedArchive, info);
+                    return;
             }
 
             _logger?.LogInformation($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
@@ -290,17 +285,18 @@ namespace FortniteReplayReader
         public virtual string ParsePlayer(FArchive archive)
         {
             var botIndicator = archive.ReadByteAsEnum<PlayerTypes>();
-            if (botIndicator == PlayerTypes.BOT)
+            switch (botIndicator)
             {
-                return "Bot";
+                case PlayerTypes.BOT:
+                    return "Bot";
+                case PlayerTypes.NAMED_BOT:
+                    return archive.ReadFString();
+                default:
+                {
+                    var size = archive.ReadByte();
+                    return archive.ReadGUID(size);
+                }
             }
-            else if (botIndicator == PlayerTypes.NAMED_BOT)
-            {
-                return archive.ReadFString();
-            }
-
-            var size = archive.ReadByte();
-            return archive.ReadGUID(size);
         }
 
         protected override FArchive DecryptBuffer(FArchive archive, int size)

@@ -19,5 +19,7 @@
         HISTORY_HEADER_GUID = 12,                   // Save guid to demo header
         HISTORY_CHARACTER_MOVEMENT = 13,            // Change to using replicated movement and not interpolation
         HISTORY_CHARACTER_MOVEMENT_NOINTERP = 14,   // No longer recording interpolated movement samples
+        HISTORY_GUID_NAMETABLE = 15,                // Added a string table for exported guids
+        HISTORY_GUIDCACHE_CHECKSUMS = 16            // Removing guid export checksums from saved data, they are ignored during playback
     }
 }

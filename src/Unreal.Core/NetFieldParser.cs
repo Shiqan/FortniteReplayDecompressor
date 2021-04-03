@@ -14,7 +14,7 @@ namespace Unreal.Core
     /// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
     /// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
     /// </summary>
-    public partial class NetFieldParser
+    public class NetFieldParser
     {
         private readonly NetGuidCache GuidCache;
         public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
@@ -34,7 +34,10 @@ namespace Unreal.Core
         {
             GuidCache = cache;
 
-            var types = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName.Contains(assemblyNameFilter) || a.FullName.Contains("Unreal.Core")).SelectMany(i => i.GetTypes());
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => a.FullName.Contains(assemblyNameFilter) || a.FullName.Contains("Unreal.Core"))
+                .SelectMany(i => i.GetTypes())
+                .ToList();
             var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
 
             foreach (var type in netFields)

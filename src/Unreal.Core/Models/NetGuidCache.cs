@@ -7,12 +7,8 @@ namespace Unreal.Core.Models
     /// <summary>
     /// Class to track all NetGuids being loaded during a replay.
     /// </summary>
-    public partial class NetGuidCache
+    public class NetGuidCache
     {
-        public NetGuidCache()
-        {
-        }
-
         //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>

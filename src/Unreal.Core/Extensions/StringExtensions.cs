@@ -1,4 +1,6 @@
-﻿namespace Unreal.Core.Extensions
+﻿using System.Linq;
+
+namespace Unreal.Core.Extensions
 {
     public static class StringExtensions
     {
@@ -14,7 +16,7 @@
                 switch (path[i])
                 {
                     case '.':
-                        return path.Substring(i + 1);
+                        return path[(i + 1)..];
                     case '/':
                         return path;
                 }
@@ -35,15 +37,9 @@
                 return path;
             }
 
-            for (var i = 0; i < toRemove.Length; i++)
-            {
-                if (path[i] != toRemove[i])
-                {
-                    return path;
-                }
-            }
-
-            return path.Substring(toRemove.Length);
+            return toRemove.Any((t, i) => path[i] != t)
+                ? path 
+                : path[toRemove.Length..];
         }
 
         /// <summary>
@@ -57,7 +53,7 @@
             {
                 if (!char.IsDigit(path[i]) && path[i] != '_')
                 {
-                    return path.Substring(0, i + 1);
+                    return path[..(i + 1)];
                 }
             }
             return path;

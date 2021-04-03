@@ -129,7 +129,7 @@ namespace Unreal.Core
         {
             if (IsDebugMode)
             {
-                File.AppendAllLines($"{filename}.txt", new string[1] {line});
+                File.AppendAllLines($"{filename}.txt", new string[1] { line });
             }
         }
 
@@ -139,7 +139,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="archive"></param>
         /// <returns></returns>
-        protected virtual void ReadCheckpoint(FArchive archive)
+        public  virtual void ReadCheckpoint(FArchive archive)
         {
             // TODO add support for bDeltaCheckpoint ??
 
@@ -153,7 +153,6 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using var decrypted = DecryptBuffer(archive, info.SizeInBytes);
             using var decrypted = DecryptBuffer(archive, (int)info.SizeInBytes);
             using var binaryArchive = Decompress(decrypted);
 

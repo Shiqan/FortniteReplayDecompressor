@@ -37,7 +37,7 @@ namespace Unreal.Core.Extensions
                 return path;
             }
 
-            return toRemove.Any((t, i) => path[i] != t)
+            return toRemove.Where((t, i) => path[i] != t).Any()
                 ? path 
                 : path[toRemove.Length..];
         }

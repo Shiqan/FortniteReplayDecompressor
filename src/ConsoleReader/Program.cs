@@ -60,7 +60,7 @@ namespace ConsoleReader
             //sw.Stop();
 
             //Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
-            Console.ReadLine();
+            //Console.ReadLine();
         }
     }
 }

@@ -138,53 +138,22 @@ namespace Unreal.Core.Models
             Location = reader.ReadPackedVector(1, 20);
             Normal = reader.SerializePropertyVectorNormal();
 
-            if (!bImpactPointEqualsLocation)
-            {
-                ImpactPoint = reader.ReadPackedVector(1, 20);
-            }
-            else
-            {
-                ImpactPoint = Location;
-            }
-
-            if (!bImpactNormalEqualsNormal)
-            {
-                ImpactNormal = reader.SerializePropertyVectorNormal();
-            }
-            else
-            {
-                ImpactNormal = Normal;
-            }
+            ImpactPoint = !bImpactPointEqualsLocation ? reader.ReadPackedVector(1, 20) : Location;
+            ImpactNormal = !bImpactNormalEqualsNormal ? reader.SerializePropertyVectorNormal() : Normal;
 
             TraceStart = reader.ReadPackedVector(1, 20);
             TraceEnd = reader.ReadPackedVector(1, 20);
 
-            if (!bNoPenetrationDepth)
-            {
-                PenetrationDepth = reader.SerializePropertyFloat();
-            }
-            else
-            {
-                PenetrationDepth = 0.0f;
-            }
-
+            PenetrationDepth = !bNoPenetrationDepth ? reader.SerializePropertyFloat() : 0.0f;
             Distance = (ImpactPoint - TraceStart).Size();
-
-            if (!bInvalidItem)
-            {
-                Item = reader.ReadInt32();
-            }
-            else
-            {
-                Item = 0;
-            }
+            Item = !bInvalidItem ? reader.ReadInt32() : 0;
 
             PhysMaterial = reader.SerializePropertyObject();
             Actor = reader.SerializePropertyObject();
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
-            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0;
+            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0x00;
         }
     }
 }

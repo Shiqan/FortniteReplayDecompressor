@@ -33,6 +33,12 @@ namespace Unreal.Core.Models
         public int FaceIndex { get; private set; }
 
         /// <summary>
+        /// If this test started in penetration (bStartPenetrating is true) and a depenetration vector can be computed,
+        /// If the distance cannot be computed, this distance will be zero.
+        /// </summary>
+        public byte ElementIndex { get; private set; }
+
+        /// <summary>
         /// 'Time' of impact along trace direction (ranging from 0.0 to 1.0) if there is a hit, indicating time between TraceStart and TraceEnd.
         /// For swept movement(but not queries) this may be pulled back slightly from the actual time of impact, to prevent precision problems with adjacent geometry.
         /// </summary>
@@ -113,7 +119,7 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(7)[0];
+            var flags = reader.ReadBits(8)[0];
 
             // Most of the time the vectors are the same values, use that as an optimization
             BlockingHit = (flags & (1 << 0)) >= 1;
@@ -125,6 +131,7 @@ namespace Unreal.Core.Models
             bool bInvalidItem = (flags & (1 << 4)) >= 1;
             bool bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
             bool bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
+            bool bInvalidElementIndex = (flags & (1 << 7)) >= 1;
 
             Time = reader.ReadSingle();
 
@@ -176,14 +183,8 @@ namespace Unreal.Core.Models
             Actor = reader.SerializePropertyObject();
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
-            if (!bInvalidFaceIndex)
-            {
-                FaceIndex = reader.ReadInt32();
-            }
-            else
-            {
-                FaceIndex = 0;
-            }
+            FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
+            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0;
         }
     }
 }

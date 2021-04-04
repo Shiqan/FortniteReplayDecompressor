@@ -104,27 +104,38 @@ namespace Unreal.Core
             }
 
             var bitCountUsedInByte = Position & 7;
-            if (bitCountUsedInByte == 0 && bitCount % 8 == 0)
+            var byteCount = bitCount / 8;
+            var extraBits = bitCount % 8;
+            if (bitCountUsedInByte == 0 && extraBits == 0)
             {
-                return ReadBytes(bitCount >> 3);
+                var byteResult = Buffer.Span.Slice(CurrentByte, byteCount);
+                Position += bitCount;
+                return byteResult;
             }
 
-            Span<byte> result = new byte[((bitCount + 7) / 8)];
+            Span<byte> result = new byte[(bitCount + 7) / 8];
 
             var bitCountLeftInByte = 8 - (Position & 7);
-            var byteCount = bitCount / 8;
+            var currentByte = CurrentByte;
+            var span = Buffer.Span;
+            var shiftDelta = (1 << bitCountUsedInByte) - 1;
             for (var i = 0; i < byteCount; i++)
             {
-                result[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+                result[i] = (byte) (
+                    (span[currentByte + i] >> bitCountUsedInByte) |
+                    ((span[currentByte + i + 1] & shiftDelta) << bitCountLeftInByte)
+                    );
             }
             Position += (byteCount * 8);
 
             bitCount %= 8;
             for (var i = 0; i < bitCount; i++)
             {
-                if (ReadBit())
+                var bit = (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
+                Position++;
+                if (bit)
                 {
-                    result[^1] |= (byte)(1 << i);
+                    result[^1] |= (byte) (1 << i);
                 }
             }
 

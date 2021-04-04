@@ -22,11 +22,11 @@ namespace ConsoleReader
 
             //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
             //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-            var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
+            var replayFilesFolder = @"Replays";
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(logger, ParseMode.Minimal);
+            var reader = new ReplayReader(logger, ParseMode.Debug);
             long total = 0;
             foreach (var replayFile in replayFiles)
             {
@@ -44,7 +44,23 @@ namespace ConsoleReader
                 total += sw.ElapsedMilliseconds;
             }
             Console.WriteLine($"total: {total / 1000} seconds ----");
-            Console.ReadLine();
+
+            //var replayFile = "Replays/shootergame.replay";
+            //var replayFile = "Replays/season6.10.replay";
+            //var replayFile = "Replays/season11.11.replay";
+            //var replayFile = "Replays/season11.31.replay";
+            //var replayFile = "Replays/season11.replay";
+            //var replayFile = "Replays/season12.replay";
+            //var replayFile = "Replays/collectPickup.replay";
+
+            //var sw = new Stopwatch();
+            //sw.Start();
+            //var reader = new ReplayReader(logger, ParseMode.Debug);
+            //var replay = reader.ReadReplay(replayFile);
+            //sw.Stop();
+
+            //Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
+            //Console.ReadLine();
         }
     }
 }

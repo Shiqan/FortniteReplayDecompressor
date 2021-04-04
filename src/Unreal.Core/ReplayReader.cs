@@ -65,6 +65,8 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
+        private List<string> PathNameTable = new List<string>();
+
         public ReplayReader(ILogger logger, ParseMode mode)
         {
             _logger = logger;
@@ -158,6 +160,11 @@ namespace Unreal.Core
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
 
+            if (binaryArchive.HasDeltaCheckpoints())
+            {
+                var checkPointSize = binaryArchive.ReadUInt32();
+            }
+
             if (binaryArchive.HasLevelStreamingFixes())
             {
                 var packetOffset = binaryArchive.ReadInt64();
@@ -170,6 +177,11 @@ namespace Unreal.Core
 
             if (binaryArchive.NetworkVersion >= NetworkVersionHistory.HISTORY_DELETED_STARTUP_ACTORS)
             {
+                if (binaryArchive.HasDeltaCheckpoints())
+                {
+                    throw new NotImplementedException("Delta checkpoints not supported currently");
+                }
+
                 var deletedNetStartupActors = binaryArchive.ReadArray(binaryArchive.ReadFString);
             }
 
@@ -185,29 +197,81 @@ namespace Unreal.Core
                     OuterGuid = new NetworkGUID
                     {
                         Value = binaryArchive.ReadIntPacked()
-                    },
-                    PathName = binaryArchive.ReadFString(),
-                    NetworkChecksum = binaryArchive.ReadUInt32(),
-                    Flags = binaryArchive.ReadByte()
+                    }
                 };
 
-                //_netGuidCache.ObjectLookup[guid] = cacheObject;
+                if (binaryArchive.NetworkVersion < NetworkVersionHistory.HISTORY_GUID_NAMETABLE)
+                {
+                    cacheObject.PathName = binaryArchive.ReadFString();
+                }
+                else
+                {
+                    var isExported = binaryArchive.ReadBoolean();
+
+                    if (isExported)
+                    {
+                        cacheObject.PathName = binaryArchive.ReadFString();
+
+                        PathNameTable.Add(cacheObject.PathName);
+                    }
+                    else
+                    {
+                        var pathNameIndex = binaryArchive.ReadIntPacked();
+
+                        if (pathNameIndex < PathNameTable.Count)
+                        {
+                            cacheObject.PathName = PathNameTable[(int) pathNameIndex];
+                        }
+                        else
+                        {
+                            _logger?.LogError("Invalid guid path table index while deserializing checkpoint.");
+                        }
+                    }
+                }
+
+                if (binaryArchive.NetworkVersion < NetworkVersionHistory.HISTORY_GUIDCACHE_CHECKSUMS)
+                {
+                    cacheObject.NetworkChecksum = binaryArchive.ReadUInt32();
+                }
+
+                cacheObject.Flags = binaryArchive.ReadByte();
+
+                // TODO DemoNetDriver 5319
+                // GuidCache->ObjectLookup.Add(Guid, CacheObject);
             }
 
-            // SerializeNetFieldExportGroupMap 
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
-
-            // Clear all of our mappings, since we're starting over
-            _netGuidCache.NetFieldExportGroupMap.Clear();
-            _netGuidCache.NetFieldExportGroupIndexToGroup.Clear();
-
-            var numNetFieldExportGroups = binaryArchive.ReadUInt32();
-            for (var i = 0; i < numNetFieldExportGroups; i++)
+            if (binaryArchive.HasDeltaCheckpoints())
             {
-                var group = ReadNetFieldExportGroupMap(binaryArchive);
+                throw new NotImplementedException("Delta checkpoints not implemented");
+            }
+            else
+            {
+                // Clear all of our mappings, since we're starting over
+                _netGuidCache.NetFieldExportGroupMap.Clear();
+                _netGuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
-                // Add the export group to the map
-                _netGuidCache.AddToExportGroupMap(group.PathName, group);
+                // SerializeNetFieldExportGroupMap 
+                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
+                var numNetFieldExportGroups = binaryArchive.ReadUInt32();
+                for (var i = 0; i < numNetFieldExportGroups; i++)
+                {
+                    var group = ReadNetFieldExportGroupMap(binaryArchive);
+
+                    // Add the export group to the map
+                    _netGuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group.PathName;
+                    _netGuidCache.AddToExportGroupMap(group.PathName, group);
+                }
+            }
+
+            //Remove all actors
+            foreach (var channel in Channels)
+            {
+                if (channel == null)
+                {
+                    continue;
+                }
+
+                channel.Actor = null;
             }
 
             // SerializeDemoFrameFromQueuedDemoPackets
@@ -1272,7 +1336,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    _logger.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
+                    _logger?.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
                 }
             }
             return true;

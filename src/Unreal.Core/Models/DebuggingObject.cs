@@ -43,7 +43,7 @@ namespace Unreal.Core.Models
         public bool DidError => _reader.IsError;
 
         private static IEnumerable<Type> _propertyTypes = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
+            .Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
 
         private NetBitReader _reader;
 
@@ -89,18 +89,12 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            FRotator rotator = null;
-
-            switch (type)
+            FRotator rotator = type switch
             {
-                case RotatorType.Byte:
-                    rotator = _reader.ReadRotation();
-                    break;
-                case RotatorType.Short:
-                    rotator = _reader.ReadRotationShort();
-                    break;
-            }
-
+                RotatorType.Byte => _reader.ReadRotation(),
+                RotatorType.Short => _reader.ReadRotationShort(),
+                _ => null
+            };
 
             if (_reader.IsError || !_reader.AtEnd())
             {
@@ -120,23 +114,14 @@ namespace Unreal.Core.Models
         {
             _reader.Reset();
 
-            FVector tVector = null;
-
-            switch (type)
+            FVector tVector = type switch
             {
-                case VectorType.Normal:
-                    tVector = _reader.SerializePropertyVectorNormal();
-                    break;
-                case VectorType.Vector10:
-                    tVector = _reader.SerializePropertyVector10();
-                    break;
-                case VectorType.Vector100:
-                    tVector = _reader.SerializePropertyVector100();
-                    break;
-                case VectorType.Quantize:
-                    tVector = _reader.SerializePropertyQuantizedVector();
-                    break;
-            }
+                VectorType.Normal => _reader.SerializePropertyVectorNormal(),
+                VectorType.Vector10 => _reader.SerializePropertyVector10(),
+                VectorType.Vector100 => _reader.SerializePropertyVector100(),
+                VectorType.Quantize => _reader.SerializePropertyQuantizedVector(),
+                _ => null
+            };
 
             if (_reader.IsError || !_reader.AtEnd())
             {

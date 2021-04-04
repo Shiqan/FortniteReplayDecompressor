@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 using Unreal.Core.Models;
@@ -24,7 +23,7 @@ namespace Unreal.Core
         /// <seealso cref="System.IO.BinaryReader"/> 
         public BinaryReader(Stream input)
         {
-            using var ms = new MemoryStream();
+            using var ms = new MemoryStream((int) input.Length);
             input.CopyTo(ms);
             Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
             _length = Bytes.Length;
@@ -106,22 +105,14 @@ namespace Unreal.Core
             }
 
             var isUnicode = length < 0;
-            ReadOnlySpan<byte> data;
-            string value;
-
             if (isUnicode)
             {
                 length = -2 * length;
-                data = ReadBytes(length);
-                value = Encoding.Unicode.GetString(data);
-            }
-            else
-            {
-                data = ReadBytes(length);
-                value = Encoding.Default.GetString(data);
             }
 
-            return value.Trim(new[] { ' ', '\0' });
+            var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
+            return encoding.GetString(ReadBytes(length))
+                .Trim(new[] {' ', '\0'});
         }
 
         public override string ReadFName()
@@ -129,15 +120,10 @@ namespace Unreal.Core
             var isHardcoded = ReadBoolean();
             if (isHardcoded)
             {
-                uint nameIndex;
-                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = ReadIntPacked();
-                }
+                var nameIndex = EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES
+                ? ReadUInt32()
+                : ReadIntPacked();
+
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl

@@ -9,6 +9,7 @@ namespace Unreal.Core.Models
     public class FText : IProperty
     {
         public string Namespace { get; set; }
+        public string Key { get; set; }
         public string Text { get; set; }
 
         /// <summary>
@@ -17,13 +18,16 @@ namespace Unreal.Core.Models
         /// <param name="reader"></param>
         public void Serialize(NetBitReader reader)
         {
-            //var flags = reader.ReadInt32();
-            //var historyType = reader.ReadByteAsEnum<ETextHistoryType>();
-            // 4 bytes ?
-            reader.SkipBytes(9);
-
-            Namespace = reader.ReadFString();
-            Text = reader.ReadFString();
+            var flags = reader.ReadInt32();
+            var historyType = reader.ReadByteAsEnum<ETextHistoryType>();
+            switch (historyType)
+            {
+                case ETextHistoryType.Base:
+                    Namespace = reader.ReadFString();
+                    Key = reader.ReadFString();
+                    Text = reader.ReadFString();
+                    break;
+            }
         }
     }
 

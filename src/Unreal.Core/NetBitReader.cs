@@ -269,10 +269,10 @@ namespace Unreal.Core
 
             var encodingFlags = ReadByteAsEnum<UniqueIdEncodingFlags>();
             var encoded = false;
-            if ((encodingFlags & UniqueIdEncodingFlags.IsEncoded) == UniqueIdEncodingFlags.IsEncoded)
+            if (encodingFlags.HasFlag(UniqueIdEncodingFlags.IsEncoded))
             {
                 encoded = true;
-                if ((encodingFlags & UniqueIdEncodingFlags.IsEmpty) == UniqueIdEncodingFlags.IsEmpty)
+                if (encodingFlags.HasFlag(UniqueIdEncodingFlags.IsEmpty))
                 {
                     // empty cleared out unique id
                     return "";

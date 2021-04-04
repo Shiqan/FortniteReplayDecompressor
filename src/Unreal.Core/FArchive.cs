@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 

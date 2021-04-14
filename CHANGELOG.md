@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2021-
+### Added
+- Player Elim information on event chunk [SL-x-TnT](https://github.com/SL-x-TnT)
+
+### Changed
+- .Net 5.0
+- Performance improvements [razfriman](https://github.com/razfriman/)
+- Moved Unreal.Encryption dependency to FortniteReplayReader
 
 ## [1.1.2] - 2020-08-09
 ### Added
@@ -57,3 +65,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.0
 [1.1.1]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.1
 [1.1.2]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.2
+[2.0.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/2.0.0

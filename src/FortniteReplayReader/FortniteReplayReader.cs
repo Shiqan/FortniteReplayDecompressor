@@ -254,9 +254,26 @@ namespace FortniteReplayReader
 
                 if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
                 {
-                    archive.SkipBytes(85);
-                    elim.Eliminated = ParsePlayer(archive);
-                    elim.Eliminator = ParsePlayer(archive);
+                    archive.SkipBytes(9);
+
+                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    {
+                        Unknown1 = archive.ReadFVector(),
+                        Location = archive.ReadFVector(),
+                        Unknown2 = archive.ReadFVector(),
+                    };
+
+                    archive.ReadSingle();
+
+                    elim.EliminatorInfo = new PlayerEliminationInfo
+                    {
+                        Unknown1 = archive.ReadFVector(),
+                        Location = archive.ReadFVector(),
+                        Unknown2 = archive.ReadFVector(),
+                    };
+
+                    ParsePlayer(archive, elim.EliminatedInfo);
+                    ParsePlayer(archive, elim.EliminatorInfo);
                 }
                 else
                 {
@@ -272,8 +289,16 @@ namespace FortniteReplayReader
                     {
                         archive.SkipBytes(45);
                     }
-                    elim.Eliminated = archive.ReadFString();
-                    elim.Eliminator = archive.ReadFString();
+
+                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    {
+                        Id = archive.ReadFString()
+                    };
+
+                    elim.EliminatorInfo = new PlayerEliminationInfo
+                    {
+                        Id = archive.ReadFString()
+                    };
                 }
 
                 elim.GunType = archive.ReadByte();
@@ -288,20 +313,15 @@ namespace FortniteReplayReader
             }
         }
 
-        public virtual string ParsePlayer(FArchive archive)
+        public virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info)
         {
-            var botIndicator = archive.ReadByteAsEnum<PlayerTypes>();
-            if (botIndicator == PlayerTypes.BOT)
+            info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
+            info.Id = info.PlayerType switch
             {
-                return "Bot";
-            }
-            else if (botIndicator == PlayerTypes.NAMED_BOT)
-            {
-                return archive.ReadFString();
-            }
-
-            var size = archive.ReadByte();
-            return archive.ReadGUID(size);
+                PlayerTypes.BOT => "Bot",
+                PlayerTypes.NAMED_BOT => archive.ReadFString(),
+                _ => archive.ReadGUID(archive.ReadByte())
+            };
         }
 
         protected override FArchive DecryptBuffer(FArchive archive, int size)

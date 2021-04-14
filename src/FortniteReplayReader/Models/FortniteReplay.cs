@@ -6,14 +6,44 @@ namespace FortniteReplayReader.Models
 {
     public class FortniteReplay : Replay
     {
-        public IList<PlayerElimination> Eliminations { get; set; } = new List<PlayerElimination>();
-        public Stats Stats { get; set; }
-        public TeamStats TeamStats { get; set; }
+        /// <summary>
+        /// Eliminations found in the event chunks. See <see cref="KillFeed"/> for a much more detailed list of eliminations.
+        /// </summary>
+        public IList<PlayerElimination> Eliminations { get; internal set; } = new List<PlayerElimination>();
 
-        public GameData GameData { get; set; } = new GameData();
-        public IEnumerable<TeamData> TeamData { get; set; }
-        public IEnumerable<PlayerData> PlayerData { get; set; }
-        public IList<KillFeedEntry> KillFeed { get; set; } = new List<KillFeedEntry>();
-        public MapData MapData { get; set; } = new MapData();
+        /// <summary>
+        /// Personal stats found in the event chunk.
+        /// </summary>
+        public Stats Stats { get; internal set; }
+
+        /// <summary>
+        /// Team stats found in the event chunk.
+        /// </summary>
+        public TeamStats TeamStats { get; internal set; }
+
+        /// <summary>
+        /// Generic game information found in the network chunks.
+        /// </summary>
+        public GameData GameData { get; internal set; } = new GameData();
+
+        /// <summary>
+        /// Team information
+        /// </summary>
+        public IEnumerable<TeamData> TeamData { get; internal set; }
+
+        /// <summary>
+        /// Player information
+        /// </summary>
+        public IEnumerable<PlayerData> PlayerData { get; internal set; }
+
+        /// <summary>
+        /// Eliminations based on the network chunks.
+        /// </summary>
+        public IList<KillFeedEntry> KillFeed { get; internal set; } = new List<KillFeedEntry>();
+
+        /// <summary>
+        /// Map information
+        /// </summary>
+        public MapData MapData { get; internal set; } = new MapData();
     }
 }

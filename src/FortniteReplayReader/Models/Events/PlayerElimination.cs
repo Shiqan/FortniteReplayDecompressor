@@ -1,15 +1,20 @@
-using FortniteReplayReader.Models.Events;
 using System;
 
 namespace FortniteReplayReader.Models.Events
 {
     public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     {
-        public string Eliminated { get; set; }
-        public string Eliminator { get; set; }
-        public byte GunType { get; set; }
-        public string Time { get; set; }
-        public bool Knocked { get; set; }
+        public PlayerEliminationInfo EliminatedInfo { get; internal set; }
+        public PlayerEliminationInfo EliminatorInfo { get; internal set; }
+
+        public string Eliminated => EliminatedInfo?.Id;
+        public string Eliminator => EliminatedInfo?.Id;
+        public byte GunType { get; internal set; }
+        public string Time { get; internal set; }
+        public bool Knocked { get; internal set; }
+        public bool IsSelfElimination => Eliminated == Eliminator;
+        public bool IsValidLocation => EliminatorInfo.Location.Size() != 0;
+        public double? Distance => IsValidLocation ? EliminatorInfo.Location.DistanceTo(EliminatedInfo.Location) : null;
 
         public bool Equals(PlayerElimination other)
         {
@@ -18,7 +23,7 @@ namespace FortniteReplayReader.Models.Events
                 return false;
             }
 
-            if (this.Eliminated == other.Eliminated && this.Eliminator == other.Eliminator && this.GunType == other.GunType && this.Time == other.Time && this.Knocked == other.Knocked)
+            if (Eliminated == other.Eliminated && Eliminator == other.Eliminator && GunType == other.GunType && Time == other.Time && Knocked == other.Knocked)
             {
                 return true;
             }

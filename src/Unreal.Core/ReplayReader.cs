@@ -212,20 +212,20 @@ namespace Unreal.Core
                     {
                         cacheObject.PathName = binaryArchive.ReadFString();
 
-                        PathNameTable.Add(cacheObject.PathName);
+                        //PathNameTable.Add(cacheObject.PathName);
                     }
                     else
                     {
                         var pathNameIndex = binaryArchive.ReadIntPacked();
 
-                        if (pathNameIndex < PathNameTable.Count)
-                        {
-                            cacheObject.PathName = PathNameTable[(int) pathNameIndex];
-                        }
-                        else
-                        {
-                            _logger?.LogError("Invalid guid path table index while deserializing checkpoint.");
-                        }
+                        //if (pathNameIndex < PathNameTable.Count)
+                        //{
+                        //    cacheObject.PathName = PathNameTable[(int) pathNameIndex];
+                        //}
+                        //else
+                        //{
+                        //    _logger?.LogError("Invalid guid path table index while deserializing checkpoint.");
+                        //}
                     }
                 }
 
@@ -311,7 +311,12 @@ namespace Unreal.Core
                 var chunkSize = archive.ReadInt32();
                 var offset = archive.Position;
 
-                if (chunkType == ReplayChunkType.Checkpoint)
+                if (chunkType == ReplayChunkType.ReplayData && _parseMode.HasFlag(ParseMode.Minimal))
+                {
+                    ReadReplayData(archive);
+                }
+
+                else if (chunkType == ReplayChunkType.Checkpoint)
                 {
                     // Checkpoints are used for fast forwarding,
                     // we dont need it unless we want to process small parts of replay files.
@@ -321,14 +326,6 @@ namespace Unreal.Core
                 else if (chunkType == ReplayChunkType.Event)
                 {
                     ReadEvent(archive);
-                }
-
-                else if (chunkType == ReplayChunkType.ReplayData)
-                {
-                    if (_parseMode >= ParseMode.Minimal)
-                    {
-                        ReadReplayData(archive);
-                    }
                 }
 
                 else if (chunkType == ReplayChunkType.Header)
@@ -352,7 +349,7 @@ namespace Unreal.Core
         public virtual void ReadReplayData(FArchive archive)
         {
             var info = new ReplayDataInfo();
-            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_STREAM_CHUNK_TIMES)
+            if (archive.ReplayVersion.HasFlag(ReplayVersionHistory.HISTORY_STREAM_CHUNK_TIMES))
             {
                 info.Start = archive.ReadUInt32();
                 info.End = archive.ReadUInt32();
@@ -363,10 +360,10 @@ namespace Unreal.Core
                 info.Length = archive.ReadUInt32();
             }
 
-            var memorySizeInBytes = (int)info.Length;
-            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_ENCRYPTION)
+            if (archive.ReplayVersion.HasFlag(ReplayVersionHistory.HISTORY_ENCRYPTION))
             {
-                memorySizeInBytes = archive.ReadInt32();
+                // memorySizeInBytes
+                var _ = archive.ReadInt32();
             }
 
             using var decrypted = DecryptBuffer(archive, (int)info.Length);
@@ -703,15 +700,16 @@ namespace Unreal.Core
         /// <returns></returns>
         public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
-            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
+            if (archive.NetworkVersion.HasFlag(NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS))
             {
-                var currentLevelIndex = archive.ReadInt32();
+                // currentLevelIndex
+                archive.ReadInt32();
             }
 
             var timeSeconds = archive.ReadSingle();
             _logger?.LogInformation($"ReadDemoFrameIntoPlaybackPackets at {timeSeconds}");
 
-            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
+            if (archive.NetworkVersion.HasFlag(NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES))
             {
                 ReadExportData(archive);
             }
@@ -721,7 +719,8 @@ namespace Unreal.Core
                 var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
                 {
-                    var levelName = archive.ReadFString();
+                    // levelName 
+                    archive.ReadFString();
                 }
             }
             else
@@ -729,16 +728,19 @@ namespace Unreal.Core
                 var numStreamingLevels = archive.ReadIntPacked();
                 for (var i = 0; i < numStreamingLevels; i++)
                 {
-                    var packageName = archive.ReadFString();
-                    var packageNameToLoad = archive.ReadFString();
-                    //var levelTransform = archive.ReadFTransfrom();
+                    // packageName
+                    archive.ReadFString();
+                    // packageNameToLoad
+                    archive.ReadFString();
+                    // levelTransform
                     archive.ReadFTransfrom();
                 }
             }
 
             if (archive.HasLevelStreamingFixes())
             {
-                var externalOffset = archive.ReadUInt64();
+                // externalOffset
+                archive.ReadUInt64();
             }
 
             // if (!bForLevelFastForward)
@@ -761,7 +763,7 @@ namespace Unreal.Core
             {
                 if (archive.HasLevelStreamingFixes())
                 {
-                    // var seenLevelIndex = 
+                    // seenLevelIndex
                     archive.ReadIntPacked();
                 }
 
@@ -1831,12 +1833,12 @@ namespace Unreal.Core
 
                 var bControl = bitReader.ReadBit();
                 bunch.PacketId = InPacketId;
-                bunch.bOpen = bControl ? bitReader.ReadBit() : false;
-                bunch.bClose = bControl ? bitReader.ReadBit() : false;
+                bunch.bOpen = bControl && bitReader.ReadBit();
+                bunch.bClose = bControl && bitReader.ReadBit();
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_CLOSE_REASON)
                 {
-                    bunch.bDormant = bunch.bClose ? bitReader.ReadBit() : false;
+                    bunch.bDormant = bunch.bClose && bitReader.ReadBit();
                     bunch.CloseReason = bunch.bDormant ? ChannelCloseReason.Dormancy : ChannelCloseReason.Destroyed;
                 }
                 else
@@ -1876,8 +1878,8 @@ namespace Unreal.Core
                     bunch.ChSequence = 0;
                 }
 
-                bunch.bPartialInitial = bunch.bPartial ? bitReader.ReadBit() : false;
-                bunch.bPartialFinal = bunch.bPartial ? bitReader.ReadBit() : false;
+                bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
+                bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
                 var chType = ChannelType.None;
                 var chName = ChannelName.None;

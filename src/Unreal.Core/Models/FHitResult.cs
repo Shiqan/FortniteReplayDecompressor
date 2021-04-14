@@ -124,14 +124,14 @@ namespace Unreal.Core.Models
             // Most of the time the vectors are the same values, use that as an optimization
             BlockingHit = (flags & (1 << 0)) >= 1;
             StartPenetrating = (flags & (1 << 1)) >= 1;
-            bool bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
-            bool bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
+            var bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
+            var bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
 
             // Often times the indexes are invalid, use that as an optimization
-            bool bInvalidItem = (flags & (1 << 4)) >= 1;
-            bool bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
-            bool bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
-            bool bInvalidElementIndex = (flags & (1 << 7)) >= 1;
+            var bInvalidItem = (flags & (1 << 4)) >= 1;
+            var bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
+            var bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
+            var bInvalidElementIndex = (flags & (1 << 7)) >= 1;
 
             Time = reader.ReadSingle();
 
@@ -153,7 +153,7 @@ namespace Unreal.Core.Models
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
-            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0x00;
+            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0;
         }
     }
 }

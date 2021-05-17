@@ -1,11 +1,8 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums
+﻿namespace Unreal.Core.Models.Enums
 {
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L84
     /// </summary>
-    [Flags]
     public enum NetworkVersionHistory
     {
         HISTORY_REPLAY_INITIAL = 1,
@@ -23,6 +20,9 @@ namespace Unreal.Core.Models.Enums
         HISTORY_CHARACTER_MOVEMENT = 13,            // Change to using replicated movement and not interpolation
         HISTORY_CHARACTER_MOVEMENT_NOINTERP = 14,   // No longer recording interpolated movement samples
         HISTORY_GUID_NAMETABLE = 15,                // Added a string table for exported guids
-        HISTORY_GUIDCACHE_CHECKSUMS = 16            // Removing guid export checksums from saved data, they are ignored during playback
+        HISTORY_GUIDCACHE_CHECKSUMS = 16,           // Removing guid export checksums from saved data, they are ignored during playback
+
+        HISTORY_NETWORKVERSION_PLUS_ONE,
+        HISTORY__NETWORKVERSION_LATEST = HISTORY_NETWORKVERSION_PLUS_ONE - 1,
     }
 }

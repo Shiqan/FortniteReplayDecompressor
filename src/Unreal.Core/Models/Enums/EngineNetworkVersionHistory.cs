@@ -1,11 +1,8 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums
+﻿namespace Unreal.Core.Models.Enums
 {
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33
     /// </summary>
-    [Flags]
     public enum EngineNetworkVersionHistory
     {
         HISTORY_INITIAL = 1,

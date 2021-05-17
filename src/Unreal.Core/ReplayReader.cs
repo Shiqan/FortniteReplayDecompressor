@@ -700,7 +700,7 @@ namespace Unreal.Core
         /// <returns></returns>
         public virtual IEnumerable<PlaybackPacket> ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
-            if (archive.NetworkVersion.HasFlag(NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS))
+            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
                 // currentLevelIndex
                 archive.ReadInt32();
@@ -709,7 +709,7 @@ namespace Unreal.Core
             var timeSeconds = archive.ReadSingle();
             _logger?.LogInformation($"ReadDemoFrameIntoPlaybackPackets at {timeSeconds}");
 
-            if (archive.NetworkVersion.HasFlag(NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES))
+            if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
             {
                 ReadExportData(archive);
             }

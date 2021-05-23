@@ -62,7 +62,7 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnChannelOpened(uint channelIndex, NetworkGUID actor)
+        protected override void OnChannelOpened(uint channelIndex, NetworkGUID? actor)
         {
             if (actor != null)
             {
@@ -70,7 +70,7 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnChannelClosed(uint channelIndex, NetworkGUID actor)
+        protected override void OnChannelClosed(uint channelIndex, NetworkGUID? actor)
         {
             if (actor != null)
             {
@@ -97,7 +97,7 @@ namespace FortniteReplayReader
             }
         }
 
-        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup exportGroup)
+        protected override void OnExportRead(uint channelIndex, INetFieldExportGroup? exportGroup)
         {
             switch (exportGroup)
             {
@@ -303,7 +303,7 @@ namespace FortniteReplayReader
 
                 elim.GunType = archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
-                elim.Time = info?.StartTime.MillisecondsToTimeStamp();
+                elim.Time = info.StartTime.MillisecondsToTimeStamp();
                 return elim;
             }
             catch (Exception ex)

@@ -23,7 +23,7 @@ namespace Unreal.Core
         /// <seealso cref="System.IO.BinaryReader"/> 
         public BinaryReader(Stream input)
         {
-            using var ms = new MemoryStream((int) input.Length);
+            using var ms = new MemoryStream((int)input.Length);
             input.CopyTo(ms);
             Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
             _length = Bytes.Length;
@@ -91,8 +91,7 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
-            // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
+            return Convert.ToHexString(ReadBytes(count)).Replace("-", "");
         }
 
         public override string ReadFString()
@@ -112,7 +111,7 @@ namespace Unreal.Core
 
             var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
             return encoding.GetString(ReadBytes(length))
-                .Trim(new[] {' ', '\0'});
+                .Trim(new[] { ' ', '\0' });
         }
 
         public override string ReadFName()
@@ -120,10 +119,7 @@ namespace Unreal.Core
             var isHardcoded = ReadBoolean();
             if (isHardcoded)
             {
-                var nameIndex = EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES
-                ? ReadUInt32()
-                : ReadIntPacked();
-
+                var nameIndex = EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES ? ReadUInt32() : ReadIntPacked();
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
@@ -143,7 +139,8 @@ namespace Unreal.Core
             // InName.GetNumber();
 
             var inString = ReadFString();
-            var inNumber = ReadInt32();
+            ReadInt32(); // inNumber
+
             return inString;
         }
 

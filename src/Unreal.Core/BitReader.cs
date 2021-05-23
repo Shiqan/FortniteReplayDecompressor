@@ -213,36 +213,26 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
-            // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
+            return Convert.ToHexString(ReadBytes(count)).Replace("-", "");
         }
 
         public override string ReadFString()
         {
             var length = ReadInt32();
 
-            if (!CanRead(length))
-            {
-                IsError = true;
-                return "";
-            }
-
-            if (length == 0 || IsError)
+            if (length == 0)
             {
                 return "";
             }
 
-            string value;
-            if (length < 0)
+            var isUnicode = length < 0;
+            if (isUnicode)
             {
-                value = Encoding.Unicode.GetString(ReadBytes(-2 * length));
-            }
-            else
-            {
-                value = Encoding.Default.GetString(ReadBytes(length));
+                length = -2 * length;
             }
 
-            return value.Trim(new[] { ' ', '\0' });
+            var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
+            return encoding.GetString(ReadBytes(length)).Trim(new[] { ' ', '\0' });
         }
 
         public override string ReadFName()

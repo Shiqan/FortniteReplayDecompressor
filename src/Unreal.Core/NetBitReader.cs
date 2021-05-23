@@ -119,7 +119,7 @@ namespace Unreal.Core
 
         public void SerializPropertyPlane()
         {
-
+            throw new NotImplementedException("SerializPropertyPlane in NetBitReader not implemented");
         }
 
         /// <summary>
@@ -130,7 +130,6 @@ namespace Unreal.Core
             var maxBitValue = (1 << (numBits - 1)) - 1;
             var bias = (1 << (numBits - 1));
             var serIntMax = (1 << (numBits - 0));
-            //int maxDelta = (1 << (numBits - 0)) -1;
 
             var delta = ReadSerializedInt(serIntMax);
             float unscaledValue = (int)delta - bias;
@@ -203,45 +202,7 @@ namespace Unreal.Core
         public uint SerializePropertyObject()
         {
             //InternalLoadObject(); // TODO make available in archive
-
             return ReadIntPacked();
-
-            //if (!netGuid.IsValid())
-            //{
-            //    return;
-            //}
-
-            //if (netGuid.IsDefault() || exportGUIDs)
-            //{
-            //    var flags = archive.ReadByteAsEnum<ExportFlags>();
-
-            //    // outerguid
-            //    if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
-            //    {
-            //        var outerGuid = InternalLoadObject(archive, true); // TODO: archetype?
-
-            //        var pathName = archive.ReadFString();
-
-            //        if (!NetGuidCache.ContainsKey(netGuid.Value))
-            //        {
-            //            NetGuidCache.Add(netGuid.Value, pathName);
-            //        }
-
-            //        if (flags >= ExportFlags.bHasNetworkChecksum)
-            //        {
-            //            var networkChecksum = archive.ReadUInt32();
-            //        }
-
-            //        return netGuid;
-            //    }
-            //}
-
-            //return netGuid;
-
-            //UObject* Object = GetObjectPropertyValue(Data);
-            //bool Result = Map->SerializeObject(Ar, PropertyClass, Object);
-            //SetObjectPropertyValue(Data, Object);
-            //return Result;
         }
 
 

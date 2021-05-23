@@ -458,7 +458,7 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="group"></param>
         /// <returns></returns>
-        public INetFieldExportGroup CreateType(string group)
+        public INetFieldExportGroup? CreateType(string group)
         {
             if (group == null || !_netFieldGroups.TryGetValue(group, out var netfieldGroup))
             {

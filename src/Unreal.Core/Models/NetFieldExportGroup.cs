@@ -8,7 +8,7 @@
         public string PathName { get; set; }
         public uint PathNameIndex { get; set; }
         public uint NetFieldExportsLength { get; set; }
-        public NetFieldExport[] NetFieldExports { get; set; }
+        public NetFieldExport?[] NetFieldExports { get; set; }
 
         public bool IsValidIndex(uint handle)
         {

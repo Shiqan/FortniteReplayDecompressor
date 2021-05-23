@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
     <AssemblyName>Unreal.Core</AssemblyName>
     <RootNamespace>Unreal.Core</RootNamespace>
     <Authors>Shiqan</Authors>

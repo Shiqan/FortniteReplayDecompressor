@@ -48,7 +48,7 @@ namespace FortniteReplayReader.Test
             Assert.True(archive.AtEnd());
             Assert.False(archive.IsError);
 
-            reader.ParseElimination(result, null);
+            reader.ParseElimination(result, new Unreal.Core.Models.EventInfo { StartTime = 0 });
             Assert.True(result.AtEnd());
             Assert.False(result.IsError);
         }

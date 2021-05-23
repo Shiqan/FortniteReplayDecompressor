@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
@@ -34,7 +35,7 @@ namespace Unreal.Core.Models
         /// <summary>
         /// Holds data about the tag dictionary
         /// </summary>
-        public NetFieldExportGroup NetworkGameplayTagNodeIndex
+        public NetFieldExportGroup? NetworkGameplayTagNodeIndex
         {
             get
             {
@@ -53,7 +54,7 @@ namespace Unreal.Core.Models
         private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
         private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
         private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
-        private NetFieldExportGroup _networkGameplayTagNodeIndex { get; set; }
+        private NetFieldExportGroup? _networkGameplayTagNodeIndex { get; set; }
 
         /// <summary>
         /// Add a <see cref="NetFieldExportGroup"/> to the GuidCache.
@@ -74,9 +75,9 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="index"></param>
         /// <returns><see cref="NetFieldExportGroup"/></returns>
-        public NetFieldExportGroup GetNetFieldExportGroupFromIndex(uint index)
+        public NetFieldExportGroup? GetNetFieldExportGroupFromIndex(uint? index)
         {
-            if (!NetFieldExportGroupIndexToGroup.TryGetValue(index, out var group))
+            if (index is null || !NetFieldExportGroupIndexToGroup.TryGetValue(index.Value, out var group))
             {
                 return null;
             }
@@ -88,9 +89,9 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="path"></param>
         /// <returns><see cref="NetFieldExportGroup"/></returns>
-        public NetFieldExportGroup GetNetFieldExportGroup(string path)
+        public NetFieldExportGroup? GetNetFieldExportGroup(string path)
         {
-            if (path == null || !NetFieldExportGroupMap.TryGetValue(path, out var group))
+            if (string.IsNullOrEmpty(path) || !NetFieldExportGroupMap.TryGetValue(path, out var group))
             {
                 return null;
             }
@@ -102,11 +103,16 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="netguid"></param>
         /// <returns><see cref="NetFieldExportGroup"/></returns>
-        public NetFieldExportGroup GetNetFieldExportGroup(uint netguid)
+        public NetFieldExportGroup? GetNetFieldExportGroup(uint? netguid)
         {
-            if (!_archTypeToExportGroup.TryGetValue(netguid, out var group))
+            if (!netguid.HasValue)
             {
-                if (!NetGuidToPathName.TryGetValue(netguid, out var path))
+                return null;
+            }
+
+            if (!_archTypeToExportGroup.TryGetValue(netguid.Value, out var group))
+            {
+                if (!NetGuidToPathName.TryGetValue(netguid.Value, out var path))
                 {
                     return null;
                 }
@@ -117,9 +123,9 @@ namespace Unreal.Core.Models
                     return null;
                 }
 
-                if (NetFieldExportGroupMapPathFixed.TryGetValue(netguid, out group))
+                if (NetFieldExportGroupMapPathFixed.TryGetValue(netguid.Value, out group))
                 {
-                    _archTypeToExportGroup[netguid] = NetFieldExportGroupMapPathFixed[netguid];
+                    _archTypeToExportGroup[netguid.Value] = NetFieldExportGroupMapPathFixed[netguid.Value];
                     return group;
                 }
 
@@ -135,8 +141,8 @@ namespace Unreal.Core.Models
 
                     if (path.Contains(groupPathFixed, StringComparison.Ordinal))
                     {
-                        NetFieldExportGroupMapPathFixed[netguid] = NetFieldExportGroupMap[groupPath];
-                        _archTypeToExportGroup[netguid] = NetFieldExportGroupMap[groupPath];
+                        NetFieldExportGroupMapPathFixed[netguid.Value] = NetFieldExportGroupMap[groupPath];
+                        _archTypeToExportGroup[netguid.Value] = NetFieldExportGroupMap[groupPath];
 
                         return NetFieldExportGroupMap[groupPath];
                     }
@@ -151,8 +157,8 @@ namespace Unreal.Core.Models
                     {
                         if (groupPathFixed.Contains(cleanedPath, StringComparison.Ordinal))
                         {
-                            NetFieldExportGroupMapPathFixed[netguid] = NetFieldExportGroupMap[groupPath];
-                            _archTypeToExportGroup[netguid] = NetFieldExportGroupMap[groupPath];
+                            NetFieldExportGroupMapPathFixed[netguid.Value] = NetFieldExportGroupMap[groupPath];
+                            _archTypeToExportGroup[netguid.Value] = NetFieldExportGroupMap[groupPath];
 
                             return NetFieldExportGroupMap[groupPath];
                         }
@@ -171,9 +177,9 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="group"></param>
         /// <returns>true if ClassNetCache was found, false otherwise</returns>
-        public bool TryGetClassNetCache(string group, out NetFieldExportGroup netFieldExportGroup, bool useFullName)
+        public bool TryGetClassNetCache(string? group, [NotNullWhen(returnValue: true)]  out NetFieldExportGroup? netFieldExportGroup, bool useFullName)
         {
-            if (group == null)
+            if (string.IsNullOrEmpty(group))
             {
                 netFieldExportGroup = null;
                 return false;
@@ -208,11 +214,11 @@ namespace Unreal.Core.Models
         public bool TryGetTagName(uint tagIndex, out string tagName)
         {
             tagName = "";
-            if (tagIndex < NetworkGameplayTagNodeIndex.NetFieldExportsLength)
+            if (NetworkGameplayTagNodeIndex != null && NetworkGameplayTagNodeIndex.IsValidIndex(tagIndex))
             {
                 if (NetworkGameplayTagNodeIndex.NetFieldExports[tagIndex] != null)
                 {
-                    tagName = NetworkGameplayTagNodeIndex.NetFieldExports[tagIndex]?.Name;
+                    tagName = NetworkGameplayTagNodeIndex.NetFieldExports[tagIndex].Name;
                     return true;
                 }
             }

@@ -8,7 +8,7 @@ namespace Unreal.Core.Models
     public class NetDeltaUpdate
     {
         public int ElementIndex { get; set; }
-        public INetFieldExportGroup Export { get; set; }
+        public INetFieldExportGroup? Export { get; set; }
         public bool Deleted { get; set; }
         //public FFastArraySerializerHeader Header { get; set; }
     }

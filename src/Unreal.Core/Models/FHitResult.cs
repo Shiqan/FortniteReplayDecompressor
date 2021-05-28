@@ -119,19 +119,17 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(8)[0];
-
             // Most of the time the vectors are the same values, use that as an optimization
-            BlockingHit = (flags & (1 << 0)) >= 1;
-            StartPenetrating = (flags & (1 << 1)) >= 1;
-            var bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
-            var bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
+            BlockingHit = reader.ReadBit();
+            StartPenetrating = reader.ReadBit();
+            var bImpactPointEqualsLocation = reader.ReadBit();
+            var bImpactNormalEqualsNormal = reader.ReadBit();
 
             // Often times the indexes are invalid, use that as an optimization
-            var bInvalidItem = (flags & (1 << 4)) >= 1;
-            var bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
-            var bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
-            var bInvalidElementIndex = (flags & (1 << 7)) >= 1;
+            var bInvalidItem = reader.ReadBit();
+            var bInvalidFaceIndex = reader.ReadBit();
+            var bNoPenetrationDepth = reader.ReadBit();
+            var bInvalidElementIndex = reader.ReadBit();
 
             Time = reader.ReadSingle();
 
@@ -153,7 +151,7 @@ namespace Unreal.Core.Models
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
-            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : 0;
+            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : new byte();
         }
     }
 }

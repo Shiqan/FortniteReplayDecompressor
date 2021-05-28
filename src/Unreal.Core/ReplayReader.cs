@@ -34,13 +34,18 @@ namespace Unreal.Core
         /// </summary>
         public const uint MetadataMagic = 0x3D06B24E;
 
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
+        /// </summary>
+        public const int MaxPacketSizeInBits = 16384; // 2 * 1024 * 8
+
         protected ILogger _logger;
         protected T Replay { get; set; }
         protected ParseMode _parseMode;
         protected bool IsDebugMode => _parseMode == ParseMode.Debug;
 
-        public NetGuidCache _netGuidCache;
-        public NetFieldParser _netFieldParser;
+        protected NetGuidCache _netGuidCache;
+        protected NetFieldParser _netFieldParser;
 
         private int replayDataIndex = 0;
         private int checkpointIndex = 0;
@@ -51,13 +56,12 @@ namespace Unreal.Core
         private DataBunch? PartialBunch;
 
         /// <summary>
-        /// 
+        /// Index of latest received bunch sequence.
         /// </summary>
         private int InReliable = 0;
-        //private int?[] InReliable = new int?[DefaultMaxChannelSize];
 
         /// <summary>
-        /// 
+        /// Received channels during replay parsing.
         /// </summary>
         public UChannel?[] Channels = new UChannel[DefaultMaxChannelSize];
 
@@ -336,7 +340,7 @@ namespace Unreal.Core
 
                 if (archive.Position != offset + chunkSize)
                 {
-                    _logger?.LogWarning($"Chunk ({chunkType}) at offset {offset} not fully read...");
+                    _logger?.LogDebug($"Chunk ({chunkType}) at offset {offset} not fully read...");
                     archive.Seek(offset + chunkSize, SeekOrigin.Begin);
                 }
             }
@@ -377,10 +381,10 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// Parse the replay header and set it to the <see cref="Replay"/>.
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L191
         /// </summary>
         /// <param name="archive"></param>
-        /// <returns>ReplayHeader</returns>
         public virtual void ReadReplayHeader(FArchive archive)
         {
             var magic = archive.ReadUInt32();
@@ -458,6 +462,7 @@ namespace Unreal.Core
 
 
         /// <summary>
+        /// Parse the replay info and set it on the <see cref="Replay"/>.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183
         /// </summary>
         /// <param name="archive"></param>
@@ -816,11 +821,8 @@ namespace Unreal.Core
                     //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
                     group.NetFieldExports[netField.Handle] = netField;
                 }
-                else
-                {
-                    // ReceiveNetFieldExports: Invalid NetFieldExport Handle
-                    // InBunch.SetError();
-                }
+                // ReceiveNetFieldExports: Invalid NetFieldExport Handle
+                // InBunch.SetError();
             }
         }
 
@@ -1737,7 +1739,7 @@ namespace Unreal.Core
             if (bIsActor)
             {
                 // If this is for the actor on the channel, we don't need to read anything else
-                return Channels[bunch.ChIndex].ArchetypeId ?? Channels[bunch.ChIndex].ActorId;
+                return Channels[bunch.ChIndex]?.ArchetypeId ?? Channels[bunch.ChIndex]?.ActorId;
             }
 
             // We need to handle a sub-object
@@ -1757,6 +1759,16 @@ namespace Unreal.Core
             if (!classNetGUID.IsValid())
             {
                 bObjectDeleted = true;
+            }
+
+            if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
+            {
+                var bActorIsOuter = bunch.Archive.ReadBit();
+                if (!bActorIsOuter)
+                {
+                    // outerobject
+                    InternalLoadObject(bunch.Archive, false);
+                }
             }
 
             return classNetGUID.Value;
@@ -1826,7 +1838,8 @@ namespace Unreal.Core
                 // For demo backwards compatibility, old replays still have this bit
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_ACKS_INCLUDED_IN_HEADER)
                 {
-                    var isAckDummy = bitReader.ReadBit();
+                    // isAckDummy
+                    bitReader.ReadBit();
                 }
 
                 // FInBunch
@@ -1890,39 +1903,29 @@ namespace Unreal.Core
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
                     var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
-                    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
+                //    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
-                    if (chType == ChannelType.Actor)
-                    {
-                        chName = ChannelName.Actor;
-                    }
-                    else if (chType == ChannelType.Control)
-                    {
-                        chName = ChannelName.Control;
-                    }
-                    else if (chType == ChannelType.Voice)
-                    {
-                        chName = ChannelName.Voice;
-                    }
+                //    chName = chType switch
+                //    {
+                //        ChannelType.Actor => ChannelName.Actor,
+                //        ChannelType.Control => ChannelName.Control,
+                //        ChannelType.Voice => ChannelName.Voice,
+                //        _ => ChannelName.None
+                //    };
                 }
                 else
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                        Enum.TryParse(bitReader.ReadFName(), out chName);
-
-                        if (chName.Equals(ChannelName.Actor))
-                        {
-                            chType = ChannelType.Actor;
-                        }
-                        else if (chName.Equals(ChannelName.Control))
-                        {
-                            chType = ChannelType.Control;
-                        }
-                        else if (chName.Equals(ChannelName.Voice))
-                        {
-                            chType = ChannelType.Voice;
-                        }
+                            bitReader.ReadFName();
+                        //Enum.TryParse(bitReader.ReadFName(), out chName);
+                        //chType = chName switch
+                        //{
+                        //    ChannelName.Actor => ChannelType.Actor,
+                        //    ChannelName.Control => ChannelType.Control,
+                        //    ChannelName.Voice => ChannelType.Voice,
+                        //    _ => ChannelType.None
+                        //};
                     }
                 }
                 bunch.ChType = chType;
@@ -1934,10 +1937,7 @@ namespace Unreal.Core
                 // If there's an existing channel and the bunch specified it's channel type, make sure they match.
                 // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
 
-                // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
-                var maxPacket = 1024 * 2;
-                var bunchDataBits = (int)bitReader.ReadSerializedInt(maxPacket * 8);
-                // Bunch.SetData( Reader, BunchDataBits );
+                var bunchDataBits = (int)bitReader.ReadSerializedInt(MaxPacketSizeInBits);
                 bunch.Archive = new BitReader(bitReader.ReadBits(bunchDataBits), bunchDataBits)
                 {
                     EngineNetworkVersion = bitReader.EngineNetworkVersion,
@@ -1955,53 +1955,53 @@ namespace Unreal.Core
                 // In that case, we can generally ignore these bunches.
                 // if (InternalAck && Channel && bIgnoreAlreadyOpenedChannels)
                 // bIgnoreAlreadyOpenedChannels always true?  https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4393
-                if (channel && false)
-                {
-                    var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
-                    if (bNewlyOpenedActorChannel)
-                    {
-                        // GetActorGUIDFromOpenBunch(Bunch);
-                        if (bunch.bHasMustBeMappedGUIDs)
-                        {
-                            var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
-                            for (var i = 0; i < numMustBeMappedGUIDs; i++)
-                            {
-                                // FNetworkGUID NetGUID
-                                var guid = bunch.Archive.ReadIntPacked();
-                            }
-                        }
+                //if (channel && false)
+                //{
+                //    var bNewlyOpenedActorChannel = bunch.bOpen && (bunch.ChName == ChannelName.Actor) && (!bunch.bPartial || bunch.bPartialInitial);
+                //    if (bNewlyOpenedActorChannel)
+                //    {
+                //        // GetActorGUIDFromOpenBunch(Bunch);
+                //        if (bunch.bHasMustBeMappedGUIDs)
+                //        {
+                //            var numMustBeMappedGUIDs = bunch.Archive.ReadUInt16();
+                //            for (var i = 0; i < numMustBeMappedGUIDs; i++)
+                //            {
+                //                // FNetworkGUID NetGUID
+                //                var guid = bunch.Archive.ReadIntPacked();
+                //            }
+                //        }
 
-                        //FNetworkGUID ActorGUID;
-                        var actorGuid = bunch.Archive.ReadIntPacked();
-                        IgnoringChannels[bunch.ChIndex] = actorGuid;
-                    }
+                //        //FNetworkGUID ActorGUID;
+                //        var actorGuid = bunch.Archive.ReadIntPacked();
+                //        IgnoringChannels[bunch.ChIndex] = actorGuid;
+                //    }
 
-                    if (IgnoringChannels[bunch.ChIndex] != null)
-                    {
-                        if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
-                        {
-                            //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
-                            IgnoringChannels[bunch.ChIndex] = null;
-                        }
+                //    if (IgnoringChannels[bunch.ChIndex] != null)
+                //    {
+                //        if (bunch.bClose && (!bunch.bPartial || bunch.bPartialFinal))
+                //        {
+                //            //FNetworkGUID ActorGUID = IgnoringChannels.FindAndRemoveChecked(Bunch.ChIndex);
+                //            IgnoringChannels[bunch.ChIndex] = null;
+                //        }
 
-                        continue;
-                    }
-                }
+                //        continue;
+                //    }
+                //}
 
-                // Ignore if reliable packet has already been processed.
-                if (bunch.bReliable && bunch.ChSequence <= InReliable)
-                {
-                    continue;
-                }
+                //// Ignore if reliable packet has already been processed.
+                //if (bunch.bReliable && bunch.ChSequence <= InReliable)
+                //{
+                //    continue;
+                //}
 
-                // If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
-                if (!channel && !bunch.bReliable)
-                {
-                    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
-                    {
-                        continue;
-                    }
-                }
+                //// If opening the channel with an unreliable packet, check that it is "bNetTemporary", otherwise discard it
+                //if (!channel && !bunch.bReliable)
+                //{
+                //    if (!(bunch.bOpen && (bunch.bClose || bunch.bPartial)))
+                //    {
+                //        continue;
+                //    }
+                //}
 
                 // Create channel if necessary
                 if (!channel)
@@ -2020,8 +2020,8 @@ namespace Unreal.Core
                     // Reliable (either open or later), so create new channel.
                     var newChannel = new UChannel()
                     {
-                        ChannelName = bunch.ChName,
-                        ChannelType = bunch.ChType,
+                        //ChannelName = bunch.ChName,
+                        //ChannelType = bunch.ChType,
                         ChannelIndex = bunch.ChIndex,
                     };
 

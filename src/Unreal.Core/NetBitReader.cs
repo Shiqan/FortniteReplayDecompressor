@@ -59,15 +59,16 @@ namespace Unreal.Core
             RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
-            var repMovement = new FRepMovement();
-            //var flags = ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = ReadBit();
-            repMovement.bRepPhysics = ReadBit();
+            var repMovement = new FRepMovement
+            {
+                bSimulatedPhysicSleep = ReadBit(),
+                bRepPhysics = ReadBit(),
 
-            repMovement.Location = SerializePropertyQuantizedVector(locationQuantizationLevel);
-            repMovement.Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort();
+                Location = SerializePropertyQuantizedVector(locationQuantizationLevel),
+                Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort(),
 
-            repMovement.LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel);
+                LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel)
+            };
 
             if (repMovement.bRepPhysics)
             {

@@ -400,6 +400,11 @@ namespace Unreal.Core
                 NetworkVersion = archive.ReadUInt32AsEnum<NetworkVersionHistory>()
             };
 
+            if (header.NetworkVersion >= NetworkVersionHistory.LATEST)
+            {
+                _logger?.LogWarning($"Found unexpected NetworkVersionHistory: {header.NetworkVersion}");
+            }
+
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_EXTRA_VERSION)
             {
                 _logger?.LogError($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
@@ -408,6 +413,12 @@ namespace Unreal.Core
 
             header.NetworkChecksum = archive.ReadUInt32();
             header.EngineNetworkVersion = archive.ReadUInt32AsEnum<EngineNetworkVersionHistory>();
+
+            if (header.EngineNetworkVersion >= EngineNetworkVersionHistory.LATEST)
+            {
+                _logger?.LogWarning($"Found unexpected EngineNetworkVersionHistory: {header.EngineNetworkVersion}");
+            }
+
             header.GameNetworkProtocolVersion = archive.ReadUInt32();
 
             if (header.NetworkVersion >= NetworkVersionHistory.HISTORY_HEADER_GUID)
@@ -478,6 +489,11 @@ namespace Unreal.Core
 
             var fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
             archive.ReplayVersion = fileVersion;
+
+            if (fileVersion >= ReplayVersionHistory.LATEST)
+            {
+                _logger?.LogWarning($"Found unexpected ReplayVersionHistory: {fileVersion}");
+            }
 
             var info = new ReplayInfo()
             {

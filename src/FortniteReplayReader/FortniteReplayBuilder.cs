@@ -478,6 +478,8 @@ namespace FortniteReplayReader
                 return;
             }
 
+            llama.LandingLocation ??= supplyDropLlama.FinalDestination;
+
             if (supplyDropLlama.Looted)
             {
                 llama.Looted = true;

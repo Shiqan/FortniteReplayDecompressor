@@ -9,6 +9,7 @@ namespace BenchmarkReader
             BenchmarkRunner.Run<BenchmarkBitReader>();
             //BenchmarkRunner.Run<BenchmarkBinaryReader>();
             //BenchmarkRunner.Run<BenchmarkNetGuidCache>();
+            //BenchmarkRunner.Run<BenchmarkReader>();
         }
     }
 }

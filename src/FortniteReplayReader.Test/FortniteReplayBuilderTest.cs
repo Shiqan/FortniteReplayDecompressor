@@ -102,23 +102,22 @@ namespace FortniteReplayReader.Test
         {
             var llama = new SupplyDropLlama()
             {
-                FinalDestination = new FVector(1, 2, 3),
-                Looted = true
             };
             builder.UpdateLlama(1, llama);
 
             builder.Build(replay);
             var addedLlama = replay.MapData.Llamas.First();
             Assert.Equal(1u, addedLlama.Id);
-            Assert.Equal(llama.Looted, addedLlama.Looted);
-            Assert.Equal(llama.FinalDestination, addedLlama.LandingLocation);
+            Assert.False(addedLlama.Looted);
 
             var newLlama = new SupplyDropLlama()
             {
+                Looted = true,
                 FinalDestination = new FVector(3, 2, 1)
             };
             builder.UpdateLlama(1, newLlama);
-            Assert.Equal(llama.FinalDestination, addedLlama.LandingLocation);
+            Assert.True(addedLlama.Looted);
+            Assert.Equal(newLlama.FinalDestination, addedLlama.LandingLocation);
 
             builder.UpdateLlama(2, newLlama);
             builder.Build(replay);

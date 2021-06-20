@@ -20,13 +20,13 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedMovement", RepLayoutCmdType.RepMovement)]
         public FRepMovement? ReplicatedMovement { get; set; }
 
-        [NetFieldExport("bDestroyed", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("bDestroyed", RepLayoutCmdType.Ignore)]
         public bool bDestroyed { get; set; }
 
-        [NetFieldExport("bEditorPlaced", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("bEditorPlaced", RepLayoutCmdType.Ignore)]
         public bool bEditorPlaced { get; set; }
 
-        [NetFieldExport("bInstantDeath", RepLayoutCmdType.PropertyBool)]
+        [NetFieldExport("bInstantDeath", RepLayoutCmdType.Ignore)]
         public bool bInstantDeath { get; set; }
 
         [NetFieldExport("bHasSpawnedPickups", RepLayoutCmdType.PropertyBool)]
@@ -36,6 +36,6 @@ namespace FortniteReplayReader.Models.NetFieldExports
         public bool Looted { get; set; }
 
         [NetFieldExport("FinalDestination", RepLayoutCmdType.PropertyVector)]
-        public FVector FinalDestination { get; set; }
+        public FVector? FinalDestination { get; set; }
     }
 }

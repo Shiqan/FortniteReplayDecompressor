@@ -32,9 +32,9 @@ namespace OozSharp
         /// <param name="compressedInput"></param>
         /// <param name="uncompressedSize"></param>
         /// <returns>Decompressed byte[]</returns>
-        public byte[] Decompress(byte[] compressedInput, int uncompressedSize)
+        public byte[] Decompress(ReadOnlySpan<byte> compressedInput, int uncompressedSize)
         {
-            var decoder = new KrakenDecoder();
+            using var decoder = new KrakenDecoder();
 
             var decompressedBuffer = new byte[uncompressedSize];
             var remainingBytes = uncompressedSize;

@@ -374,7 +374,7 @@ namespace FortniteReplayReader
             var compressedBuffer = archive.ReadBytes(compressedSize);
 
             _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
-            var output = Oodle.DecompressReplayData(compressedBuffer.ToArray(), decompressedSize);
+            var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
 
             return new Unreal.Core.BinaryReader(output.AsMemory())
             {

@@ -25,6 +25,6 @@
         HISTORY_SUBOBJECT_OUTER_CHAIN = 18,             // Bump version to support subobject outer chains matching on client and server
 
         HISTORY_ENGINENETVERSION_PLUS_ONE,
-        HISTORY_ENGINENETVERSION_LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,
+        LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,
     }
 }

@@ -23,6 +23,6 @@
         HISTORY_GUIDCACHE_CHECKSUMS = 16,           // Removing guid export checksums from saved data, they are ignored during playback
 
         HISTORY_NETWORKVERSION_PLUS_ONE,
-        HISTORY__NETWORKVERSION_LATEST = HISTORY_NETWORKVERSION_PLUS_ONE - 1,
+        LATEST = HISTORY_NETWORKVERSION_PLUS_ONE - 1,
     }
 }

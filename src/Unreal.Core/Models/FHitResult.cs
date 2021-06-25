@@ -1,4 +1,5 @@
 ﻿using Unreal.Core.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -105,6 +106,11 @@ namespace Unreal.Core.Models
         /// </summary>
         public string MyBoneName { get; private set; }
 
+        /// <summary>
+        /// If this test started in penetration (bStartPenetrating is true) and a depenetration vector can be computed,
+        /// If the distance cannot be computed, this distance will be zero.
+        /// </summary>
+        public byte ElementIndex { get; private set; }
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
@@ -113,77 +119,42 @@ namespace Unreal.Core.Models
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            var flags = reader.ReadBits(7)[0];
+            //var flags = reader.ReadByte();
 
             // Most of the time the vectors are the same values, use that as an optimization
-            BlockingHit = (flags & (1 << 0)) >= 1;
-            StartPenetrating = (flags & (1 << 1)) >= 1;
-            bool bImpactPointEqualsLocation = (flags & (1 << 2)) >= 1;
-            bool bImpactNormalEqualsNormal = (flags & (1 << 3)) >= 1;
+            BlockingHit = reader.ReadBit();
+            StartPenetrating = reader.ReadBit();
+            var bImpactPointEqualsLocation = reader.ReadBit();
+            var bImpactNormalEqualsNormal = reader.ReadBit();
 
             // Often times the indexes are invalid, use that as an optimization
-            bool bInvalidItem = (flags & (1 << 4)) >= 1;
-            bool bInvalidFaceIndex = (flags & (1 << 5)) >= 1;
-            bool bNoPenetrationDepth = (flags & (1 << 6)) >= 1;
+            var bInvalidItem = reader.ReadBit();
+            var bInvalidFaceIndex = reader.ReadBit();
+            var bNoPenetrationDepth = reader.ReadBit();
+            var bInvalidElementIndex = reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_ENUM_SERIALIZATION_COMPAT && reader.ReadBit();
 
             Time = reader.ReadSingle();
 
             Location = reader.ReadPackedVector(1, 20);
             Normal = reader.SerializePropertyVectorNormal();
 
-            if (!bImpactPointEqualsLocation)
-            {
-                ImpactPoint = reader.ReadPackedVector(1, 20);
-            }
-            else
-            {
-                ImpactPoint = Location;
-            }
-
-            if (!bImpactNormalEqualsNormal)
-            {
-                ImpactNormal = reader.SerializePropertyVectorNormal();
-            }
-            else
-            {
-                ImpactNormal = Normal;
-            }
+            ImpactPoint = !bImpactPointEqualsLocation ? reader.ReadPackedVector(1, 20) : Location;
+            ImpactNormal = !bImpactNormalEqualsNormal ? reader.SerializePropertyVectorNormal() : Normal;
 
             TraceStart = reader.ReadPackedVector(1, 20);
             TraceEnd = reader.ReadPackedVector(1, 20);
 
-            if (!bNoPenetrationDepth)
-            {
-                PenetrationDepth = reader.SerializePropertyFloat();
-            }
-            else
-            {
-                PenetrationDepth = 0.0f;
-            }
+            PenetrationDepth = !bNoPenetrationDepth ? reader.SerializePropertyFloat() : 0.0f;
 
             Distance = (ImpactPoint - TraceStart).Size();
-
-            if (!bInvalidItem)
-            {
-                Item = reader.ReadInt32();
-            }
-            else
-            {
-                Item = 0;
-            }
+            Item = !bInvalidItem ? reader.ReadInt32() : 0;
 
             PhysMaterial = reader.SerializePropertyObject();
             Actor = reader.SerializePropertyObject();
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
-            if (!bInvalidFaceIndex)
-            {
-                FaceIndex = reader.ReadInt32();
-            }
-            else
-            {
-                FaceIndex = 0;
-            }
+            FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
+            ElementIndex = !bInvalidElementIndex && reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_ENUM_SERIALIZATION_COMPAT ? reader.ReadByte() : new byte();
         }
     }
 }

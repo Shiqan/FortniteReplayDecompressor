@@ -400,7 +400,7 @@ namespace Unreal.Core
                 NetworkVersion = archive.ReadUInt32AsEnum<NetworkVersionHistory>()
             };
 
-            if (header.NetworkVersion >= NetworkVersionHistory.LATEST)
+            if (header.NetworkVersion > NetworkVersionHistory.LATEST)
             {
                 _logger?.LogWarning($"Found unexpected NetworkVersionHistory: {header.NetworkVersion}");
             }
@@ -414,7 +414,7 @@ namespace Unreal.Core
             header.NetworkChecksum = archive.ReadUInt32();
             header.EngineNetworkVersion = archive.ReadUInt32AsEnum<EngineNetworkVersionHistory>();
 
-            if (header.EngineNetworkVersion >= EngineNetworkVersionHistory.LATEST)
+            if (header.EngineNetworkVersion > EngineNetworkVersionHistory.LATEST)
             {
                 _logger?.LogWarning($"Found unexpected EngineNetworkVersionHistory: {header.EngineNetworkVersion}");
             }
@@ -490,7 +490,7 @@ namespace Unreal.Core
             var fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
             archive.ReplayVersion = fileVersion;
 
-            if (fileVersion >= ReplayVersionHistory.LATEST)
+            if (fileVersion > ReplayVersionHistory.LATEST)
             {
                 _logger?.LogWarning($"Found unexpected ReplayVersionHistory: {fileVersion}");
             }

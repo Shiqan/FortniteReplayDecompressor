@@ -1,4 +1,5 @@
 ﻿using Unreal.Core.Contracts;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models
 {
@@ -147,7 +148,21 @@ namespace Unreal.Core.Models
             Item = !bInvalidItem ? reader.ReadInt32() : 0;
 
             PhysMaterial = reader.SerializePropertyObject();
-            Actor = reader.SerializePropertyObject();
+
+            if (reader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_HITRESULT_INSTANCEHANDLE)
+            {
+                Actor = reader.SerializePropertyObject();
+            }
+            else
+            {
+                Actor = reader.SerializePropertyObject();
+
+                // see https://github.com/EpicGames/UnrealEngine/blob/4564529ed77196caada6971f5de1be829900b9e1/Engine/Source/Runtime/Engine/Private/EngineTypes.cpp#L558
+                //Ar << Handle.Actor;
+                //Ar << Handle.Manager;
+                //Ar << Handle.InstanceIndex;
+            }
+
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;

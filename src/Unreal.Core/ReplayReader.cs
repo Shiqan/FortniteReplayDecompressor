@@ -587,10 +587,10 @@ namespace Unreal.Core
                 }
 
                 // Read net guid this payload belongs to
-                archive.ReadIntPacked();
+                var netGuid = archive.ReadIntPacked();
 
-                var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
-                archive.SkipBytes(externalDataNumBytes);
+                archive.SkipBytes((int)(externalDataNumBits + 7) >> 3);
+                _logger?.LogDebug("External data found for netguid {}, bits: {}", netGuid, externalDataNumBits);
             }
         }
 
@@ -775,7 +775,9 @@ namespace Unreal.Core
             }
 
             // if (!bForLevelFastForward)
+            // Load any custom external data in this frame
             ReadExternalData(archive);
+            // else skip externalOffset
 
             if (archive.HasGameSpecificFrameData())
             {
@@ -785,8 +787,8 @@ namespace Unreal.Core
                     // ignore it for now
                     archive.SkipBytes((int)skipExternalOffset);
                 }
+                // else skip externalOffset
             }
-            // else skip externalOffset
 
             var @continue = true;
             while (@continue)
@@ -1791,7 +1793,7 @@ namespace Unreal.Core
 
             if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
             {
-                var bActorIsOuter = bunch.Archive.ReadBit();
+                var bActorIsOuter = bunch.Archive.AtEnd() || bunch.Archive.ReadBit();
                 if (!bActorIsOuter)
                 {
                     // outerobject
@@ -1928,21 +1930,21 @@ namespace Unreal.Core
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
                     var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
-                //    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
+                    //    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
-                //    chName = chType switch
-                //    {
-                //        ChannelType.Actor => ChannelName.Actor,
-                //        ChannelType.Control => ChannelName.Control,
-                //        ChannelType.Voice => ChannelName.Voice,
-                //        _ => ChannelName.None
-                //    };
+                    //    chName = chType switch
+                    //    {
+                    //        ChannelType.Actor => ChannelName.Actor,
+                    //        ChannelType.Control => ChannelName.Control,
+                    //        ChannelType.Voice => ChannelName.Voice,
+                    //        _ => ChannelName.None
+                    //    };
                 }
                 else
                 {
                     if (bunch.bReliable || bunch.bOpen)
                     {
-                            bitReader.ReadFName();
+                        bitReader.ReadFName();
                         //Enum.TryParse(bitReader.ReadFName(), out chName);
                         //chType = chName switch
                         //{

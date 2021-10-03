@@ -11,29 +11,29 @@ namespace FortniteReplayReader
     /// </summary>
     public class FortniteReplayBuilder
     {
-        private GameData GameData = new GameData();
-        private MapData MapData = new MapData();
-        private List<KillFeedEntry> KillFeed = new List<KillFeedEntry>();
+        private readonly GameData GameData = new();
+        private readonly MapData MapData = new();
+        private readonly List<KillFeedEntry> KillFeed = new();
 
-        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
-        private Dictionary<uint, uint> _channelToActor = new Dictionary<uint, uint>();
-        private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
+        private readonly Dictionary<uint, uint> _actorToChannel = new();
+        private readonly Dictionary<uint, uint> _channelToActor = new();
+        private readonly Dictionary<uint, uint> _pawnChannelToStateChannel = new();
 
         /// <summary>
         /// Sometimes we receive a PlayerPawn but we havent received the PlayerState yet, so we dont want to processes these yet.
         /// </summary>
-        private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
+        private readonly Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new();
 
-        private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
-        private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
-        private Dictionary<int?, TeamData> _teams = new Dictionary<int?, TeamData>();
-        private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
-        private Dictionary<int, RebootVan> _rebootVans = new Dictionary<int, RebootVan>();
-        private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
+        private readonly HashSet<uint> _onlySpectatingPlayers = new();
+        private readonly Dictionary<uint, PlayerData> _players = new();
+        private readonly Dictionary<int?, TeamData> _teams = new();
+        private readonly Dictionary<uint, Llama> _llamas = new();
+        private readonly Dictionary<int, RebootVan> _rebootVans = new();
+        private readonly Dictionary<uint, Models.SupplyDrop> _drops = new();
 
-        private Dictionary<uint, Inventory> _inventories = new Dictionary<uint, Inventory>();
-        private Dictionary<uint, WeaponData> _weapons = new Dictionary<uint, WeaponData>();
-        private Dictionary<uint, WeaponData> _unknownWeapons = new Dictionary<uint, WeaponData>();
+        private readonly Dictionary<uint, Inventory> _inventories = new();
+        private readonly Dictionary<uint, WeaponData> _weapons = new();
+        private readonly Dictionary<uint, WeaponData> _unknownWeapons = new();
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
@@ -43,7 +43,7 @@ namespace FortniteReplayReader
             _channelToActor[channelIndex] = guid;
         }
 
-        public void RemoveChannel(uint channelIndex, uint guid)
+        public void RemoveChannel(uint channelIndex)
         {
             _weapons.Remove(channelIndex);
             _unknownWeapons.Remove(channelIndex);

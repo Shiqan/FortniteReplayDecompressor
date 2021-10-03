@@ -74,7 +74,7 @@ namespace FortniteReplayReader
         {
             if (actor != null)
             {
-                Builder.RemoveChannel(channelIndex, actor.Value);
+                Builder.RemoveChannel(channelIndex);
             }
         }
 
@@ -166,7 +166,7 @@ namespace FortniteReplayReader
                 SizeInBytes = archive.ReadInt32()
             };
 
-            _logger?.LogDebug($"Encountered event {info.Group} ({info.Metadata}) at {info.StartTime} of size {info.SizeInBytes}");
+            _logger?.LogDebug("Encountered event {group} ({metadata}) at {startTime} of size {sizeInBytes}", info.Group, info.Metadata, info.StartTime, info.SizeInBytes);
 
             using var decryptedArchive = DecryptBuffer(archive, info.SizeInBytes);
 
@@ -196,7 +196,7 @@ namespace FortniteReplayReader
                 return;
             }
 
-            _logger?.LogInformation($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+            _logger?.LogInformation("Unknown event {group} ({metadata}) of size {sizeInBytes}", info.Group, info.Metadata, info.SizeInBytes);
             if (IsDebugMode)
             {
                 throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
@@ -308,7 +308,7 @@ namespace FortniteReplayReader
             }
             catch (Exception ex)
             {
-                _logger?.LogError($"Error while parsing PlayerElimination at timestamp {info.StartTime}");
+                _logger?.LogError(ex, "Error while parsing PlayerElimination at timestamp {}", info?.StartTime);
                 throw new PlayerEliminationException($"Error while parsing PlayerElimination at timestamp {info?.StartTime}", ex);
             }
         }
@@ -350,8 +350,8 @@ namespace FortniteReplayReader
 
             using var cryptoTransform = rDel.CreateDecryptor();
             var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes.ToArray(), 0, encryptedBytes.Length);
-
-            var decrypted = new Unreal.Core.BinaryReader(new MemoryStream(decryptedArray))
+            
+            var decrypted = new Unreal.Core.BinaryReader(decryptedArray.AsMemory())
             {
                 EngineNetworkVersion = archive.EngineNetworkVersion,
                 NetworkVersion = archive.NetworkVersion,
@@ -373,7 +373,7 @@ namespace FortniteReplayReader
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
 
-            _logger?.LogDebug($"Decompressed archive from {compressedSize} to {decompressedSize}.");
+            _logger?.LogDebug("Decompressed archive from {compressedSize} to {decompressedSize}.", compressedSize, decompressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
 
             return new Unreal.Core.BinaryReader(output.AsMemory())

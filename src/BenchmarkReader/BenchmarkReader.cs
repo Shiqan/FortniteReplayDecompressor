@@ -8,7 +8,7 @@ namespace BenchmarkReader
     [SimpleJob]
     public class BenchmarkReader
     {
-        public ReplayReader _reader = new ReplayReader(null, Unreal.Core.Models.Enums.ParseMode.Full);
+        public ReplayReader _reader = new(null, Unreal.Core.Models.Enums.ParseMode.Full);
 
         public BenchmarkReader()
         {

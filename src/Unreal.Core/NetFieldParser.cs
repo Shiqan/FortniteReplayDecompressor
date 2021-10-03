@@ -17,12 +17,12 @@ namespace Unreal.Core
     public class NetFieldParser
     {
         private readonly NetGuidCache GuidCache;
-        public HashSet<string> PlayerControllerGroups { get; private set; } = new HashSet<string>();
+        public HashSet<string> PlayerControllerGroups { get; private set; } = new();
 
-        private Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new Dictionary<string, NetFieldGroupInfo>();
-        private Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new Dictionary<Type, RepLayoutCmdType>();
-        private Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new Dictionary<string, ClassNetCacheInfo>();
-        private CompiledLinqCache _linqCache = new CompiledLinqCache();
+        private readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new();
+        private readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new();
+        private readonly Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new();
+        private readonly CompiledLinqCache _linqCache = new();
 
         /// <summary>
         /// Create a NetFieldParser, which will load all <see cref="NetFieldExportGroup"/> in the <see cref="AppDomain.CurrentDomain"/>.
@@ -489,7 +489,7 @@ namespace Unreal.Core
 
         private class NetFieldInfo
         {
-            public RepMovementAttribute MovementAttribute { get; set; }
+            public RepMovementAttribute? MovementAttribute { get; set; }
             public NetFieldAttribute Attribute { get; set; }
             public PropertyInfo PropertyInfo { get; set; }
         }

@@ -50,10 +50,10 @@ namespace Unreal.Core.Models
             }
         }
 
-        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new Dictionary<uint, NetFieldExportGroup>();
-        private Dictionary<uint, string> _cleanedPaths = new Dictionary<uint, string>();
-        private Dictionary<string, string> _cleanedClassNetCache = new Dictionary<string, string>();
-        private HashSet<string> _failedPaths = new HashSet<string>(); //Path names that didn't find an export group
+        private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new();
+        private Dictionary<uint, string> _cleanedPaths = new();
+        private Dictionary<string, string> _cleanedClassNetCache = new();
+        private HashSet<string> _failedPaths = new(); //Path names that didn't find an export group
         private NetFieldExportGroup? _networkGameplayTagNodeIndex { get; set; }
 
         /// <summary>

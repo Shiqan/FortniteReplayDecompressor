@@ -24,6 +24,9 @@ var replay = reader.ReadReplay(replayFile);
 ## Documentation
 Available at [readthedocs.org](https://fortnitereplaydecompressor.readthedocs.io/en/latest/?badge=latest). For any other question you can join our [Discord server](https://discord.gg/p5CMqJC)!
 
+## Alternatives
+- [xNocken](https://github.com/xNocken/replay-reader) created a [node version](https://www.npmjs.com/package/fortnite-replay-parser).
+
 ## Special thanks
 Special thanks to [Kuinox](https://github.com/Kuinox/ChartsNite) for the collaboration to figure out the compression and structure of the replay file.
 

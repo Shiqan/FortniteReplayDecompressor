@@ -17,27 +17,37 @@ namespace Unreal.Core
         /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; 
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L84
         /// </summary>
-        private const int DefaultMaxChannelSize = 32767;
+        protected const int DefaultMaxChannelSize = 32767;
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L59
         /// </summary>
-        public const uint FileMagic = 0x1CA2E27F;
+        protected const uint FileMagic = 0x1CA2E27F;
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L107
         /// </summary>
-        public const uint NetworkMagic = 0x2CF5A13D;
+        protected const uint NetworkMagic = 0x2CF5A13D;
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L111
         /// </summary>
-        public const uint MetadataMagic = 0x3D06B24E;
+        protected const uint MetadataMagic = 0x3D06B24E;
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
         /// </summary>
-        public const int MaxPacketSizeInBits = 16384; // 2 * 1024 * 8
+        protected const int MaxPacketSizeInBits = 16384; // 2 * 1024 * 8
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
+        /// </summary>
+        protected const int OLD_MAX_ACTOR_CHANNELS = 10240;
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1027
+        /// </summary>
+        protected const int MAX_GUID_COUNT = 2048;
 
         protected ILogger _logger;
         protected T Replay { get; set; }
@@ -63,14 +73,14 @@ namespace Unreal.Core
         /// <summary>
         /// Received channels during replay parsing.
         /// </summary>
-        public UChannel?[] Channels = new UChannel[DefaultMaxChannelSize];
+        protected UChannel?[] Channels = new UChannel[DefaultMaxChannelSize];
 
         /// <summary>
         /// Tracks channels that we should ignore when handling special demo data.
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        private List<string> PathNameTable = new List<string>();
+        private readonly List<string> PathNameTable = new();
 
         public ReplayReader(ILogger logger, ParseMode mode)
         {
@@ -340,7 +350,7 @@ namespace Unreal.Core
 
                 if (archive.Position != offset + chunkSize)
                 {
-                    _logger?.LogDebug($"Chunk ({chunkType}) at offset {offset} not fully read...");
+                    _logger?.LogDebug("Chunk ({chunkType}) at offset {offset} not fully read...", chunkType, offset);
                     archive.Seek(offset + chunkSize, SeekOrigin.Begin);
                 }
             }
@@ -391,7 +401,7 @@ namespace Unreal.Core
 
             if (magic != NetworkMagic)
             {
-                _logger?.LogError($"Header.Magic != NETWORK_DEMO_MAGIC. Header.Magic: {magic}, NETWORK_DEMO_MAGIC: {NetworkMagic}");
+                _logger?.LogError("Header.Magic != NETWORK_DEMO_MAGIC. Header.Magic: {magic}, NETWORK_DEMO_MAGIC: {NetworkMagic}", magic, NetworkMagic);
                 throw new InvalidReplayException($"Header.Magic != NETWORK_DEMO_MAGIC. Header.Magic: {magic}, NETWORK_DEMO_MAGIC: {NetworkMagic}");
             }
 
@@ -402,12 +412,12 @@ namespace Unreal.Core
 
             if (header.NetworkVersion > NetworkVersionHistory.LATEST)
             {
-                _logger?.LogWarning($"Found unexpected NetworkVersionHistory: {header.NetworkVersion}");
+                _logger?.LogWarning("Found unexpected NetworkVersionHistory: {}", header.NetworkVersion);
             }
 
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_EXTRA_VERSION)
             {
-                _logger?.LogError($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
+                _logger?.LogError("Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {}, MIN_NETWORK_DEMO_VERSION: {}", header.NetworkVersion, NetworkVersionHistory.HISTORY_EXTRA_VERSION);
                 throw new InvalidReplayException($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
             }
 
@@ -416,7 +426,7 @@ namespace Unreal.Core
 
             if (header.EngineNetworkVersion > EngineNetworkVersionHistory.LATEST)
             {
-                _logger?.LogWarning($"Found unexpected EngineNetworkVersionHistory: {header.EngineNetworkVersion}");
+                _logger?.LogWarning("Found unexpected EngineNetworkVersionHistory: {}", header.EngineNetworkVersion);
             }
 
             header.GameNetworkProtocolVersion = archive.ReadUInt32();
@@ -450,7 +460,7 @@ namespace Unreal.Core
 
             if (header.NetworkVersion <= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException("HISTORY_MULTIPLE_LEVELS not supported yet.");
             }
             else
             {
@@ -483,7 +493,7 @@ namespace Unreal.Core
 
             if (magicNumber != FileMagic)
             {
-                _logger?.LogError("Invalid replay file");
+                _logger?.LogError("Invalid replay file, expected file magic {}, found {}", FileMagic, magicNumber);
                 throw new InvalidReplayException("Invalid replay file");
             }
 
@@ -492,7 +502,7 @@ namespace Unreal.Core
 
             if (fileVersion > ReplayVersionHistory.LATEST)
             {
-                _logger?.LogWarning($"Found unexpected ReplayVersionHistory: {fileVersion}");
+                _logger?.LogWarning("Found unexpected ReplayVersionHistory: {}", fileVersion);
             }
 
             var info = new ReplayInfo()
@@ -577,7 +587,7 @@ namespace Unreal.Core
                 }
 
                 // Read net guid this payload belongs to
-                var netGuid = archive.ReadIntPacked();
+                archive.ReadIntPacked();
 
                 var externalDataNumBytes = (int)(externalDataNumBits + 7) >> 3;
                 archive.SkipBytes(externalDataNumBytes);
@@ -728,7 +738,7 @@ namespace Unreal.Core
             }
 
             var timeSeconds = archive.ReadSingle();
-            _logger?.LogInformation($"ReadDemoFrameIntoPlaybackPackets at {timeSeconds}");
+            _logger?.LogDebug("ReadDemoFrameIntoPlaybackPackets at {}", timeSeconds);
 
             if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)
             {
@@ -908,11 +918,9 @@ namespace Unreal.Core
             }
 
             var numGUIDsInBunch = bitArchive.ReadInt32();
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1027
-            const int MAX_GUID_COUNT = 2048;
             if (numGUIDsInBunch > MAX_GUID_COUNT)
             {
-                _logger?.LogWarning($"UPackageMapClient::ReceiveNetGUIDBunch: NumGUIDsInBunch > MAX_GUID_COUNT ({numGUIDsInBunch})");
+                _logger?.LogWarning("UPackageMapClient::ReceiveNetGUIDBunch: NumGUIDsInBunch > MAX_GUID_COUNT ({})", numGUIDsInBunch);
                 return;
             }
 
@@ -987,7 +995,7 @@ namespace Unreal.Core
                     {
                         if (bitsLeft % 8 != 0)
                         {
-                            _logger?.LogWarning($"Corrupt partial bunch. Initial partial bunches are expected to be byte-aligned. BitsLeft = {bitsLeft % 8}.");
+                            _logger?.LogWarning("Corrupt partial bunch. Initial partial bunches are expected to be byte-aligned. BitsLeft = {}.", bitsLeft % 8);
                             return;
                         }
 
@@ -1024,7 +1032,7 @@ namespace Unreal.Core
                     if (PartialBunch != null && !PartialBunch.bPartialFinal && bSequenceMatches && PartialBunch.bReliable == bunch.bReliable)
                     {
                         var bitsLeft = bunch.Archive.GetBitsLeft();
-                        _logger?.LogDebug($"Merging Partial Bunch: {bitsLeft} bits");
+                        _logger?.LogDebug("Merging Partial Bunch: {} bits", bitsLeft);
                         if (!bunch.bHasPackageMapExports && bitsLeft > 0)
                         {
                             PartialBunch.Archive.AppendDataFromChecked(bunch.Archive.ReadBits(bitsLeft), bitsLeft);
@@ -1217,7 +1225,7 @@ namespace Unreal.Core
 
                 if (bunch.Archive.IsError)
                 {
-                    _logger?.LogWarning($"UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. bunch: {bunchIndex}");
+                    _logger?.LogWarning("UActorChannel::ReceivedBunch: ReadContentBlockPayload FAILED. bunch: {}", bunchIndex);
                     break;
                 }
 
@@ -1267,7 +1275,7 @@ namespace Unreal.Core
 
             if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup.PathName, out var classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
             {
-                _logger?.LogDebug($"Couldnt find ClassNetCache for {netFieldExportGroup.PathName}");
+                _logger?.LogDebug("Couldnt find ClassNetCache for {}", netFieldExportGroup.PathName);
                 return false;
             }
 
@@ -1276,20 +1284,20 @@ namespace Unreal.Core
             {
                 if (fieldCache == null)
                 {
-                    _logger?.LogInformation($"ReceivedBunch: FieldCache == nullptr: {classNetCache.PathName}");
+                    _logger?.LogInformation("ReceivedBunch: FieldCache == nullptr: {}", classNetCache.PathName);
                     continue;
                 }
 
                 if (fieldCache.Incompatible)
                 {
                     // We've already warned about this property once, so no need to continue to do so
-                    _logger?.LogInformation($"ReceivedBunch: FieldCache->bIncompatible == true: {fieldCache.Name}");
+                    _logger?.LogDebug("ReceivedBunch: FieldCache->bIncompatible == true: {}", fieldCache.Name);
                     continue;
                 }
 
                 if (reader is null || reader.IsError || reader.AtEnd())
                 {
-                    _logger?.LogInformation($"ReceivedBunch: reader == nullptr or IsError: {classNetCache.PathName}");
+                    _logger?.LogDebug("ReceivedBunch: reader == nullptr or IsError: {}", classNetCache.PathName);
                     continue;
                 }
 
@@ -1316,7 +1324,7 @@ namespace Unreal.Core
                         {
                             if (!ReceiveCustomProperty(reader, classNetProperty, bunch.ChIndex))
                             {
-                                _logger?.LogWarning($"Failed to parse custom property {classNetCache.PathName} {fieldCache.Name} (bunchIndex: {bunchIndex})");
+                                _logger?.LogWarning("Failed to parse custom property {pathName} {name} (bunchIndex: {bunchIndex})", classNetCache.PathName, fieldCache.Name, bunchIndex);
                                 continue;
                             }
                         }
@@ -1331,7 +1339,7 @@ namespace Unreal.Core
                             if (!ReceiveCustomDeltaProperty(reader, group, bunch.ChIndex, classNetProperty.EnablePropertyChecksum))
                             {
                                 //FieldCache->bIncompatible = true; TODO?
-                                _logger?.LogWarning($"Failed to parse custom delta property {fieldCache.Name} (bunchIndex: {bunchIndex})");
+                                _logger?.LogWarning("Failed to parse custom delta property {name} (bunchIndex: {bunchIndex})", fieldCache.Name, bunchIndex);
                                 continue;
                             }
                         }
@@ -1339,7 +1347,7 @@ namespace Unreal.Core
                 }
                 else
                 {
-                    _logger?.LogDebug($"Skipping struct {fieldCache.Name} from group {classNetCache.PathName}");
+                    _logger?.LogDebug("Skipping struct {name} from group {pathName}", fieldCache.Name, classNetCache.PathName);
                 }
             }
 
@@ -1356,7 +1364,7 @@ namespace Unreal.Core
         {
             if (netFieldExportGroup is null)
             {
-                _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - netFieldExportGroup is null");
+                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - netFieldExportGroup is null");
                 return false;
             }
 
@@ -1364,13 +1372,13 @@ namespace Unreal.Core
 
             if (reader.IsError)
             {
-                _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true (bunch: {bunchIndex})");
+                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Reader.IsError() == true (bunch: {})", bunchIndex);
                 return false;
             }
 
             if (!Channels[channelIndex]!.IsIgnoringGroup(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
             {
-                _logger?.LogWarning($"ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {bunchIndex})");
+                _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {})", bunchIndex);
                 return false;
             }
 
@@ -1400,12 +1408,12 @@ namespace Unreal.Core
 
                 if (cmdReader.IsError)
                 {
-                    _logger?.LogWarning($"Custom Property {fieldCache.Name} caused error when reading (bits: {cmdReader.LastBit})");
+                    _logger?.LogWarning("Custom Property {} caused error when reading (bits: {})", fieldCache.Name, cmdReader.LastBit);
                 }
 
                 if (!cmdReader.AtEnd())
                 {
-                    _logger?.LogWarning($"Custom Property {fieldCache.Name} didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {cmdReader.LastBit}");
+                    _logger?.LogWarning("Custom Property {name} didnt read proper number of bits: {bitsLeft} out of {bits}", fieldCache.Name, (cmdReader.LastBit - cmdReader.GetBitsLeft()), cmdReader.LastBit);
                 }
 
                 (export as IResolvable)?.Resolve(_netGuidCache);
@@ -1522,19 +1530,19 @@ namespace Unreal.Core
 
             if (Channels[channelIndex] is null)
             {
-                _logger?.LogError($"No channel found for {channelIndex}");
+                _logger?.LogError("No channel found for {}", channelIndex);
                 return false;
             }
 
             if (Channels[channelIndex]!.IsIgnoringGroup(group.PathName))
             {
-                _logger?.LogInformation($"Ignoring channel for type {group.PathName}");
+                _logger?.LogInformation("Ignoring channel for type {}", group.PathName);
                 return false;
             }
 
             if (!_netFieldParser.WillReadType(group.PathName))
             {
-                _logger?.LogInformation($"Not reading type {group.PathName}");
+                _logger?.LogInformation("Not reading type {}", group.PathName);
                 Channels[channelIndex]!.IgnoreGroup(group.PathName);
 
 #if DEBUG
@@ -1554,12 +1562,12 @@ namespace Unreal.Core
                 var doChecksum = archive.ReadBit();
             }
 
-            _logger?.LogDebug($"ReceiveProperties: group {group.PathName}");
+            _logger?.LogDebug("ReceiveProperties: group {}", group.PathName);
             exportGroup = _netFieldParser.CreateType(group.PathName);
 
             if (exportGroup is null)
             {
-                _logger?.LogWarning($"Couldnt create export group of type {group.PathName}");
+                _logger?.LogWarning("Couldnt create export group of type {}", group.PathName);
                 return false;
             }
 
@@ -1580,7 +1588,7 @@ namespace Unreal.Core
 
                 if (!group.IsValidIndex(handle))
                 {
-                    _logger?.LogWarning($"NetFieldExports length for group {group.PathName} ({group?.NetFieldExportsLength}) < handle ({handle})");
+                    _logger?.LogWarning("NetFieldExports length for group {pathname} ({length}) < handle ({handle})", group.PathName, group?.NetFieldExportsLength, handle);
                     return false;
                 }
 
@@ -1594,14 +1602,14 @@ namespace Unreal.Core
 
                 if (export is null)
                 {
-                    _logger?.LogWarning($"Couldnt find handle {handle} for group {group.PathName}, numbits is {numBits}");
+                    _logger?.LogWarning("Couldnt find handle {handle} for group {pathname}, numbits is {numBits}", handle, group.PathName, numBits);
                     archive.SkipBits(numBits);
                     continue;
                 }
 
                 if (export.Incompatible)
                 {
-                    _logger?.LogDebug($"Incompatible export {export.Name} for group {group.PathName}, numbits is {numBits}");
+                    _logger?.LogDebug("Incompatible export {name} for group {pathName}, numbits is {numBits}", export.Name, group.PathName, numBits);
                     archive.SkipBits(numBits);
                     // We've already warned that this property doesn't load anymore
                     continue;
@@ -1625,7 +1633,8 @@ namespace Unreal.Core
 
                     if (cmdReader.IsError)
                     {
-                        _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
+                        _logger?.LogWarning("Property {name} (handle: {handle}, path: {pathName}) caused error when reading (bits: {numBits})", export.Name, handle, group.PathName, numBits);
+                        export.Incompatible = true;
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
                         cmdReader.Reset();
@@ -1636,7 +1645,9 @@ namespace Unreal.Core
 
                     if (!cmdReader.AtEnd())
                     {
-                        _logger?.LogWarning($"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
+                        _logger?.LogWarning("Property {name} (handle: {handle}, path: {pathName}) didnt read proper number of bits: {numBitsLeft} out of {numBits}", export.Name, handle, group.PathName, (cmdReader.LastBit - cmdReader.GetBitsLeft()), numBits);
+                        export.Incompatible = true;
+
 #if DEBUG
                         Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(cmdReader.LastBit - cmdReader.GetBitsLeft())} out of {numBits}");
                         cmdReader.Reset();
@@ -1647,7 +1658,7 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError($"NetFieldParser exception. Ex: {ex.Message}");
+                    _logger?.LogError("NetFieldParser exception. Ex: {}", ex.Message);
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}, bits: {numBits}) threw exception {ex.Message}");
 #endif
@@ -1712,7 +1723,7 @@ namespace Unreal.Core
 
             if (archive.IsError)
             {
-                _logger?.LogWarning($"ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}");
+                _logger?.LogWarning("ReadFieldHeaderAndPayload: Error reading payload. Bunch: {bunchIndex}, OutField: {netFieldExportHandle}", bunchIndex, netFieldExportHandle);
                 return false;
             }
 
@@ -1822,12 +1833,12 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, $"failed ReceivedPacket, index: {packetIndex}");
+                    _logger?.LogError(ex, "ReceivedPacket failed, index: {}", packetIndex);
                 }
             }
             else
             {
-                _logger?.LogError("Malformed packet: Received packet with 0's in last byte of packet");
+                _logger?.LogError("Malformed packet: Received packet with 0's in last byte of packet, index: {}", packetIndex);
                 throw new MalformedPacketException("Malformed packet: Received packet with 0's in last byte of packet");
             }
         }
@@ -1842,9 +1853,6 @@ namespace Unreal.Core
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
             // InternalAck always true!
-
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
-            const int OLD_MAX_ACTOR_CHANNELS = 10240;
 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
             InPacketId++;
@@ -2055,13 +2063,13 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, $"failed ReceivedRawBunch, index: {bunchIndex}");
+                    _logger?.LogError(ex, "failed ReceivedRawBunch, index: {}", bunchIndex);
                 }
             }
 
             if (!bitReader.AtEnd())
             {
-                _logger?.LogWarning($"Packet {packetIndex} not fully read...");
+                _logger?.LogWarning("Packet {} not fully read...", packetIndex);
             }
         }
 
@@ -2135,7 +2143,7 @@ namespace Unreal.Core
             var compressedSize = archive.ReadInt32();
             var compressedBuffer = archive.ReadBytes(compressedSize);
 
-            _logger?.LogDebug($"Decompressing archive from {compressedSize} to {decompressedSize}.");
+            _logger?.LogDebug("Decompressing archive from {compressedSize} to {decompressedSize}.", compressedSize, decompressedSize);
             throw new NotImplementedException("Replay is marked as compressed. Make sure to implement this method to decompress the chunks");
         }
     }

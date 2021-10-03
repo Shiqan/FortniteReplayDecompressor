@@ -6,7 +6,7 @@ namespace Unreal.Core
 {
     public class CompiledLinqCache
     {
-        private Dictionary<Type, Func<dynamic>> _compiledBuilders = new Dictionary<Type, Func<dynamic>>();
+        private Dictionary<Type, Func<dynamic>> _compiledBuilders = new();
 
         public object CreateObject(Type type)
         {

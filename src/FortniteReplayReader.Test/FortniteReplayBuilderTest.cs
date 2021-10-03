@@ -476,7 +476,7 @@ namespace FortniteReplayReader.Test
             builder.Build(replay);
 
             Assert.Equal(3, replay.TeamData.Count());
-            Assert.Equal(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds.Count());
+            Assert.Equal(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds.Count);
             Assert.Contains(1, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
             Assert.Contains(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
             Assert.Contains(5, replay.TeamData.First(i => i.TeamIndex == 3).PlayerIds);

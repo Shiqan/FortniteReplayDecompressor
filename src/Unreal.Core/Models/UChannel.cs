@@ -9,7 +9,7 @@ namespace Unreal.Core.Models
     /// </summary>
     public class UChannel
     {
-        private HashSet<string> _ignore = new HashSet<string>();
+        private HashSet<string> _ignore = new();
         public ChannelName ChannelName { get; set; }
         public uint ChannelIndex { get; set; }
         public ChannelType ChannelType { get; set; }

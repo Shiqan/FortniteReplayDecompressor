@@ -14,7 +14,7 @@ namespace BenchmarkReader
 
         public BenchmarkBinaryReader()
         {
-            Random rnd = new Random();
+            Random rnd = new();
             Byte[] b = new Byte[1000];
             rnd.NextBytes(b);
             var ms = new MemoryStream(b);
@@ -38,7 +38,7 @@ namespace BenchmarkReader
         [Benchmark]
         public void BinaryReader()
         {
-            Random rnd = new Random();
+            Random rnd = new();
             Byte[] b = new Byte[1000];
             rnd.NextBytes(b);
             using var ms = new MemoryStream(b);

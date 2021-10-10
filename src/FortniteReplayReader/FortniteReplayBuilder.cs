@@ -134,6 +134,7 @@ namespace FortniteReplayReader
 
             GameData.WinningPlayerIds ??= state.WinningPlayerList?.Select(i => i);
             GameData.WinningTeam ??= state.WinningTeam;
+            GameData.RecorderId ??= state.RecorderPlayerState?.Value;
         }
 
         public void UpdatePrivateName(uint channelIndex, PlayerNameData playerNameData)
@@ -207,6 +208,12 @@ namespace FortniteReplayReader
             if (isNewPlayer)
             {
                 playerData = new PlayerData(state);
+
+                if (_channelToActor.TryGetValue(channelIndex, out var actorId) && actorId == GameData.RecorderId)
+                {
+                    playerData.IsReplayOwner = true;
+                }
+
                 _players[channelIndex] = playerData;
             }
 
@@ -220,16 +227,11 @@ namespace FortniteReplayReader
                 UpdateKillFeed(channelIndex, playerData, state);
             }
 
-            if (state.Ping > 0)
-            {
-                // workaround
-                playerData.IsReplayOwner = true;
-            }
-
             if (state.TeamIndex > 0)
             {
                 playerData.TeamIndex = state.TeamIndex;
             }
+
             playerData.Placement ??= state.Place;
             playerData.TeamKills = state.TeamKillScore ?? playerData.TeamKills;
             playerData.Kills = state.KillScore ?? playerData.Kills;

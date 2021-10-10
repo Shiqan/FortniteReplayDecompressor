@@ -35,7 +35,7 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt)]
         public int? PlayerID { get; set; }
 
-        [NetFieldExport("Ping", RepLayoutCmdType.PropertyByte)]
+        [NetFieldExport("Ping", RepLayoutCmdType.Ignore)]
         public byte? Ping { get; set; }
 
         [NetFieldExport("bIsABot", RepLayoutCmdType.PropertyBool)]

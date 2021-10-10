@@ -4,11 +4,11 @@ namespace FortniteReplayReader.Models.Events
 {
     public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     {
-        public PlayerEliminationInfo EliminatedInfo { get; internal set; }
-        public PlayerEliminationInfo EliminatorInfo { get; internal set; }
+        public PlayerEliminationInfo EliminatedInfo { get; internal set; } = new PlayerEliminationInfo();
+        public PlayerEliminationInfo EliminatorInfo { get; internal set; } = new PlayerEliminationInfo();
 
-        public string Eliminated => EliminatedInfo?.Id;
-        public string Eliminator => EliminatedInfo?.Id;
+        public string? Eliminated => EliminatedInfo?.Id;
+        public string? Eliminator => EliminatedInfo?.Id;
         public byte GunType { get; internal set; }
         public string Time { get; internal set; }
         public bool Knocked { get; internal set; }

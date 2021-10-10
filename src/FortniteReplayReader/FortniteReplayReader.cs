@@ -143,6 +143,15 @@ namespace FortniteReplayReader
             }
         }
 
+        protected override void OnExternalDataRead(uint channelIndex, IExternalData? externalData)
+        {
+            // TODO: at the very least, only use PlayerNameData when handle and netfieldgroup match...
+            if (externalData != null)
+            {
+                Builder.UpdatePrivateName(channelIndex, new PlayerNameData(externalData.Archive));
+            }
+        }
+
         public override void ReadReplayHeader(FArchive archive)
         {
             base.ReadReplayHeader(archive);
@@ -252,54 +261,39 @@ namespace FortniteReplayReader
                     Info = info,
                 };
 
-                if (archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT && Major >= 9)
+                var version = archive.ReadInt32();
+
+                if (version >= 3)
                 {
-                    archive.SkipBytes(9);
+                    // unknown
+                    archive.SkipBytes(1);
 
-                    elim.EliminatedInfo = new PlayerEliminationInfo
+                    if (version >= 6)
                     {
-                        Unknown1 = archive.ReadFVector(),
-                        Location = archive.ReadFVector(),
-                        Unknown2 = archive.ReadFVector(),
-                    };
+                        elim.EliminatedInfo.Rotation = archive.ReadFQuat();
+                        elim.EliminatedInfo.Location = archive.ReadFVector();
+                        elim.EliminatedInfo.Scale = archive.ReadFVector();
+                    }
 
-                    archive.ReadSingle();
-
-                    elim.EliminatorInfo = new PlayerEliminationInfo
-                    {
-                        Unknown1 = archive.ReadFVector(),
-                        Location = archive.ReadFVector(),
-                        Unknown2 = archive.ReadFVector(),
-                    };
-
-                    ParsePlayer(archive, elim.EliminatedInfo);
-                    ParsePlayer(archive, elim.EliminatorInfo);
+                    elim.EliminatorInfo.Rotation = archive.ReadFQuat();
+                    elim.EliminatorInfo.Location = archive.ReadFVector();
+                    elim.EliminatorInfo.Scale = archive.ReadFVector();
                 }
                 else
                 {
                     if (Major <= 4 && Minor < 2)
                     {
-                        archive.SkipBytes(12);
+                        //12 bytes including version int. Always all 0s
+                        archive.SkipBytes(8);
                     }
                     else if (Major == 4 && Minor <= 2)
                     {
-                        archive.SkipBytes(40);
+                        //Likely transform data with version being part of it, but don't have a replay to verify
+                        archive.SkipBytes(36);
                     }
-                    else
-                    {
-                        archive.SkipBytes(45);
-                    }
-
-                    elim.EliminatedInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
-
-                    elim.EliminatorInfo = new PlayerEliminationInfo
-                    {
-                        Id = archive.ReadFString()
-                    };
                 }
+                ParsePlayer(archive, elim.EliminatedInfo, version);
+                ParsePlayer(archive, elim.EliminatorInfo, version);
 
                 elim.GunType = archive.ReadByte();
                 elim.Knocked = archive.ReadUInt32AsBoolean();
@@ -313,14 +307,21 @@ namespace FortniteReplayReader
             }
         }
 
-        public virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info)
+        public virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info, int version)
         {
+            if (version < 6)
+            {
+                info.Id = archive.ReadFString();
+                return;
+            }
+
             info.PlayerType = archive.ReadByteAsEnum<PlayerTypes>();
             info.Id = info.PlayerType switch
             {
                 PlayerTypes.BOT => "Bot",
                 PlayerTypes.NAMED_BOT => archive.ReadFString(),
-                _ => archive.ReadGUID(archive.ReadByte())
+                PlayerTypes.PLAYER => archive.ReadGUID(archive.ReadByte()),
+                _ => ""
             };
         }
 
@@ -328,7 +329,7 @@ namespace FortniteReplayReader
         {
             if (!Replay.Info.IsEncrypted)
             {
-                return new Unreal.Core.BinaryReader(archive.ReadBytes(size).ToArray())
+                return new Unreal.Core.BinaryReader(archive.ReadBytes(size))
                 {
                     EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                     NetworkVersion = Replay.Header.NetworkVersion,
@@ -340,26 +341,24 @@ namespace FortniteReplayReader
             var key = Replay.Info.EncryptionKey;
             var encryptedBytes = archive.ReadBytes(size);
 
-            using var rDel = new RijndaelManaged
+            using var aesCryptoServiceProvider = new AesCryptoServiceProvider
             {
-                KeySize = (key.Length * 8),
+                KeySize = key.Length * 8,
                 Key = key.ToArray(),
                 Mode = CipherMode.ECB,
                 Padding = PaddingMode.PKCS7
             };
 
-            using var cryptoTransform = rDel.CreateDecryptor();
+            using var cryptoTransform = aesCryptoServiceProvider.CreateDecryptor();
             var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes.ToArray(), 0, encryptedBytes.Length);
-            
-            var decrypted = new Unreal.Core.BinaryReader(decryptedArray.AsMemory())
+
+            return new Unreal.Core.BinaryReader(decryptedArray.AsMemory())
             {
                 EngineNetworkVersion = archive.EngineNetworkVersion,
                 NetworkVersion = archive.NetworkVersion,
                 ReplayHeaderFlags = archive.ReplayHeaderFlags,
                 ReplayVersion = archive.ReplayVersion
             };
-
-            return decrypted;
         }
 
         protected override FArchive Decompress(FArchive archive)
@@ -376,12 +375,12 @@ namespace FortniteReplayReader
             _logger?.LogDebug("Decompressed archive from {compressedSize} to {decompressedSize}.", compressedSize, decompressedSize);
             var output = Oodle.DecompressReplayData(compressedBuffer, decompressedSize);
 
-            return new Unreal.Core.BinaryReader(output.AsMemory())
+            return new Unreal.Core.BinaryReader(output)
             {
-                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                NetworkVersion = Replay.Header.NetworkVersion,
-                ReplayHeaderFlags = Replay.Header.Flags,
-                ReplayVersion = Replay.Info.FileVersion
+                EngineNetworkVersion = archive.EngineNetworkVersion,
+                NetworkVersion = archive.NetworkVersion,
+                ReplayHeaderFlags = archive.ReplayHeaderFlags,
+                ReplayVersion = archive.ReplayVersion
             };
         }
     }

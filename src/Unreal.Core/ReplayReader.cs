@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Unreal.Core.Contracts;
@@ -11,6 +10,10 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
+    /// <summary>
+    /// Abstract base class implementation of default UE replays.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public abstract class ReplayReader<T> where T : Replay, new()
     {
         /// <summary>
@@ -80,8 +83,6 @@ namespace Unreal.Core
         /// </summary>
         private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-        private readonly List<string> PathNameTable = new();
-
         public ReplayReader(ILogger logger, ParseMode mode)
         {
             _logger = logger;
@@ -95,8 +96,6 @@ namespace Unreal.Core
         /// Parses the entire replay. 
         /// It first parses the info section, and then all chunks.
         /// </summary>
-        /// <param name="archive"></param>
-        /// <returns><typeparamref name="T"/></returns>
         public virtual T ReadReplay(FArchive archive)
         {
             Replay = new T();
@@ -153,8 +152,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
         /// </summary>
-        /// <param name="archive"></param>
-        /// <returns></returns>
         public virtual void ReadCheckpoint(FArchive archive)
         {
             // TODO add support for bDeltaCheckpoint ??
@@ -169,8 +166,8 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using var decrypted = DecryptBuffer(archive, (int)info.SizeInBytes);
-            using var binaryArchive = Decompress(decrypted);
+            using FArchive? decrypted = DecryptBuffer(archive, info.SizeInBytes);
+            using FArchive? binaryArchive = Decompress(decrypted);
 
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
@@ -226,21 +223,10 @@ namespace Unreal.Core
                     if (isExported)
                     {
                         cacheObject.PathName = binaryArchive.ReadFString();
-
-                        //PathNameTable.Add(cacheObject.PathName);
                     }
                     else
                     {
                         var pathNameIndex = binaryArchive.ReadIntPacked();
-
-                        //if (pathNameIndex < PathNameTable.Count)
-                        //{
-                        //    cacheObject.PathName = PathNameTable[(int) pathNameIndex];
-                        //}
-                        //else
-                        //{
-                        //    _logger?.LogError("Invalid guid path table index while deserializing checkpoint.");
-                        //}
                     }
                 }
 
@@ -251,7 +237,7 @@ namespace Unreal.Core
 
                 cacheObject.Flags = binaryArchive.ReadByte();
 
-                // TODO DemoNetDriver 5319
+                // DemoNetDriver 5319
                 // GuidCache->ObjectLookup.Add(Guid, CacheObject);
             }
 
@@ -270,7 +256,7 @@ namespace Unreal.Core
                 var numNetFieldExportGroups = binaryArchive.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
                 {
-                    var group = ReadNetFieldExportGroupMap(binaryArchive);
+                    NetFieldExportGroup? group = ReadNetFieldExportGroupMap(binaryArchive);
 
                     // Add the export group to the map
                     _netGuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group.PathName;
@@ -279,7 +265,7 @@ namespace Unreal.Core
             }
 
             //Remove all actors
-            foreach (var channel in Channels)
+            foreach (UChannel? channel in Channels)
             {
                 if (channel == null)
                 {
@@ -298,7 +284,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363
         /// </summary>
-        /// <param name="archive"></param>
         public virtual void ReadEvent(FArchive archive)
         {
             var info = new EventInfo
@@ -317,18 +302,17 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
         /// </summary>
-        /// <param name="archive"></param>
         public virtual void ReadReplayChunks(FArchive archive)
         {
             while (!archive.AtEnd())
             {
-                var chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
+                ReplayChunkType chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
                 var chunkSize = archive.ReadInt32();
                 var offset = archive.Position;
 
                 if (chunkType == ReplayChunkType.ReplayData && _parseMode.HasFlag(ParseMode.Minimal))
                 {
-                    ReadReplayData(archive);
+                    ReadReplayData(archive, chunkSize);
                 }
 
                 else if (chunkType == ReplayChunkType.Checkpoint)
@@ -360,19 +344,18 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318
         /// </summary> 
-        /// <param name="archive"></param>
-        public virtual void ReadReplayData(FArchive archive)
+        public virtual void ReadReplayData(FArchive archive, int fallbackChunkSize)
         {
             var info = new ReplayDataInfo();
             if (archive.ReplayVersion.HasFlag(ReplayVersionHistory.HISTORY_STREAM_CHUNK_TIMES))
             {
                 info.Start = archive.ReadUInt32();
                 info.End = archive.ReadUInt32();
-                info.Length = archive.ReadUInt32();
+                info.Length = (int)archive.ReadUInt32();
             }
             else
             {
-                info.Length = archive.ReadUInt32();
+                info.Length = fallbackChunkSize;
             }
 
             if (archive.ReplayVersion.HasFlag(ReplayVersionHistory.HISTORY_ENCRYPTION))
@@ -381,8 +364,8 @@ namespace Unreal.Core
                 archive.ReadInt32();
             }
 
-            using var decrypted = DecryptBuffer(archive, (int)info.Length);
-            using var binaryArchive = Decompress(decrypted);
+            using FArchive? decrypted = DecryptBuffer(archive, info.Length);
+            using FArchive? binaryArchive = Decompress(decrypted);
             while (!binaryArchive.AtEnd())
             {
                 ReadDemoFrameIntoPlaybackPackets(binaryArchive);
@@ -394,7 +377,6 @@ namespace Unreal.Core
         /// Parse the replay header and set it to the <see cref="Replay"/>.
         /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L191
         /// </summary>
-        /// <param name="archive"></param>
         public virtual void ReadReplayHeader(FArchive archive)
         {
             var magic = archive.ReadUInt32();
@@ -486,7 +468,6 @@ namespace Unreal.Core
         /// Parse the replay info and set it on the <see cref="Replay"/>.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183
         /// </summary>
-        /// <param name="archive"></param>
         public virtual void ReadReplayInfo(FArchive archive)
         {
             var magicNumber = archive.ReadUInt32();
@@ -497,7 +478,7 @@ namespace Unreal.Core
                 throw new InvalidReplayException("Invalid replay file");
             }
 
-            var fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
+            ReplayVersionHistory fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
             archive.ReplayVersion = fileVersion;
 
             if (fileVersion > ReplayVersionHistory.LATEST)
@@ -589,8 +570,20 @@ namespace Unreal.Core
                 // Read net guid this payload belongs to
                 var netGuid = archive.ReadIntPacked();
 
-                archive.SkipBytes((int)(externalDataNumBits + 7) >> 3);
                 _logger?.LogDebug("External data found for netguid {}, bits: {}", netGuid, externalDataNumBits);
+
+                _netGuidCache.ExternalData[netGuid] = new ExternalData()
+                {
+                    Archive = new BinaryReader(archive.ReadBytes((externalDataNumBits + 7) >> 3))
+                    {
+                        NetworkReplayVersion = archive.NetworkReplayVersion,
+                        EngineNetworkVersion = archive.EngineNetworkVersion,
+                        ReplayHeaderFlags = archive.ReplayHeaderFlags,
+                        ReplayVersion = archive.ReplayVersion,
+                        NetworkVersion = archive.NetworkVersion
+                    },
+                    NetGUID = netGuid
+                };
             }
         }
 
@@ -642,7 +635,7 @@ namespace Unreal.Core
 
             for (var i = 0; i < group.NetFieldExportsLength; i++)
             {
-                var netFieldExport = ReadNetFieldExport(archive);
+                NetFieldExport? netFieldExport = ReadNetFieldExport(archive);
                 if (netFieldExport != null)
                 {
                     group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
@@ -713,7 +706,7 @@ namespace Unreal.Core
                     group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
-                var netField = ReadNetFieldExport(archive);
+                NetFieldExport? netField = ReadNetFieldExport(archive);
                 if (group != null && netField != null)
                 {
                     group.NetFieldExports[netField.Handle] = netField;
@@ -728,7 +721,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
         /// </summary>
-        /// <returns></returns>
         public virtual void ReadDemoFrameIntoPlaybackPackets(FArchive archive)
         {
             if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
@@ -843,7 +835,7 @@ namespace Unreal.Core
                     group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
                 }
 
-                var netField = ReadNetFieldExport(bitArchive);
+                NetFieldExport? netField = ReadNetFieldExport(bitArchive);
                 if (group != null && netField is not null && group.IsValidIndex(netField.Handle))
                 {
                     //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
@@ -878,7 +870,7 @@ namespace Unreal.Core
 
             if (netGuid.IsDefault() || isExportingNetGUIDBunch)
             {
-                var flags = archive.ReadByteAsEnum<ExportFlags>();
+                ExportFlags flags = archive.ReadByteAsEnum<ExportFlags>();
 
                 if (flags.HasFlag(ExportFlags.bHasPath))
                 {
@@ -937,7 +929,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
         /// </summary>
-        /// <param name="bunch"></param>
         public virtual void ReceivedRawBunch(DataBunch bunch)
         {
             // bDeleted =
@@ -950,7 +941,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L517
         /// </summary>
-        /// <param name="bunch"></param>
         public virtual void ReceivedNextBunch(DataBunch bunch)
         {
             // We received the next bunch. Basically at this point:
@@ -1090,7 +1080,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L348
         /// </summary>
-        /// <param name="bunch"></param>
         public virtual bool ReceivedSequencedBunch(DataBunch bunch)
         {
             ReceivedActorBunch(bunch);
@@ -1111,7 +1100,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298
         /// </summary>
-        /// <param name="bunch"></param>
         public virtual void ReceivedActorBunch(DataBunch bunch)
         {
             if (bunch.bHasMustBeMappedGUIDs)
@@ -1130,9 +1118,6 @@ namespace Unreal.Core
         /// <summary>
         /// https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L490
         /// </summary>
-        /// <param name="archive"></param>
-        /// <param name="defaultVector"></param>
-        /// <returns><see cref="FVector"/></returns>
         public virtual FVector ConditionallySerializeQuantizedVector(FBitArchive archive, FVector defaultVector)
         {
             var bWasSerialized = archive.ReadBit();
@@ -1148,11 +1133,9 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2411
         /// </summary>
-        /// <param name="bitReader"></param>
-        /// <param name="bunch"></param>
         public virtual void ProcessBunch(DataBunch bunch)
         {
-            var channel = Channels[bunch.ChIndex];
+            UChannel? channel = Channels[bunch.ChIndex];
 
             if (channel != null && channel.Actor is null)
             {
@@ -1218,7 +1201,7 @@ namespace Unreal.Core
             //  Read chunks of actor content
             while (!bunch.Archive.AtEnd())
             {
-                var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var reader);
+                var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out FBitArchive? reader);
 
                 if (bObjectDeleted)
                 {
@@ -1248,12 +1231,10 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
         /// </summary>
-        /// <param name="archive"></param>
         public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint? repObject, bool bHasRepLayout)
         {
-            var netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
+            NetFieldExportGroup? netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
 
-            //Mainly props. If needed, add them in
             if (netFieldExportGroup is null)
             {
                 //_logger?.LogWarning($"Failed group. {bunch.ChIndex}");
@@ -1267,6 +1248,8 @@ namespace Unreal.Core
                 {
                     return false;
                 }
+
+                ReceiveExternalData(netFieldExportGroup, bunch.ChIndex);
             }
 
             // moved from ReadFieldHeaderAndPayload to here to save a search for ClassNetCache if not needed
@@ -1275,14 +1258,14 @@ namespace Unreal.Core
                 return true;
             }
 
-            if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup.PathName, out var classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
+            if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup.PathName, out NetFieldExportGroup? classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
             {
                 _logger?.LogDebug("Couldnt find ClassNetCache for {}", netFieldExportGroup.PathName);
                 return false;
             }
 
             // Read fields from stream
-            while (ReadFieldHeaderAndPayload(archive, classNetCache, out var fieldCache, out var reader))
+            while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport? fieldCache, out FBitArchive? reader))
             {
                 if (fieldCache == null)
                 {
@@ -1308,12 +1291,12 @@ namespace Unreal.Core
                     continue;
                 }
 
-                if (_netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var classNetProperty))
+                if (_netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out NetFieldParser.ClassNetCachePropertyInfo? classNetProperty))
                 {
                     if (classNetProperty.IsFunction)
                     {
                         // Handle function call
-                        var functionGroup = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                        NetFieldExportGroup? functionGroup = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
                         if (!ReceivedRPC(reader, functionGroup, bunch.ChIndex))
                         {
                             return false;
@@ -1332,7 +1315,7 @@ namespace Unreal.Core
                         }
                         else
                         {
-                            var group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                            NetFieldExportGroup? group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
                             if (group is null || !_netFieldParser.WillReadType(group.PathName))
                             {
                                 continue;
@@ -1357,11 +1340,36 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// If there is any <see cref="ExternalData"> for this group and netguid, read it and pass it back.
+        /// There is no info in UE on how to handle external data.
+        /// </summary>
+        public virtual bool ReceiveExternalData(NetFieldExportGroup group, uint channelIndex)
+        {
+            if (Channels[channelIndex] is null)
+            {
+                _logger?.LogError("No channel found for {}", channelIndex);
+                return false;
+            }
+
+            if (Channels[channelIndex]!.IsIgnoringGroup(group.PathName))
+            {
+                _logger?.LogInformation("Ignoring channel for type {}", group.PathName);
+                return false;
+            }
+
+            _logger?.LogDebug("ReceiveExternalData: group {}", group.PathName);
+            if (_netGuidCache.TryGetExternalData(Channels[channelIndex]?.Actor?.ActorNetGUID?.Value, out IExternalData? externalData))
+            {
+                OnExternalDataRead(channelIndex, externalData);
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158
         /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup? netFieldExportGroup, uint channelIndex)
         {
             if (netFieldExportGroup is null)
@@ -1391,13 +1399,9 @@ namespace Unreal.Core
         /// We didnt really know how certain properties were parsed, so we mark those with <see cref="NetFieldParser.ClassNetCachePropertyInfo.IsCustomStruct"/>
         /// and we deserialize and/or resolve them 'manually' here.
         /// </summary>
-        /// <param name="reader"></param>
-        /// <param name="fieldCache"></param>
-        /// <param name="channelIndex"></param>
-        /// <returns></returns>
         public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldParser.ClassNetCachePropertyInfo fieldCache, uint channelIndex)
         {
-            var export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
+            IProperty? export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
             if (export != null)
             {
                 var numBits = reader.GetBitsLeft();
@@ -1430,8 +1434,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3744
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
         {
             if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
@@ -1457,8 +1459,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L895
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public virtual FFastArraySerializerHeader NetDeltaSerializeHeader(FBitArchive reader)
         {
             return new FFastArraySerializerHeader()
@@ -1473,15 +1473,13 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1064
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
             // DeltaSerializeFastArrayProperty
 
             // Read header
-            var header = NetDeltaSerializeHeader(reader);
+            FFastArraySerializerHeader? header = NetDeltaSerializeHeader(reader);
 
             if (reader.IsError)
             {
@@ -1508,7 +1506,7 @@ namespace Unreal.Core
                 var elementIndex = reader.ReadInt32();
 
                 // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
-                ReceiveProperties(reader, group, channelIndex, out var export, !enablePropertyChecksum, netDeltaUpdate: true);
+                ReceiveProperties(reader, group, channelIndex, out INetFieldExportGroup? export, !enablePropertyChecksum, netDeltaUpdate: true);
 
                 OnNetDeltaRead(channelIndex, new NetDeltaUpdate
                 {
@@ -1525,7 +1523,6 @@ namespace Unreal.Core
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2971
         ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
         /// </summary>
-        /// <param name="archive"></param>
         public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, [NotNullWhen(returnValue: true)] out INetFieldExportGroup? exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
         {
             exportGroup = default;
@@ -1549,9 +1546,13 @@ namespace Unreal.Core
 
 #if DEBUG
                 Debug("not-reading-groups", group.PathName);
-                foreach (var field in group.NetFieldExports)
+                foreach (NetFieldExport? field in group.NetFieldExports)
                 {
-                    if (field == null) continue;
+                    if (field == null)
+                    {
+                        continue;
+                    }
+
                     Debug("not-reading-groups", $"\t\t{field.Name}");
                 }
 #endif
@@ -1594,7 +1595,7 @@ namespace Unreal.Core
                     return false;
                 }
 
-                var export = group.NetFieldExports[handle];
+                NetFieldExport? export = group.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
 
                 if (numBits == 0)
@@ -1678,8 +1679,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
         /// </summary>
-        /// <param name="archive"></param>
-        /// <returns></returns>
         public virtual bool ReadFieldHeaderAndPayload(FBitArchive archive, [NotNull] NetFieldExportGroup group, out NetFieldExport? outField, out FBitArchive? reader)
         {
             if (archive.AtEnd())
@@ -1773,7 +1772,7 @@ namespace Unreal.Core
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
-            var netGuid = InternalLoadObject(bunch.Archive, false);
+            NetworkGUID? netGuid = InternalLoadObject(bunch.Archive, false);
 
             var bStablyNamed = bunch.Archive.ReadBit();
             if (bStablyNamed)
@@ -1783,7 +1782,7 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
-            var classNetGUID = InternalLoadObject(bunch.Archive, false);
+            NetworkGUID? classNetGUID = InternalLoadObject(bunch.Archive, false);
 
             if (!classNetGUID.IsValid())
             {
@@ -1807,7 +1806,6 @@ namespace Unreal.Core
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
         /// </summary>
-        /// <param name="packet"></param>
         public virtual void ReceivedRawPacket(ReadOnlySpan<byte> packet)
         {
             var lastByte = packet[^1];
@@ -1849,8 +1847,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3352
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525
         /// </summary>
-        /// <param name="bitReader"><see cref="Core.BitReader"/></param>
-        /// <param name="packet"><see cref="PlaybackPacket"/></param>
         public virtual void ReceivedPacket(FBitArchive bitReader)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
@@ -1924,8 +1920,8 @@ namespace Unreal.Core
                 bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
                 bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
-                var chType = ChannelType.None;
-                var chName = ChannelName.None;
+                ChannelType chType = ChannelType.None;
+                ChannelName chName = ChannelName.None;
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
@@ -2076,25 +2072,24 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Receive the netfield group after receiving properties.
+        /// Receive an <see cref="INetFieldExportGroup"/> after receiving properties.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="exportGroup"></param>
         protected abstract void OnExportRead(uint channelIndex, INetFieldExportGroup? exportGroup);
+
+        /// <summary>
+        /// Receive an <see cref="IExternalData"/> group.
+        /// </summary>
+        protected abstract void OnExternalDataRead(uint channelIndex, IExternalData? exportGroup);
 
 
         /// <summary>
-        /// Notifies when a new actor channel is created.
+        /// Receive a <see cref="NetDeltaUpdate"/>.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="update"></param>
         protected abstract void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update);
 
         /// <summary>
         /// Notifies when a new actor channel is created.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="actor"></param>
         protected virtual void OnChannelOpened(uint channelIndex, NetworkGUID? actor)
         {
 
@@ -2103,8 +2098,6 @@ namespace Unreal.Core
         /// <summary>
         /// Notifies when a channel is closed.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="actor"></param>
         protected virtual void OnChannelClosed(uint channelIndex, NetworkGUID? actor)
         {
 
@@ -2114,9 +2107,6 @@ namespace Unreal.Core
         /// Chunks can be encrypted with the <see cref="ReplayInfo.EncryptionKey"/>. If the replay is encrypted this method needs to be implemented.
         /// see https://github.com/EpicGames/UnrealEngine/blob/12dbd9877379223a839e59ceb92131a7e400aae5/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L475
         /// </summary>
-        /// <param name="archive"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
         protected virtual FArchive DecryptBuffer(FArchive archive, int size)
         {
             if (!Replay.Info.IsEncrypted)
@@ -2132,8 +2122,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
         /// </summary>
-        /// <param name="archive"></param>
-        /// <returns></returns>
         protected virtual FArchive Decompress(FArchive archive)
         {
             if (!Replay.Info.IsCompressed)
@@ -2143,7 +2131,7 @@ namespace Unreal.Core
 
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
-            var compressedBuffer = archive.ReadBytes(compressedSize);
+            ReadOnlySpan<byte> compressedBuffer = archive.ReadBytes(compressedSize);
 
             _logger?.LogDebug("Decompressing archive from {compressedSize} to {decompressedSize}.", compressedSize, decompressedSize);
             throw new NotImplementedException("Replay is marked as compressed. Make sure to implement this method to decompress the chunks");

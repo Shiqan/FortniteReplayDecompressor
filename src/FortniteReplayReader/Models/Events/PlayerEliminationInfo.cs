@@ -7,9 +7,9 @@ namespace FortniteReplayReader.Models.Events
     {
         public string Id { get; internal set; }
         public PlayerTypes PlayerType { get; internal set; }
-        public FVector Unknown1 { get; internal set; }
-        public FVector Unknown2 { get; internal set; }
+        public FQuat Rotation { get; internal set; }
         public FVector Location { get; internal set; }
+        public FVector Scale { get; internal set; }
         public bool IsBot => PlayerType == PlayerTypes.BOT || PlayerType == PlayerTypes.NAMED_BOT;
     }
 }

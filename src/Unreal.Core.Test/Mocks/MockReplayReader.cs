@@ -28,6 +28,11 @@ namespace Unreal.Core.Test.Mocks
             // pass
         }
 
+        protected override void OnExternalDataRead(uint channelIndex, IExternalData update)
+        {
+            // pass
+        }        
+        
         protected override void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update)
         {
             // pass

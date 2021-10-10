@@ -589,8 +589,20 @@ namespace Unreal.Core
                 // Read net guid this payload belongs to
                 var netGuid = archive.ReadIntPacked();
 
-                archive.SkipBytes((int)(externalDataNumBits + 7) >> 3);
                 _logger?.LogDebug("External data found for netguid {}, bits: {}", netGuid, externalDataNumBits);
+
+                _netGuidCache.ExternalData[netGuid] = new ExternalData()
+                {
+                    Archive = new BinaryReader(archive.ReadBytes((externalDataNumBits + 7) >> 3))
+                    {
+                        NetworkReplayVersion = archive.NetworkReplayVersion,
+                        EngineNetworkVersion = archive.EngineNetworkVersion,
+                        ReplayHeaderFlags = archive.ReplayHeaderFlags,
+                        ReplayVersion = archive.ReplayVersion,
+                        NetworkVersion = archive.NetworkVersion
+                    },
+                    NetGUID = netGuid
+                };
             }
         }
 
@@ -1252,8 +1264,7 @@ namespace Unreal.Core
         public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint? repObject, bool bHasRepLayout)
         {
             var netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
-
-            //Mainly props. If needed, add them in
+            
             if (netFieldExportGroup is null)
             {
                 //_logger?.LogWarning($"Failed group. {bunch.ChIndex}");
@@ -1267,6 +1278,8 @@ namespace Unreal.Core
                 {
                     return false;
                 }
+
+                ReceiveExternalData(netFieldExportGroup, bunch.ChIndex);
             }
 
             // moved from ReadFieldHeaderAndPayload to here to save a search for ClassNetCache if not needed
@@ -1357,11 +1370,36 @@ namespace Unreal.Core
         }
 
         /// <summary>
+        /// If there is any <see cref="ExternalData"> for this group and netguid, read it and pass it back.
+        /// There is no info in UE on how to handle external data.
+        /// </summary>
+        public virtual bool ReceiveExternalData(NetFieldExportGroup group, uint channelIndex)
+        {
+            if (Channels[channelIndex] is null)
+            {
+                _logger?.LogError("No channel found for {}", channelIndex);
+                return false;
+            }
+
+            if (Channels[channelIndex]!.IsIgnoringGroup(group.PathName))
+            {
+                _logger?.LogInformation("Ignoring channel for type {}", group.PathName);
+                return false;
+            }
+
+            _logger?.LogDebug("ReceiveExternalData: group {}", group.PathName);
+            if (_netGuidCache.TryGetExternalData(Channels[channelIndex]?.Actor?.ActorNetGUID?.Value, out var externalData))
+            {
+                OnExternalDataRead(channelIndex, externalData);
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158
         /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801
         /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup? netFieldExportGroup, uint channelIndex)
         {
             if (netFieldExportGroup is null)
@@ -2076,25 +2114,24 @@ namespace Unreal.Core
         }
 
         /// <summary>
-        /// Receive the netfield group after receiving properties.
+        /// Receive an <see cref="INetFieldExportGroup"/> after receiving properties.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="exportGroup"></param>
         protected abstract void OnExportRead(uint channelIndex, INetFieldExportGroup? exportGroup);
+
+        /// <summary>
+        /// Receive an <see cref="IExternalData"/> group.
+        /// </summary>
+        protected abstract void OnExternalDataRead(uint channelIndex, IExternalData? exportGroup);
 
 
         /// <summary>
-        /// Notifies when a new actor channel is created.
+        /// Receive a <see cref="NetDeltaUpdate"/>.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="update"></param>
         protected abstract void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update);
 
         /// <summary>
         /// Notifies when a new actor channel is created.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="actor"></param>
         protected virtual void OnChannelOpened(uint channelIndex, NetworkGUID? actor)
         {
 
@@ -2103,8 +2140,6 @@ namespace Unreal.Core
         /// <summary>
         /// Notifies when a channel is closed.
         /// </summary>
-        /// <param name="channelIndex"></param>
-        /// <param name="actor"></param>
         protected virtual void OnChannelClosed(uint channelIndex, NetworkGUID? actor)
         {
 
@@ -2114,9 +2149,6 @@ namespace Unreal.Core
         /// Chunks can be encrypted with the <see cref="ReplayInfo.EncryptionKey"/>. If the replay is encrypted this method needs to be implemented.
         /// see https://github.com/EpicGames/UnrealEngine/blob/12dbd9877379223a839e59ceb92131a7e400aae5/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L475
         /// </summary>
-        /// <param name="archive"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
         protected virtual FArchive DecryptBuffer(FArchive archive, int size)
         {
             if (!Replay.Info.IsEncrypted)
@@ -2132,8 +2164,6 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
         /// </summary>
-        /// <param name="archive"></param>
-        /// <returns></returns>
         protected virtual FArchive Decompress(FArchive archive)
         {
             if (!Replay.Info.IsCompressed)

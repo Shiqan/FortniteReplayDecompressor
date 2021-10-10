@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Unreal.Core.Contracts;
 using Unreal.Core.Extensions;
 
 namespace Unreal.Core.Models
@@ -13,7 +14,7 @@ namespace Unreal.Core.Models
         //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
         /// <summary>
-        /// Maps net field export group name to the respective FNetFieldExportGroup
+        /// Maps net field export group name to the respective NetFieldExportGroup
         /// </summary>
         public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
 
@@ -49,6 +50,11 @@ namespace Unreal.Core.Models
                 return _networkGameplayTagNodeIndex;
             }
         }
+
+        /// <summary>
+        /// Maps a netguid to received <see cref="IExternalData"/>.
+        /// </summary>
+        public Dictionary<uint, IExternalData> ExternalData { get; private set; } = new();
 
         private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new();
         private Dictionary<uint, string> _cleanedPaths = new();
@@ -200,7 +206,7 @@ namespace Unreal.Core.Models
         /// <param name="netguid"></param>
         /// <param name="pathName"></param>
         /// <returns>true if netguid was resolved, false otherwise</returns>
-        public bool TryGetPathName(uint netguid, out string pathName)
+        public bool TryGetPathName(uint netguid, [NotNullWhen(returnValue: true)] out string pathName)
         {
             return NetGuidToPathName.TryGetValue(netguid, out pathName);
         }
@@ -211,7 +217,7 @@ namespace Unreal.Core.Models
         /// <param name="tagIndex"></param>
         /// <param name="tagName"></param>
         /// <returns>true if tag was resolved, false otherwise</returns>
-        public bool TryGetTagName(uint tagIndex, out string tagName)
+        public bool TryGetTagName(uint tagIndex, [NotNullWhen(returnValue: true)] out string tagName)
         {
             tagName = "";
             if (NetworkGameplayTagNodeIndex != null && NetworkGameplayTagNodeIndex.IsValidIndex(tagIndex))
@@ -226,6 +232,23 @@ namespace Unreal.Core.Models
         }
 
         /// <summary>
+        /// Tries to resolve the netguid using the <see cref="NetGuidToPathName"/>
+        /// </summary>
+        /// <param name="netguid"></param>
+        /// <param name="pathName"></param>
+        /// <returns>true if netguid was resolved, false otherwise</returns>
+        public bool TryGetExternalData(uint? netguid, [NotNullWhen(returnValue: true)] out IExternalData? externalData)
+        {
+            externalData = null;
+            if (netguid != null && ExternalData.ContainsKey(netguid.Value))
+            {
+                return ExternalData.Remove(netguid.Value, out externalData);
+            }
+            return false;
+        }
+
+
+        /// <summary>
         /// Empty the NetGuidCache
         /// </summary>
         public void Cleanup()
@@ -235,8 +258,8 @@ namespace Unreal.Core.Models
             NetGuidToPathName.Clear();
             //ObjectLookup.Clear();
             NetFieldExportGroupMapPathFixed.Clear();
+            ExternalData.Clear();
             _networkGameplayTagNodeIndex = null;
-
             _archTypeToExportGroup.Clear();
             _cleanedPaths.Clear();
             _cleanedClassNetCache.Clear();

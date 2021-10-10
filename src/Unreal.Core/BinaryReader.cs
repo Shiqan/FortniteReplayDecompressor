@@ -36,6 +36,13 @@ namespace Unreal.Core
             _length = Bytes.Length;
             _position = 0;
         }
+        
+        public BinaryReader(ReadOnlySpan<byte> input)
+        {
+            Bytes = input.ToArray();
+            _length = Bytes.Length;
+            _position = 0;
+        }
 
         public override bool AtEnd()
         {

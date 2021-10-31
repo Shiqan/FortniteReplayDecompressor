@@ -10,6 +10,13 @@
         public uint NetFieldExportsLength { get; set; }
         public NetFieldExport?[] NetFieldExports { get; set; }
 
+        /// <summary>
+        /// Index of the group for the corresponding type in NetFieldParser
+        /// -1 if index is unknown.
+        /// -2 if index is not found.
+        /// </summary>
+        internal int GroupId { get; set; } = -1;
+
         public bool IsValidIndex(uint handle)
         {
             return handle >= 0 && handle < NetFieldExportsLength;

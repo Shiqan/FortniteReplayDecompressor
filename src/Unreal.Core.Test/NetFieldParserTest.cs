@@ -16,7 +16,10 @@ namespace Unreal.Core.Test
         public ItemDefinition ItemDefinitionField { get; set; }
 
         [NetFieldExport("VectorField", RepLayoutCmdType.PropertyVector)]
-        public FVector VectorField { get; set; }
+        public FVector VectorField { get; set; }        
+        
+        [NetFieldExport("ArrayField", RepLayoutCmdType.DynamicArray)]
+        public ItemDefinition[] ArrayField { get; set; }
     }
 
     [NetFieldExportGroup("group2", minimalParseMode: ParseMode.Full)]
@@ -242,6 +245,44 @@ namespace Unreal.Core.Test
             Assert.True(reader.AtEnd());
             Assert.False(reader.IsError);
             Assert.Equal(-3864, ((NetFieldGroup1)data).VectorField.Z);
+        }
+
+
+        [Fact]
+        public void ReadArrayFieldTest()
+        {
+            var reader = new NetBitReader(new byte[] { 
+                0x0C, 0x02, 0x6F, 0x02, 0x20, 0xD7, 0x08, 0x00, 0x04, 0x6F, 0x02, 0x20, 0xDF, 0x08, 0x00,
+                0x06, 0x6F, 0x02, 0x20, 0xE7, 0x08, 0x00, 0x08, 0x6F, 0x02, 0x20, 0xEF, 0x08, 0x00, 0x0A,
+                0x6F, 0x02, 0x20, 0x8F, 0x06, 0x00, 0x0C, 0x6F, 0x02, 0x20, 0xF7, 0x08, 0x00, 0x00 }, 352)
+            {
+                NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
+                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME
+            };
+
+            var export = new NetFieldExport()
+            {
+                Handle = 0,
+                Name = "ArrayField"
+            };
+
+            var group = new NetFieldExportGroup()
+            {
+                PathName = "group1",
+                NetFieldExportsLength = 183,
+                NetFieldExports = new NetFieldExport[183],
+                PathNameIndex = 1
+            };
+            group.NetFieldExports[182] = export;
+
+            var guidCache = new NetGuidCache();
+            var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+
+            var data = parser.CreateType(group.PathName);
+            parser.ReadField(data, export, export.Handle, group, reader);
+            Assert.True(reader.AtEnd());
+            Assert.False(reader.IsError);
+            Assert.Equal(6, ((NetFieldGroup1) data).ArrayField.Length);
         }
     }
 }

@@ -132,7 +132,7 @@ namespace FortniteReplayReader
                 ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
             }
 
-            GameData.WinningPlayerIds ??= state.WinningPlayerList?.Select(i => i);
+            GameData.WinningPlayerIds ??= state.WinningPlayerList;
             GameData.WinningTeam ??= state.WinningTeam;
             GameData.RecorderId ??= state.RecorderPlayerState?.Value;
         }

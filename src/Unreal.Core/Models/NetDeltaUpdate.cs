@@ -11,5 +11,6 @@ namespace Unreal.Core.Models
         public INetFieldExportGroup? Export { get; set; }
         public bool Deleted { get; set; }
         //public FFastArraySerializerHeader Header { get; set; }
+        public uint ChannelIndex { get; set; }
     }
 }

@@ -10,6 +10,7 @@ namespace Unreal.Core
     /// </summary>
     public class NetBitReader : BitReader
     {
+        public NetBitReader() : base() { }
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
         public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }

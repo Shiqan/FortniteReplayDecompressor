@@ -71,8 +71,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId)]
         public string PartyOwnerUniqueId { get; set; }
 
-        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyUInt16)]
-        public ushort? WorldPlayerId { get; set; }
+        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt)]
+        public int? WorldPlayerId { get; set; }
 
         [NetFieldExport("HeroType", RepLayoutCmdType.Property)]
         public ItemDefinition HeroType { get; set; }

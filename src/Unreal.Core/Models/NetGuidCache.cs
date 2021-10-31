@@ -183,7 +183,7 @@ namespace Unreal.Core.Models
         /// </summary>
         /// <param name="group"></param>
         /// <returns>true if ClassNetCache was found, false otherwise</returns>
-        public bool TryGetClassNetCache(string? group, [NotNullWhen(returnValue: true)]  out NetFieldExportGroup? netFieldExportGroup, bool useFullName)
+        public bool TryGetClassNetCache(string? group, [NotNullWhen(returnValue: true)] out NetFieldExportGroup? netFieldExportGroup, bool useFullName)
         {
             if (string.IsNullOrEmpty(group))
             {

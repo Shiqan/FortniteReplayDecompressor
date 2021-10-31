@@ -166,8 +166,8 @@ namespace Unreal.Core
                 SizeInBytes = archive.ReadInt32()
             };
 
-            using FArchive? decrypted = DecryptBuffer(archive, info.SizeInBytes);
-            using FArchive? binaryArchive = Decompress(decrypted);
+            using var decrypted = DecryptBuffer(archive, info.SizeInBytes);
+            using var binaryArchive = Decompress(decrypted);
 
             // SerializeDeletedStartupActors
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L1916
@@ -256,7 +256,7 @@ namespace Unreal.Core
                 var numNetFieldExportGroups = binaryArchive.ReadUInt32();
                 for (var i = 0; i < numNetFieldExportGroups; i++)
                 {
-                    NetFieldExportGroup? group = ReadNetFieldExportGroupMap(binaryArchive);
+                    var group = ReadNetFieldExportGroupMap(binaryArchive);
 
                     // Add the export group to the map
                     _netGuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group.PathName;
@@ -265,7 +265,7 @@ namespace Unreal.Core
             }
 
             //Remove all actors
-            foreach (UChannel? channel in Channels)
+            foreach (var channel in Channels)
             {
                 if (channel == null)
                 {
@@ -1307,7 +1307,7 @@ namespace Unreal.Core
                         // Handle property
                         if (classNetProperty.IsCustomStruct)
                         {
-                            if (!ReceiveCustomProperty(reader, classNetProperty, bunch.ChIndex))
+                            if (!ReceiveCustomProperty(reader, classNetCache, fieldCache, bunch.ChIndex))
                             {
                                 _logger?.LogWarning("Failed to parse custom property {pathName} {name} (bunchIndex: {bunchIndex})", classNetCache.PathName, fieldCache.Name, bunchIndex);
                                 continue;
@@ -1399,9 +1399,13 @@ namespace Unreal.Core
         /// We didnt really know how certain properties were parsed, so we mark those with <see cref="NetFieldParser.ClassNetCachePropertyInfo.IsCustomStruct"/>
         /// and we deserialize and/or resolve them 'manually' here.
         /// </summary>
-        public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldParser.ClassNetCachePropertyInfo fieldCache, uint channelIndex)
+        /// <param name="reader"></param>
+        /// <param name="fieldCache"></param>
+        /// <param name="channelIndex"></param>
+        /// <returns></returns>
+        public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
         {
-            IProperty? export = _netFieldParser.CreatePropertyType(fieldCache.PropertyInfo.PropertyType);
+            var export = _netFieldParser.CreatePropertyType(classNetCache.PathName, fieldCache.Name);
             if (export != null)
             {
                 var numBits = reader.GetBitsLeft();
@@ -1479,7 +1483,7 @@ namespace Unreal.Core
             // DeltaSerializeFastArrayProperty
 
             // Read header
-            FFastArraySerializerHeader? header = NetDeltaSerializeHeader(reader);
+            var header = NetDeltaSerializeHeader(reader);
 
             if (reader.IsError)
             {
@@ -1506,7 +1510,7 @@ namespace Unreal.Core
                 var elementIndex = reader.ReadInt32();
 
                 // https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
-                ReceiveProperties(reader, group, channelIndex, out INetFieldExportGroup? export, !enablePropertyChecksum, netDeltaUpdate: true);
+                ReceiveProperties(reader, group, channelIndex, out var export, !enablePropertyChecksum, netDeltaUpdate: true);
 
                 OnNetDeltaRead(channelIndex, new NetDeltaUpdate
                 {
@@ -1595,7 +1599,7 @@ namespace Unreal.Core
                     return false;
                 }
 
-                NetFieldExport? export = group.NetFieldExports[handle];
+                var export = group.NetFieldExports[handle];
                 var numBits = archive.ReadIntPacked();
 
                 if (numBits == 0)
@@ -1661,7 +1665,7 @@ namespace Unreal.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError("NetFieldParser exception. Ex: {}", ex.Message);
+                    _logger?.LogError(ex, "NetFieldParser exception for property: {}, path: {}", export.Name, group.PathName);
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}, bits: {numBits}) threw exception {ex.Message}");
 #endif
@@ -1671,6 +1675,11 @@ namespace Unreal.Core
             if (!netDeltaUpdate && hasdata)
             {
                 OnExportRead(channelIndex, exportGroup);
+            }
+
+            if (Channels[channelIndex].IsIgnoringGroup(group.PathName) && _parseMode != ParseMode.Debug)
+            {
+                Channels[channelIndex].IgnoreGroup(group.PathName);
             }
 
             return true;
@@ -1772,7 +1781,7 @@ namespace Unreal.Core
 
             // We need to handle a sub-object
             // Manually serialize the object so that we can get the NetGUID (in order to assign it if we spawn the object here)
-            NetworkGUID? netGuid = InternalLoadObject(bunch.Archive, false);
+            var netGuid = InternalLoadObject(bunch.Archive, false);
 
             var bStablyNamed = bunch.Archive.ReadBit();
             if (bStablyNamed)
@@ -1782,7 +1791,7 @@ namespace Unreal.Core
             }
 
             // Serialize the class in case we have to spawn it.
-            NetworkGUID? classNetGUID = InternalLoadObject(bunch.Archive, false);
+            var classNetGUID = InternalLoadObject(bunch.Archive, false);
 
             if (!classNetGUID.IsValid())
             {
@@ -1920,8 +1929,8 @@ namespace Unreal.Core
                 bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
                 bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
-                ChannelType chType = ChannelType.None;
-                ChannelName chName = ChannelName.None;
+                var chType = ChannelType.None;
+                var chName = ChannelName.None;
 
                 if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
                 {
@@ -2088,6 +2097,16 @@ namespace Unreal.Core
         protected abstract void OnNetDeltaRead(uint channelIndex, NetDeltaUpdate update);
 
         /// <summary>
+        /// After receiving propteries for this <paramref name="exportGroup"/> indicate wheter it can be ignored for the rest of the replay (on the given channel)
+        /// or if it can be ignored for the rest of the replay. 
+        /// Useful to minimize the parsing, e.g. if you're only interested in the initial values and not subsequent updates. 
+        /// </summary>
+        protected virtual bool IgnoreGroupOnChannel(uint channelIndex, INetFieldExportGroup exportGroup)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Notifies when a new actor channel is created.
         /// </summary>
         protected virtual void OnChannelOpened(uint channelIndex, NetworkGUID? actor)
@@ -2131,7 +2150,7 @@ namespace Unreal.Core
 
             var decompressedSize = archive.ReadInt32();
             var compressedSize = archive.ReadInt32();
-            ReadOnlySpan<byte> compressedBuffer = archive.ReadBytes(compressedSize);
+            var compressedBuffer = archive.ReadBytes(compressedSize);
 
             _logger?.LogDebug("Decompressing archive from {compressedSize} to {decompressedSize}.", compressedSize, decompressedSize);
             throw new NotImplementedException("Replay is marked as compressed. Make sure to implement this method to decompress the chunks");

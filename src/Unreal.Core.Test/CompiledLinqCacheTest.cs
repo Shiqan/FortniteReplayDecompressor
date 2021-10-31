@@ -22,7 +22,8 @@ namespace Unreal.Core.Test
         public void CreateObjectTest()
         {
             var cache = new CompiledLinqCache();
-            var result = cache.CreateObject(typeof(NetFieldGroupLinqExample));
+            var typeId = cache.AddExportType(typeof(NetFieldGroupLinqExample));
+            var result = cache.CreateObject(typeId);
             Assert.IsType<NetFieldGroupLinqExample>(result);
         }
     }

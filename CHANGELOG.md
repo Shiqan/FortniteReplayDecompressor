@@ -5,14 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Interfaces to support proper DI
+- Register types to be parsed with DI
 
 ## [2.0.0] - 2021-
 ### Added
-- Player Elim information on event chunk [SL-x-TnT](https://github.com/SL-x-TnT)
+- Additional information on Player Elim event (by [SL-x-TnT](https://github.com/SL-x-TnT))
+- PlayerNames on PlayerData (by [SL-x-TnT](https://github.com/SL-x-TnT) and [xNocken](https://github.com/xNocken/))
 
 ### Changed
 - .Net 5.0
-- Performance improvements [razfriman](https://github.com/razfriman/)
+- Performance improvements (by [razfriman](https://github.com/razfriman/) and [SL-x-TnT](https://github.com/SL-x-TnT))
+- IL delegates (by [SL-x-TnT](https://github.com/SL-x-TnT)))
 - Moved Unreal.Encryption dependency to FortniteReplayReader
 
 ## [1.1.2] - 2020-08-09

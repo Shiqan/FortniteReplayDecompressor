@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -23,6 +24,14 @@ namespace Unreal.Core
 
         public override int MarkPosition { get; protected set; }
 
+        private Dictionary<FBitArchiveEndIndex, int> _tempLastBit = new();
+
+
+        public BitReader()
+        {
+
+        }
+
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
@@ -44,6 +53,27 @@ namespace Unreal.Core
             LastBit = bitCount;
         }
 
+        /// <summary>
+        /// Fill the buffer and reset this BitReader. Useful when created with the empty constructor.
+        /// </summary>
+        public void FillBuffer(ReadOnlySpan<byte> input)
+        {
+            Buffer = input.ToArray();
+            LastBit = Buffer.Length * 8;
+            Position = 0;
+            IsError = false;
+        }
+
+        /// <summary>
+        /// Fill the buffer and reset this BitReader. Useful when created with the empty constructor.
+        /// </summary>
+        public void FillBuffer(ReadOnlySpan<byte> input, int bitCount)
+        {
+            Buffer = input.ToArray();
+            LastBit = bitCount;
+            Position = 0;
+            IsError = false;
+        }
 
         public override bool AtEnd()
         {
@@ -548,6 +578,26 @@ namespace Unreal.Core
             data.ToArray().CopyTo(combined, Buffer.Span.Length);
 
             Buffer = combined;
+        }
+
+        public override void SetTempEnd(int size, FBitArchiveEndIndex index)
+        {
+            var setPosition = Position + size;
+            if (setPosition > LastBit)
+            {
+                IsError = true;
+                return;
+            }
+
+            _tempLastBit[index] = LastBit;
+            LastBit = setPosition;
+        }
+
+        public override void RestoreTempEnd(FBitArchiveEndIndex index)
+        {
+            Position = LastBit;
+            LastBit = _tempLastBit[index];
+            IsError = false;
         }
     }
 }

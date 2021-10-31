@@ -544,19 +544,22 @@ namespace Unreal.Core
                         continue;
                     }
 
-                    var cmdReader = new NetBitReader(netBitReader.ReadBits(numBits), (int)numBits)
+                    try
                     {
-                        EngineNetworkVersion = netBitReader.EngineNetworkVersion,
-                        NetworkVersion = netBitReader.NetworkVersion
-                    };
+                        netBitReader.SetTempEnd((int)numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
 
-                    if (groupInfo != null)
-                    {
-                        ReadField((INetFieldExportGroup)data, export, handle, netfieldExportGroup, cmdReader, singleInstance: false);
+                        if (groupInfo != null)
+                        {
+                            ReadField((INetFieldExportGroup)data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
+                        }
+                        else
+                        {
+                            data = ReadDataType(replayout, netBitReader, elementType);
+                        }
                     }
-                    else
+                    finally
                     {
-                        data = ReadDataType(replayout, cmdReader, elementType);
+                        netBitReader.RestoreTempEnd(FBitArchiveEndIndex.READ_ARRAY_FIELD);
                     }
                 }
 

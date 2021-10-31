@@ -1,5 +1,6 @@
 ﻿using System;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
 {
@@ -118,5 +119,16 @@ namespace Unreal.Core
         /// </summary>
         /// <param name="data"></param>
         public abstract void AppendDataFromChecked(ReadOnlySpan<byte> data, int bitCount);
+        
+        /// <summary>
+        /// Pretend this archive ends earlier to prevent reading bytes twice and reduce alloctions. Make sure to call <see cref="RestoreTemp(int)"/> afterwards.
+        /// </summary>
+        public abstract void SetTempEnd(int size, FBitArchiveEndIndex index);
+
+
+        /// <summary>
+        /// Restore the original end of the archive.
+        /// </summary>
+        public abstract void RestoreTempEnd(FBitArchiveEndIndex index);
     }
 }

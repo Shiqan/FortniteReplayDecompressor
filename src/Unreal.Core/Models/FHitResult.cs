@@ -112,7 +112,6 @@ namespace Unreal.Core.Models
         /// </summary>
         public string MyBoneName { get; private set; }
 
-
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
         /// </summary>
@@ -130,7 +129,7 @@ namespace Unreal.Core.Models
             var bInvalidItem = reader.ReadBit();
             var bInvalidFaceIndex = reader.ReadBit();
             var bNoPenetrationDepth = reader.ReadBit();
-            var bInvalidElementIndex = reader.ReadBit();
+            var bInvalidElementIndex = reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_ENUM_SERIALIZATION_COMPAT && reader.ReadBit();
 
             Time = reader.ReadSingle();
 
@@ -166,7 +165,7 @@ namespace Unreal.Core.Models
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;
-            ElementIndex = !bInvalidElementIndex ? reader.ReadByte() : new byte();
+            ElementIndex = !bInvalidElementIndex && reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_ENUM_SERIALIZATION_COMPAT ? reader.ReadByte() : new byte();
         }
     }
 }

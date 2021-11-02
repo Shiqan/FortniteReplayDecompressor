@@ -2,6 +2,7 @@
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace FortniteReplayReader
@@ -11,29 +12,29 @@ namespace FortniteReplayReader
     /// </summary>
     public class FortniteReplayBuilder
     {
-        private GameData GameData = new GameData();
-        private MapData MapData = new MapData();
-        private List<KillFeedEntry> KillFeed = new List<KillFeedEntry>();
+        private readonly GameData GameData = new();
+        private readonly MapData MapData = new();
+        private readonly List<KillFeedEntry> KillFeed = new();
 
-        private Dictionary<uint, uint> _actorToChannel = new Dictionary<uint, uint>();
-        private Dictionary<uint, uint> _channelToActor = new Dictionary<uint, uint>();
-        private Dictionary<uint, uint> _pawnChannelToStateChannel = new Dictionary<uint, uint>();
+        private readonly Dictionary<uint, uint> _actorToChannel = new();
+        private readonly Dictionary<uint, uint> _channelToActor = new();
+        private readonly Dictionary<uint, uint> _pawnChannelToStateChannel = new();
 
         /// <summary>
         /// Sometimes we receive a PlayerPawn but we havent received the PlayerState yet, so we dont want to processes these yet.
         /// </summary>
-        private Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new Dictionary<uint, List<QueuedPlayerPawn>>();
+        private readonly Dictionary<uint, List<QueuedPlayerPawn>> _queuedPlayerPawns = new();
 
-        private HashSet<uint> _onlySpectatingPlayers = new HashSet<uint>();
-        private Dictionary<uint, PlayerData> _players = new Dictionary<uint, PlayerData>();
-        private Dictionary<int?, TeamData> _teams = new Dictionary<int?, TeamData>();
-        private Dictionary<uint, Llama> _llamas = new Dictionary<uint, Llama>();
-        private Dictionary<int, RebootVan> _rebootVans = new Dictionary<int, RebootVan>();
-        private Dictionary<uint, Models.SupplyDrop> _drops = new Dictionary<uint, Models.SupplyDrop>();
+        private readonly HashSet<uint> _onlySpectatingPlayers = new();
+        private readonly Dictionary<uint, PlayerData> _players = new();
+        private readonly Dictionary<int?, TeamData> _teams = new();
+        private readonly Dictionary<uint, Llama> _llamas = new();
+        private readonly Dictionary<int, RebootVan> _rebootVans = new();
+        private readonly Dictionary<uint, Models.SupplyDrop> _drops = new();
 
-        private Dictionary<uint, Inventory> _inventories = new Dictionary<uint, Inventory>();
-        private Dictionary<uint, WeaponData> _weapons = new Dictionary<uint, WeaponData>();
-        private Dictionary<uint, WeaponData> _unknownWeapons = new Dictionary<uint, WeaponData>();
+        private readonly Dictionary<uint, Inventory> _inventories = new();
+        private readonly Dictionary<uint, WeaponData> _weapons = new();
+        private readonly Dictionary<uint, WeaponData> _unknownWeapons = new();
 
         private float? ReplicatedWorldTimeSeconds = 0;
 
@@ -43,7 +44,7 @@ namespace FortniteReplayReader
             _channelToActor[channelIndex] = guid;
         }
 
-        public void RemoveChannel(uint channelIndex, uint guid)
+        public void RemoveChannel(uint channelIndex)
         {
             _weapons.Remove(channelIndex);
             _unknownWeapons.Remove(channelIndex);
@@ -65,11 +66,11 @@ namespace FortniteReplayReader
             return replay;
         }
 
-        private bool TryGetPlayerDataFromActor(uint guid, out PlayerData playerData)
+        private bool TryGetPlayerDataFromActor(uint guid, [NotNullWhen(returnValue: true)] out PlayerData? playerData)
         {
-            if (_actorToChannel.TryGetValue(guid, out var pawnChannel))
+            if (_actorToChannel.TryGetValue(guid, out uint pawnChannel))
             {
-                if (_pawnChannelToStateChannel.TryGetValue(pawnChannel, out var stateChannel))
+                if (_pawnChannelToStateChannel.TryGetValue(pawnChannel, out uint stateChannel))
                 {
                     return _players.TryGetValue(stateChannel, out playerData);
                 }
@@ -78,9 +79,9 @@ namespace FortniteReplayReader
             return false;
         }
 
-        private bool TryGetPlayerDataFromPawn(uint pawn, out PlayerData playerData)
+        private bool TryGetPlayerDataFromPawn(uint pawn, [NotNullWhen(returnValue: true)] out PlayerData? playerData)
         {
-            if (_pawnChannelToStateChannel.TryGetValue(pawn, out var stateChannel))
+            if (_pawnChannelToStateChannel.TryGetValue(pawn, out uint stateChannel))
             {
                 return _players.TryGetValue(stateChannel, out playerData);
             }
@@ -90,11 +91,11 @@ namespace FortniteReplayReader
 
         private void HandleQueuedPlayerPawns(uint stateChannelIndex)
         {
-            if (_channelToActor.TryGetValue(stateChannelIndex, out var actorId))
+            if (_channelToActor.TryGetValue(stateChannelIndex, out uint actorId))
             {
-                if (_queuedPlayerPawns.Remove(actorId, out var playerPawns))
+                if (_queuedPlayerPawns.Remove(actorId, out List<QueuedPlayerPawn>? playerPawns))
                 {
-                    foreach (var playerPawn in playerPawns)
+                    foreach (QueuedPlayerPawn? playerPawn in playerPawns)
                     {
                         UpdatePlayerPawn(playerPawn.ChannelId, playerPawn.PlayerPawn);
                     }
@@ -131,8 +132,17 @@ namespace FortniteReplayReader
                 ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
             }
 
-            GameData.WinningPlayerIds ??= state.WinningPlayerList?.Select(i => i);
+            GameData.WinningPlayerIds ??= state.WinningPlayerList;
             GameData.WinningTeam ??= state.WinningTeam;
+            GameData.RecorderId ??= state.RecorderPlayerState?.Value;
+        }
+
+        public void UpdatePrivateName(uint channelIndex, PlayerNameData playerNameData)
+        {
+            if (_players.TryGetValue(channelIndex, out PlayerData? playerData))
+            {
+                playerData.PlayerName = playerNameData.DecodedName;
+            }
         }
 
         public void UpdatePlaylistInfo(PlaylistInfo playlist)
@@ -147,14 +157,14 @@ namespace FortniteReplayReader
 
         public void UpdateTeamData()
         {
-            foreach (var playerData in _players.Values)
+            foreach (PlayerData? playerData in _players.Values)
             {
                 if (playerData?.TeamIndex == null)
                 {
                     continue;
                 }
 
-                if (!_teams.TryGetValue(playerData.TeamIndex, out var teamData))
+                if (!_teams.TryGetValue(playerData.TeamIndex, out TeamData? teamData))
                 {
                     _teams[playerData.TeamIndex] = new TeamData()
                     {
@@ -193,11 +203,17 @@ namespace FortniteReplayReader
                 return;
             }
 
-            var isNewPlayer = !_players.TryGetValue(channelIndex, out var playerData);
+            bool isNewPlayer = !_players.TryGetValue(channelIndex, out PlayerData? playerData);
 
             if (isNewPlayer)
             {
                 playerData = new PlayerData(state);
+
+                if (_channelToActor.TryGetValue(channelIndex, out var actorId) && actorId == GameData.RecorderId)
+                {
+                    playerData.IsReplayOwner = true;
+                }
+
                 _players[channelIndex] = playerData;
             }
 
@@ -211,16 +227,11 @@ namespace FortniteReplayReader
                 UpdateKillFeed(channelIndex, playerData, state);
             }
 
-            if (state.Ping > 0)
-            {
-                // workaround
-                playerData.IsReplayOwner = true;
-            }
-
             if (state.TeamIndex > 0)
             {
                 playerData.TeamIndex = state.TeamIndex;
             }
+
             playerData.Placement ??= state.Place;
             playerData.TeamKills = state.TeamKillScore ?? playerData.TeamKills;
             playerData.Kills = state.KillScore ?? playerData.Kills;
@@ -249,7 +260,7 @@ namespace FortniteReplayReader
 
         public void UpdateKillFeed(uint channelIndex, PlayerData data, FortPlayerState state)
         {
-            var entry = new KillFeedEntry()
+            KillFeedEntry? entry = new KillFeedEntry()
             {
                 ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds
             };
@@ -264,19 +275,19 @@ namespace FortniteReplayReader
                 entry.IsDowned = true;
             }
 
-            if (_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out var actorChannelIndex))
+            if (_actorToChannel.TryGetValue(state.FinisherOrDowner.GetValueOrDefault(), out uint actorChannelIndex))
             {
-                if (_players.TryGetValue(actorChannelIndex, out var finisherOrDownerData))
+                if (_players.TryGetValue(actorChannelIndex, out PlayerData? finisherOrDownerData))
                 {
                     entry.FinisherOrDowner = finisherOrDownerData.Id;
                     entry.FinisherOrDownerName = finisherOrDownerData.PlayerId;
-                    entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot == true;
+                    entry.FinisherOrDownerIsBot = finisherOrDownerData.IsBot;
                 }
             }
 
             entry.PlayerId = data.Id;
             entry.PlayerName = data.PlayerId;
-            entry.PlayerIsBot = data.IsBot == true;
+            entry.PlayerIsBot = data.IsBot;
 
             entry.Distance ??= state.Distance;
             entry.DeathCause ??= state.DeathCause;
@@ -294,14 +305,14 @@ namespace FortniteReplayReader
             if (pawn.PlayerState.HasValue)
             {
                 // Update _pawnChannelToStateChannel everytime we receive a PlayerState value for a given channel
-                var actorId = pawn.PlayerState.Value;
-                if (_actorToChannel.TryGetValue(actorId, out var stateChannelIndex))
+                uint actorId = pawn.PlayerState.Value;
+                if (_actorToChannel.TryGetValue(actorId, out uint stateChannelIndex))
                 {
                     _pawnChannelToStateChannel[channelIndex] = stateChannelIndex;
                 }
                 else
                 {
-                    if (!_queuedPlayerPawns.TryGetValue(actorId, out var playerPawns))
+                    if (!_queuedPlayerPawns.TryGetValue(actorId, out List<QueuedPlayerPawn>? playerPawns))
                     {
                         playerPawns = new List<QueuedPlayerPawn>();
                         _queuedPlayerPawns[actorId] = playerPawns;
@@ -348,7 +359,7 @@ namespace FortniteReplayReader
 
             if (pawn.ReplicatedMovement != null)
             {
-                var newLocation = new PlayerMovement
+                PlayerMovement? newLocation = new PlayerMovement
                 {
                     ReplicatedMovement = pawn.ReplicatedMovement,
                     ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
@@ -378,7 +389,7 @@ namespace FortniteReplayReader
 
         public void UpdateInventory(uint channelIndex, FortInventory fortInventory)
         {
-            if (!_inventories.TryGetValue(channelIndex, out var inventory))
+            if (!_inventories.TryGetValue(channelIndex, out Inventory? inventory))
             {
                 // TODO updates for unknown parent inventory !?
                 // TODO receive inventory for some random channel without replaypawn...?
@@ -402,7 +413,7 @@ namespace FortniteReplayReader
 
             if (!inventory.PlayerId.HasValue)
             {
-                if (TryGetPlayerDataFromActor(inventory.ReplayPawn.GetValueOrDefault(), out var playerData))
+                if (TryGetPlayerDataFromActor(inventory.ReplayPawn.GetValueOrDefault(), out PlayerData? playerData))
                 {
                     inventory.PlayerId = playerData.Id;
                     inventory.PlayerName = playerData.PlayerId;
@@ -415,7 +426,7 @@ namespace FortniteReplayReader
                 return;
             }
 
-            var inventoryItem = new InventoryItem()
+            InventoryItem? inventoryItem = new InventoryItem()
             {
                 Count = fortInventory.Count,
                 ItemDefinition = fortInventory.ItemDefinition?.Name,
@@ -433,7 +444,7 @@ namespace FortniteReplayReader
 
         public void UpdateWeapon(uint channelIndex, BaseWeapon weapon)
         {
-            if (!_weapons.TryGetValue(channelIndex, out var newWeapon))
+            if (!_weapons.TryGetValue(channelIndex, out WeaponData? newWeapon))
             {
                 if (!_unknownWeapons.TryGetValue(channelIndex, out newWeapon))
                 {
@@ -470,13 +481,15 @@ namespace FortniteReplayReader
 
         public void UpdateLlama(uint channelIndex, SupplyDropLlama supplyDropLlama)
         {
-            if (!_llamas.TryGetValue(channelIndex, out var llama))
+            if (!_llamas.TryGetValue(channelIndex, out Llama? llama))
             {
                 llama = new Llama(channelIndex, supplyDropLlama);
                 MapData.Llamas.Add(llama);
                 _llamas.Add(channelIndex, llama);
                 return;
             }
+
+            llama.LandingLocation ??= supplyDropLlama.FinalDestination;
 
             if (supplyDropLlama.Looted)
             {
@@ -492,7 +505,7 @@ namespace FortniteReplayReader
 
         public void UpdateSupplyDrop(uint channelIndex, Models.NetFieldExports.SupplyDrop supplyDrop)
         {
-            if (!_drops.TryGetValue(channelIndex, out var drop))
+            if (!_drops.TryGetValue(channelIndex, out Models.SupplyDrop? drop))
             {
                 drop = new Models.SupplyDrop(channelIndex, supplyDrop);
                 MapData.SupplyDrops.Add(drop);
@@ -525,7 +538,7 @@ namespace FortniteReplayReader
 
         public void UpdateRebootVan(uint channelIndex, SpawnMachineRepData spawnMachine)
         {
-            if (!_rebootVans.TryGetValue(spawnMachine.SpawnMachineRepDataHandle, out var rebootVan))
+            if (!_rebootVans.TryGetValue(spawnMachine.SpawnMachineRepDataHandle, out RebootVan? rebootVan))
             {
                 rebootVan = new RebootVan(spawnMachine);
                 MapData.RebootVans.Add(rebootVan);

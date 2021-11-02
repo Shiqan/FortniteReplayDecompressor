@@ -25,7 +25,7 @@ namespace FortniteReplayReader.Test
 
             using var archive = new Unreal.Core.BinaryReader(new MemoryStream(rawData))
             {
-                EngineNetworkVersion = Unreal.Core.Models.Enums.EngineNetworkVersionHistory.HISTORY_ENGINENETVERSION_LATEST, // 16
+                EngineNetworkVersion = Unreal.Core.Models.Enums.EngineNetworkVersionHistory.LATEST, // 16
             };
             var reader = new MockReplayReader()
             {
@@ -48,7 +48,7 @@ namespace FortniteReplayReader.Test
             Assert.True(archive.AtEnd());
             Assert.False(archive.IsError);
 
-            reader.ParseElimination(result, null);
+            reader.ParseElimination(result, new Unreal.Core.Models.EventInfo { StartTime = 0 });
             Assert.True(result.AtEnd());
             Assert.False(result.IsError);
         }

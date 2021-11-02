@@ -59,6 +59,20 @@ namespace Unreal.Core.Test
             Assert.Equal(expected, result);
             Assert.Equal(bitsToRead, reader.Position);
         }
+        
+        [Theory]
+        [InlineData(new byte[] { 0b10011001 }, new byte[] { 0b1100 }, 1, 4)]
+        [InlineData(new byte[] { 0b10011001 }, new byte[] { 0b10 }, 2, 2)]
+        [InlineData(new byte[] { 0b10011001 }, new byte[] { 0b11 }, 3, 3)]
+        public void ReadBitsWithOffsetTest(byte[] rawData, byte[] expected, int position, int bitsToRead)
+        {
+            var reader = new BitReader(rawData);
+            reader.Seek(position);
+            var result = reader.ReadBits(bitsToRead).ToArray();
+
+            Assert.Equal(expected, result);
+            Assert.Equal(bitsToRead + position, reader.Position);
+        }
 
         [Theory]
         [InlineData(new byte[] { 0x23 }, new byte[] { 0x11 }, 5, 1)]
@@ -298,7 +312,7 @@ namespace Unreal.Core.Test
         public void ReadVectorTest(byte[] rawData, float x, float y, float z)
         {
             var reader = new BitReader(rawData);
-            var result = reader.ReadVector();
+            var result = reader.ReadFVector();
 
             var expected = new FVector(x, y, z);
 

@@ -34,6 +34,12 @@ namespace Unreal.Core.Models
         public int FaceIndex { get; private set; }
 
         /// <summary>
+        /// If this test started in penetration (bStartPenetrating is true) and a depenetration vector can be computed,
+        /// If the distance cannot be computed, this distance will be zero.
+        /// </summary>
+        public byte ElementIndex { get; private set; }
+
+        /// <summary>
         /// 'Time' of impact along trace direction (ranging from 0.0 to 1.0) if there is a hit, indicating time between TraceStart and TraceEnd.
         /// For swept movement(but not queries) this may be pulled back slightly from the actual time of impact, to prevent precision problems with adjacent geometry.
         /// </summary>
@@ -107,20 +113,12 @@ namespace Unreal.Core.Models
         public string MyBoneName { get; private set; }
 
         /// <summary>
-        /// If this test started in penetration (bStartPenetrating is true) and a depenetration vector can be computed,
-        /// If the distance cannot be computed, this distance will be zero.
-        /// </summary>
-        public byte ElementIndex { get; private set; }
-
-        /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
         /// </summary>
         /// <param name="reader"></param>
         public void Serialize(NetBitReader reader)
         {
             // pack bitfield with flags
-            //var flags = reader.ReadByte();
-
             // Most of the time the vectors are the same values, use that as an optimization
             BlockingHit = reader.ReadBit();
             StartPenetrating = reader.ReadBit();
@@ -145,12 +143,25 @@ namespace Unreal.Core.Models
             TraceEnd = reader.ReadPackedVector(1, 20);
 
             PenetrationDepth = !bNoPenetrationDepth ? reader.SerializePropertyFloat() : 0.0f;
-
             Distance = (ImpactPoint - TraceStart).Size();
             Item = !bInvalidItem ? reader.ReadInt32() : 0;
 
             PhysMaterial = reader.SerializePropertyObject();
-            Actor = reader.SerializePropertyObject();
+
+            if (reader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_HITRESULT_INSTANCEHANDLE)
+            {
+                Actor = reader.SerializePropertyObject();
+            }
+            else
+            {
+                Actor = reader.SerializePropertyObject();
+
+                // see https://github.com/EpicGames/UnrealEngine/blob/4564529ed77196caada6971f5de1be829900b9e1/Engine/Source/Runtime/Engine/Private/EngineTypes.cpp#L558
+                //Ar << Handle.Actor;
+                //Ar << Handle.Manager;
+                //Ar << Handle.InstanceIndex;
+            }
+
             Component = reader.SerializePropertyObject();
             BoneName = reader.SerializePropertyName();
             FaceIndex = !bInvalidFaceIndex ? reader.ReadInt32() : 0;

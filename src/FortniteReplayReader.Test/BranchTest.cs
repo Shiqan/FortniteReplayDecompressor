@@ -1,4 +1,5 @@
 using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Test.Mocks;
 using Unreal.Core;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace FortniteReplayReader.Test
         [Fact]
         public void ParseBranchTest()
         {
-            var reader = new ReplayReader();
+            var reader = new FortniteReplayReader.ReplayReader();
             reader.Branch = "++PUBG+Release-11.11";
             Assert.Equal(0, reader.Major);
             Assert.Equal(0, reader.Minor);

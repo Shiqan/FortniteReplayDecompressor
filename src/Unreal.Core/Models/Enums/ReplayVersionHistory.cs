@@ -15,6 +15,6 @@ namespace Unreal.Core.Models
         HISTORY_ENCRYPTION = 6,
 
         HISTORY_PLUS_ONE,
-        HISTORY_LATEST = HISTORY_PLUS_ONE - 1
+        LATEST = HISTORY_PLUS_ONE - 1
     }
 }

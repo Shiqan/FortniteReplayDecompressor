@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -42,7 +41,7 @@ namespace Unreal.Core
         /// </summary>
         public abstract int Position { get; protected set; }
         public bool IsError { get; protected set; } = false;
-        
+
         /// <summary>
         /// Set <see cref="IsError"/> to true.
         /// </summary>
@@ -185,6 +184,21 @@ namespace Unreal.Core
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
         /// </summary>
         public abstract string ReadFName();
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/TransformNonVectorized.h#L631
+        /// </summary>
+        public abstract FTransform ReadFTransfrom();
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/Math/Quat.h#L582
+        /// </summary>
+        public abstract FQuat ReadFQuat();
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
+        /// </summary>
+        public abstract FVector ReadFVector();
 
         /// <summary>
         /// Reads 16 bytes from the current stream and advances the current position of the stream by 16-bytes.

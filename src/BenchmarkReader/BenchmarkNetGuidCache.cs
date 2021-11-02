@@ -11,7 +11,7 @@ namespace BenchmarkReader
 
         private const int iterations = 10000;
 
-        private Random random = new Random();
+        private Random random = new();
 
         public BenchmarkNetGuidCache()
         {

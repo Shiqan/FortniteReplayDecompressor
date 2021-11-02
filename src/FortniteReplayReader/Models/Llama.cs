@@ -20,10 +20,10 @@ namespace FortniteReplayReader.Models
         }
        
         public uint Id { get; set; }
-        public FVector Location { get; set; }
+        public FVector? Location { get; set; }
         public bool HasSpawnedPickups { get; set; }
         public bool Looted { get; set; }
         public float? LootedTime { get; set; }
-        public FVector LandingLocation { get; set; }
+        public FVector? LandingLocation { get; set; }
     }
 }

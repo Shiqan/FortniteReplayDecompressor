@@ -13,7 +13,7 @@ namespace BenchmarkReader
 
         public BenchmarkBitReader()
         {
-            Random rnd = new Random();
+            Random rnd = new();
             Byte[] b = new Byte[10];
             rnd.NextBytes(b);
             Reader = new BitReader(b);
@@ -46,7 +46,7 @@ namespace BenchmarkReader
         [Benchmark]
         public void BitReader()
         {
-            Random rnd = new Random();
+            Random rnd = new();
             Byte[] b = new Byte[10];
             rnd.NextBytes(b);
             var reader = new BitReader(b);

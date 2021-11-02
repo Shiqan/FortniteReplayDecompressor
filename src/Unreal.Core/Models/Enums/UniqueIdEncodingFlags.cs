@@ -1,9 +1,12 @@
-﻿namespace Unreal.Core.Models.Enums
+﻿using System;
+
+namespace Unreal.Core.Models.Enums
 {
     /// <summary>
     /// Flags relevant to network serialization of a unique id
     /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/OnlineReplStructs.cpp#L22
     /// </summary>
+    [Flags]
     public enum UniqueIdEncodingFlags
     {
         /// <summary>

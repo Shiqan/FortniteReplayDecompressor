@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.IO;
 using System.Text;
+using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core
@@ -23,7 +23,7 @@ namespace Unreal.Core
         /// <seealso cref="System.IO.BinaryReader"/> 
         public BinaryReader(Stream input)
         {
-            using var ms = new MemoryStream();
+            using var ms = new MemoryStream((int)input.Length);
             input.CopyTo(ms);
             Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
             _length = Bytes.Length;
@@ -33,6 +33,13 @@ namespace Unreal.Core
         public BinaryReader(ReadOnlyMemory<byte> input)
         {
             Bytes = input;
+            _length = Bytes.Length;
+            _position = 0;
+        }
+        
+        public BinaryReader(ReadOnlySpan<byte> input)
+        {
+            Bytes = input.ToArray();
             _length = Bytes.Length;
             _position = 0;
         }
@@ -91,8 +98,7 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
-            // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
+            return Convert.ToHexString(ReadBytes(count)).Replace("-", "");
         }
 
         public override string ReadFString()
@@ -105,22 +111,14 @@ namespace Unreal.Core
             }
 
             var isUnicode = length < 0;
-            ReadOnlySpan<byte> data;
-            string value;
-
             if (isUnicode)
             {
                 length = -2 * length;
-                data = ReadBytes(length);
-                value = Encoding.Unicode.GetString(data);
-            }
-            else
-            {
-                data = ReadBytes(length);
-                value = Encoding.Default.GetString(data);
             }
 
-            return value.Trim(new[] { ' ', '\0' });
+            var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
+            return encoding.GetString(ReadBytes(length))
+                .Trim(new[] { ' ', '\0' });
         }
 
         public override string ReadFName()
@@ -128,15 +126,7 @@ namespace Unreal.Core
             var isHardcoded = ReadBoolean();
             if (isHardcoded)
             {
-                uint nameIndex;
-                if (EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
-                {
-                    nameIndex = ReadUInt32();
-                }
-                else
-                {
-                    nameIndex = ReadIntPacked();
-                }
+                var nameIndex = EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES ? ReadUInt32() : ReadIntPacked();
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
                 // hard coded names in "UnrealNames.inl"
                 // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
@@ -156,8 +146,35 @@ namespace Unreal.Core
             // InName.GetNumber();
 
             var inString = ReadFString();
-            var inNumber = ReadInt32();
+            ReadInt32(); // inNumber
+
             return inString;
+        }
+
+        public override FTransform ReadFTransfrom()
+        {
+            return new FTransform
+            {
+                Rotation = ReadFQuat(),
+                Translation = ReadFVector(),
+                Scale3D = ReadFVector(),
+            };
+        }
+
+        public override FQuat ReadFQuat()
+        {
+            return new FQuat
+            {
+                X = ReadSingle(),
+                Y = ReadSingle(),
+                Z = ReadSingle(),
+                W = ReadSingle()
+            };
+        }
+
+        public override FVector ReadFVector()
+        {
+            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }
 
         public override string ReadGUID()

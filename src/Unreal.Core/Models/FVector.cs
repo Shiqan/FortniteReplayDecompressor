@@ -27,6 +27,15 @@ namespace Unreal.Core.Models
         {
             return (float)Math.Sqrt(X * X + Y * Y + Z * Z);
         }
+        public double DistanceTo(FVector vector)
+        {
+            return Math.Sqrt(DistanceSquared(vector));
+        }
+
+        private double DistanceSquared(FVector vector)
+        {
+            return Math.Pow(vector.X - this.X, 2) + Math.Pow(vector.Y - this.Y, 2) + Math.Pow(vector.Z - this.Z, 2);
+        }
 
         public static FVector operator -(FVector v1, FVector v2)
         {

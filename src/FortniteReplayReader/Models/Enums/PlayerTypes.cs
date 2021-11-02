@@ -1,6 +1,5 @@
 ﻿namespace FortniteReplayReader.Models.Enums
 {
-    
     public enum PlayerTypes
     {
         BOT = 0x03,

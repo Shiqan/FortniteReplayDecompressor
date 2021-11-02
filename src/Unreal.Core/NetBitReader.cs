@@ -10,6 +10,7 @@ namespace Unreal.Core
     /// </summary>
     public class NetBitReader : BitReader
     {
+        public NetBitReader() : base() { }
         public NetBitReader(byte[] input) : base(input) { }
         public NetBitReader(byte[] input, int bitCount) : base(input, bitCount) { }
         public NetBitReader(ReadOnlySpan<byte> input) : base(input.ToArray()) { }
@@ -59,15 +60,16 @@ namespace Unreal.Core
             RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
-            var repMovement = new FRepMovement();
-            var flags = ReadBitsToInt(2);
-            repMovement.bSimulatedPhysicSleep = (flags & (1 << 0)) > 0;
-            repMovement.bRepPhysics = (flags & (1 << 1)) > 0;
+            var repMovement = new FRepMovement
+            {
+                bSimulatedPhysicSleep = ReadBit(),
+                bRepPhysics = ReadBit(),
 
-            repMovement.Location = SerializePropertyQuantizedVector(locationQuantizationLevel);
-            repMovement.Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort();
+                Location = SerializePropertyQuantizedVector(locationQuantizationLevel),
+                Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort(),
 
-            repMovement.LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel);
+                LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel)
+            };
 
             if (repMovement.bRepPhysics)
             {
@@ -82,7 +84,7 @@ namespace Unreal.Core
         /// </summary>
         public FVector SerializePropertyVector()
         {
-            return ReadVector();
+            return ReadFVector();
         }
 
         /// <summary>
@@ -119,7 +121,7 @@ namespace Unreal.Core
 
         public void SerializPropertyPlane()
         {
-
+            throw new NotImplementedException("SerializPropertyPlane in NetBitReader not implemented");
         }
 
         /// <summary>
@@ -130,7 +132,6 @@ namespace Unreal.Core
             var maxBitValue = (1 << (numBits - 1)) - 1;
             var bias = (1 << (numBits - 1));
             var serIntMax = (1 << (numBits - 0));
-            //int maxDelta = (1 << (numBits - 0)) -1;
 
             var delta = ReadSerializedInt(serIntMax);
             float unscaledValue = (int)delta - bias;
@@ -203,45 +204,7 @@ namespace Unreal.Core
         public uint SerializePropertyObject()
         {
             //InternalLoadObject(); // TODO make available in archive
-
             return ReadIntPacked();
-
-            //if (!netGuid.IsValid())
-            //{
-            //    return;
-            //}
-
-            //if (netGuid.IsDefault() || exportGUIDs)
-            //{
-            //    var flags = archive.ReadByteAsEnum<ExportFlags>();
-
-            //    // outerguid
-            //    if (flags == ExportFlags.bHasPath || flags == ExportFlags.bHasPathAndNetWorkChecksum || flags == ExportFlags.All)
-            //    {
-            //        var outerGuid = InternalLoadObject(archive, true); // TODO: archetype?
-
-            //        var pathName = archive.ReadFString();
-
-            //        if (!NetGuidCache.ContainsKey(netGuid.Value))
-            //        {
-            //            NetGuidCache.Add(netGuid.Value, pathName);
-            //        }
-
-            //        if (flags >= ExportFlags.bHasNetworkChecksum)
-            //        {
-            //            var networkChecksum = archive.ReadUInt32();
-            //        }
-
-            //        return netGuid;
-            //    }
-            //}
-
-            //return netGuid;
-
-            //UObject* Object = GetObjectPropertyValue(Data);
-            //bool Result = Map->SerializeObject(Ar, PropertyClass, Object);
-            //SetObjectPropertyValue(Data, Object);
-            //return Result;
         }
 
 
@@ -269,10 +232,10 @@ namespace Unreal.Core
 
             var encodingFlags = ReadByteAsEnum<UniqueIdEncodingFlags>();
             var encoded = false;
-            if ((encodingFlags & UniqueIdEncodingFlags.IsEncoded) == UniqueIdEncodingFlags.IsEncoded)
+            if (encodingFlags.HasFlag(UniqueIdEncodingFlags.IsEncoded))
             {
                 encoded = true;
-                if ((encodingFlags & UniqueIdEncodingFlags.IsEmpty) == UniqueIdEncodingFlags.IsEmpty)
+                if (encodingFlags.HasFlag(UniqueIdEncodingFlags.IsEmpty))
                 {
                     // empty cleared out unique id
                     return "";

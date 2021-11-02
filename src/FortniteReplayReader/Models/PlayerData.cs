@@ -11,11 +11,10 @@ namespace FortniteReplayReader.Models
             Id = playerState.PlayerID;
             EpicId = playerState.UniqueId;
             BotId = playerState.BotUniqueId;
-            IsBot = playerState.bIsABot;
+            IsBot = playerState.bIsABot == true;
             PlayerNameCustomOverride = playerState.PlayerNameCustomOverride?.Text;
             IsGameSessionOwner = playerState.bIsGameSessionOwner;
             PlayerNumber = playerState.WorldPlayerId;
-            PlayerName = playerState.PlayerNamePrivate;
             StreamerModeName = playerState.StreamerModeName?.Text;
             IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId;
             TeamIndex = playerState.TeamIndex;
@@ -41,10 +40,10 @@ namespace FortniteReplayReader.Models
         public string EpicId { get; set; }
         public string PlatformUniqueNetId { get; set; }
         public string BotId { get; set; }
-        public bool? IsBot { get; set; }
+        public bool IsBot { get; set; }
         public string PlayerName { get; set; }
-        public string PlayerNameCustomOverride { get; set; }
-        public string StreamerModeName { get; set; }
+        public string? PlayerNameCustomOverride { get; set; }
+        public string? StreamerModeName { get; set; }
         public string Platform { get; set; }
         public int? Level { get; set; }
         public uint? SeasonLevelUIDisplay { get; set; }

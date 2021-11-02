@@ -12,6 +12,11 @@ namespace FortniteReplayReader.Models
         public string CurrentPlaylist { get; set; }
         public IEnumerable<string> AdditionalPlaylistLevels { get; set; }
         public IList<string> ActiveGameplayModifiers { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// Actor Id of recording player.
+        /// </summary>
+        public uint? RecorderId { get; set; }
 
         public int? MaxPlayers { get; set; }
         public int? TotalTeams { get; set; }

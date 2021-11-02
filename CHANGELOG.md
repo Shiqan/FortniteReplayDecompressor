@@ -5,7 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- .net 6 and C# 10
+- More changes and improvements by [SL-x-TnT](https://github.com/SL-x-TnT)
+- Interfaces to support proper DI
+- Register types to be parsed with DI
 
+## [2.0.0] - 2021-02-11
+### Added
+- Additional information on Player Elim event (by [SL-x-TnT](https://github.com/SL-x-TnT))
+- PlayerNames on PlayerData (by [SL-x-TnT](https://github.com/SL-x-TnT) and [xNocken](https://github.com/xNocken/))
+
+### Changed
+- .Net 5.0
+- Performance improvements (by [razfriman](https://github.com/razfriman/) and [SL-x-TnT](https://github.com/SL-x-TnT))
+- IL delegates (by [SL-x-TnT](https://github.com/SL-x-TnT)))
+- Moved Unreal.Encryption dependency to FortniteReplayReader
 
 ## [1.1.2] - 2020-08-09
 ### Added
@@ -57,3 +71,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.0
 [1.1.1]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.1
 [1.1.2]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/1.1.2
+[2.0.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/2.0.0

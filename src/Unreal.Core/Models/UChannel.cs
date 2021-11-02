@@ -9,22 +9,31 @@ namespace Unreal.Core.Models
     /// </summary>
     public class UChannel
     {
-        private HashSet<string> _ignore = new HashSet<string>();
+        private HashSet<string> _ignore = new();
         public ChannelName ChannelName { get; set; }
         public uint ChannelIndex { get; set; }
         public ChannelType ChannelType { get; set; }
 
-        public void IgnoreChannel(string group)
+        /// <summary>
+        /// Add the <paramref name="group"/> to the list of groups to ignore for this channel.
+        /// </summary>
+        /// <param name="group"></param>
+        public void IgnoreGroup(string group)
         {
             _ignore.Add(group);
         }
 
-        public bool IsIgnoringChannel(string group)
+        /// <summary>
+        /// Whether or not this <paramref name="group"/> is ignored by this channel.
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public bool IsIgnoringGroup(string group)
         {
             return _ignore.Contains(group);
         }
 
-        public Actor Actor { get; set; }
+        public Actor? Actor { get; set; }
         public uint? ArchetypeId => Actor?.Archetype?.Value;
         public uint? ActorId => Actor?.ActorNetGUID.Value;
     }

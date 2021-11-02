@@ -6,6 +6,8 @@ So yes, we can parse your replays, zero cost (it's free) and fully extensible.
 
 ## Getting the library
 
+.net 5.0 is required.
+
 In order to get started, you'll have to add the [FortniteReplayReader](https://www.nuget.org/packages/FortniteReplayReader) Nuget package to your project.
 ```powershell
 dotnet add package FortniteReplayReader

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Unreal.Core.Contracts;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     public class Replay
     {

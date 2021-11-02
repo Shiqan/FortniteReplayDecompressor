@@ -16,7 +16,7 @@ namespace ConsoleReader
             var serviceCollection = new ServiceCollection()
                 .AddLogging(loggingBuilder => loggingBuilder
                     .AddConsole()
-                    .SetMinimumLevel(LogLevel.Error));
+                    .SetMinimumLevel(LogLevel.Warning));
             var provider = serviceCollection.BuildServiceProvider();
             var logger = provider.GetService<ILogger<Program>>();
 
@@ -26,7 +26,11 @@ namespace ConsoleReader
             var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
             var sw = new Stopwatch();
-            var reader = new ReplayReader(logger, ParseMode.Full);
+#if DEBUG
+            var reader = new ReplayReader(logger, ParseMode.Minimal);
+#else
+            var reader = new ReplayReader(null, ParseMode.Minimal);
+#endif
             long total = 0;
             foreach (var replayFile in replayFiles)
             {
@@ -44,23 +48,6 @@ namespace ConsoleReader
                 total += sw.ElapsedMilliseconds;
             }
             Console.WriteLine($"total: {total / 1000} seconds ----");
-
-            //var replayFile = "Replays/shootergame.replay";
-            //var replayFile = "Replays/season6.10.replay";
-            //var replayFile = "Replays/season11.11.replay";
-            //var replayFile = "Replays/season11.31.replay";
-            //var replayFile = "Replays/season11.replay";
-            //var replayFile = "Replays/season12.replay";
-            //var replayFile = "Replays/collectPickup.replay";
-
-            //var sw = new Stopwatch();
-            //sw.Start();
-            //var reader = new ReplayReader(logger, ParseMode.Debug);
-            //var replay = reader.ReadReplay(replayFile);
-            //sw.Stop();
-
-            //Console.WriteLine($"---- done in {(sw.ElapsedMilliseconds / 1000)} seconds ----");
-            Console.ReadLine();
         }
     }
 }

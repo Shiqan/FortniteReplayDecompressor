@@ -147,7 +147,7 @@ namespace FortniteReplayReader.Test
             {
                 Branch = branch
             };
-            reader.ParseElimination(archive, null);
+            reader.ParseElimination(archive, new EventInfo { StartTime = 0 });
 
             Assert.True(archive.AtEnd());
             Assert.False(archive.IsError);

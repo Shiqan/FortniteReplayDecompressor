@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -22,6 +24,14 @@ namespace Unreal.Core
 
         public override int MarkPosition { get; protected set; }
 
+        private Dictionary<FBitArchiveEndIndex, int> _tempLastBit = new();
+
+
+        public BitReader()
+        {
+
+        }
+
         /// <summary>
         /// Initializes a new instance of the BitReader class based on the specified bytes.
         /// </summary>
@@ -43,6 +53,27 @@ namespace Unreal.Core
             LastBit = bitCount;
         }
 
+        /// <summary>
+        /// Fill the buffer and reset this BitReader. Useful when created with the empty constructor.
+        /// </summary>
+        public void FillBuffer(ReadOnlySpan<byte> input)
+        {
+            Buffer = input.ToArray();
+            LastBit = Buffer.Length * 8;
+            Position = 0;
+            IsError = false;
+        }
+
+        /// <summary>
+        /// Fill the buffer and reset this BitReader. Useful when created with the empty constructor.
+        /// </summary>
+        public void FillBuffer(ReadOnlySpan<byte> input, int bitCount)
+        {
+            Buffer = input.ToArray();
+            LastBit = bitCount;
+            Position = 0;
+            IsError = false;
+        }
 
         public override bool AtEnd()
         {
@@ -104,27 +135,38 @@ namespace Unreal.Core
             }
 
             var bitCountUsedInByte = Position & 7;
-            if (bitCountUsedInByte == 0 && bitCount % 8 == 0)
+            var byteCount = bitCount / 8;
+            var extraBits = bitCount % 8;
+            if (bitCountUsedInByte == 0 && extraBits == 0)
             {
-                return ReadBytes(bitCount >> 3);
+                var byteResult = Buffer.Span.Slice(CurrentByte, byteCount);
+                Position += bitCount;
+                return byteResult;
             }
 
-            Span<byte> result = new byte[((bitCount + 7) / 8)];
+            Span<byte> result = new byte[(bitCount + 7) / 8];
 
             var bitCountLeftInByte = 8 - (Position & 7);
-            var byteCount = bitCount / 8;
+            var currentByte = CurrentByte;
+            var span = Buffer.Span;
+            var shiftDelta = (1 << bitCountUsedInByte) - 1;
             for (var i = 0; i < byteCount; i++)
             {
-                result[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+                result[i] = (byte) (
+                    (span[currentByte + i] >> bitCountUsedInByte) |
+                    ((span[currentByte + i + 1] & shiftDelta) << bitCountLeftInByte)
+                    );
             }
             Position += (byteCount * 8);
 
             bitCount %= 8;
             for (var i = 0; i < bitCount; i++)
             {
-                if (ReadBit())
+                var bit = (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
+                Position++;
+                if (bit)
                 {
-                    result[^1] |= (byte)(1 << i);
+                    result[^1] |= (byte) (1 << i);
                 }
             }
 
@@ -202,36 +244,26 @@ namespace Unreal.Core
 
         public override string ReadBytesToString(int count)
         {
-            // https://github.com/dotnet/corefx/issues/10013
-            return BitConverter.ToString(ReadBytes(count).ToArray()).Replace("-", "");
+            return Convert.ToHexString(ReadBytes(count)).Replace("-", "");
         }
 
         public override string ReadFString()
         {
             var length = ReadInt32();
 
-            if (!CanRead(length))
-            {
-                IsError = true;
-                return "";
-            }
-
-            if (length == 0 || IsError)
+            if (length == 0)
             {
                 return "";
             }
 
-            string value;
-            if (length < 0)
+            var isUnicode = length < 0;
+            if (isUnicode)
             {
-                value = Encoding.Unicode.GetString(ReadBytes(-2 * length));
-            }
-            else
-            {
-                value = Encoding.Default.GetString(ReadBytes(length));
+                length = -2 * length;
             }
 
-            return value.Trim(new[] { ' ', '\0' });
+            var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
+            return encoding.GetString(ReadBytes(length)).Trim(new[] { ' ', '\0' });
         }
 
         public override string ReadFName()
@@ -256,6 +288,11 @@ namespace Unreal.Core
             var inNumber = ReadInt32();
 
             return inString;
+        }
+
+        public override FTransform ReadFTransfrom()
+        {
+            throw new NotImplementedException();
         }
 
         public override string ReadGUID()
@@ -340,11 +377,15 @@ namespace Unreal.Core
                     break;
                 }
             }
-
             return value;
         }
 
-        public override FVector ReadVector()
+        public override FQuat ReadFQuat()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override FVector ReadFVector()
         {
             return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
         }
@@ -537,6 +578,26 @@ namespace Unreal.Core
             data.ToArray().CopyTo(combined, Buffer.Span.Length);
 
             Buffer = combined;
+        }
+
+        public override void SetTempEnd(int size, FBitArchiveEndIndex index)
+        {
+            var setPosition = Position + size;
+            if (setPosition > LastBit)
+            {
+                IsError = true;
+                return;
+            }
+
+            _tempLastBit[index] = LastBit;
+            LastBit = setPosition;
+        }
+
+        public override void RestoreTempEnd(FBitArchiveEndIndex index)
+        {
+            Position = LastBit;
+            LastBit = _tempLastBit[index];
+            IsError = false;
         }
     }
 }

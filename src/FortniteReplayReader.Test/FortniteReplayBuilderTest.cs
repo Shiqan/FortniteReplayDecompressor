@@ -102,23 +102,22 @@ namespace FortniteReplayReader.Test
         {
             var llama = new SupplyDropLlama()
             {
-                FinalDestination = new FVector(1, 2, 3),
-                Looted = true
             };
             builder.UpdateLlama(1, llama);
 
             builder.Build(replay);
             var addedLlama = replay.MapData.Llamas.First();
             Assert.Equal(1u, addedLlama.Id);
-            Assert.Equal(llama.Looted, addedLlama.Looted);
-            Assert.Equal(llama.FinalDestination, addedLlama.LandingLocation);
+            Assert.False(addedLlama.Looted);
 
             var newLlama = new SupplyDropLlama()
             {
+                Looted = true,
                 FinalDestination = new FVector(3, 2, 1)
             };
             builder.UpdateLlama(1, newLlama);
-            Assert.Equal(llama.FinalDestination, addedLlama.LandingLocation);
+            Assert.True(addedLlama.Looted);
+            Assert.Equal(newLlama.FinalDestination, addedLlama.LandingLocation);
 
             builder.UpdateLlama(2, newLlama);
             builder.Build(replay);
@@ -200,6 +199,13 @@ namespace FortniteReplayReader.Test
         [Fact]
         public void PlayerStateMarksReplayOwnerTest()
         {
+            var gameState = new GameState()
+            {
+                RecorderPlayerState = new ActorGuid { Value = 1 }
+            };
+
+            builder.UpdateGameState(gameState);
+
             var state = new FortPlayerState()
             {
                 PlayerID = 1,
@@ -209,16 +215,7 @@ namespace FortniteReplayReader.Test
                 TeamIndex = 1,
                 HeroType = new ItemDefinition() { Name = "bandolier" }
             };
-            builder.UpdatePlayerState(1, state);
-            builder.Build(replay);
-            Assert.Equal(1, replay.PlayerData.First().Id);
-            Assert.Equal("abc-123", replay.PlayerData.First().PlayerId);
-            Assert.Equal("bandolier", replay.PlayerData.First().Cosmetics.HeroType);
-
-            state = new FortPlayerState()
-            {
-                Ping = 1,
-            };
+            builder.AddActorChannel(1, 1);
             builder.UpdatePlayerState(1, state);
             builder.Build(replay);
 
@@ -477,7 +474,7 @@ namespace FortniteReplayReader.Test
             builder.Build(replay);
 
             Assert.Equal(3, replay.TeamData.Count());
-            Assert.Equal(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds.Count());
+            Assert.Equal(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds.Count);
             Assert.Contains(1, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
             Assert.Contains(2, replay.TeamData.First(i => i.TeamIndex == 1).PlayerIds);
             Assert.Contains(5, replay.TeamData.First(i => i.TeamIndex == 3).PlayerIds);

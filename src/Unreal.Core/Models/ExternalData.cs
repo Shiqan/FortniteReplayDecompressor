@@ -1,11 +1,16 @@
-﻿namespace Unreal.Core.Models
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Unreal.Core.Contracts;
+
+namespace Unreal.Core.Models
 {
-    /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L60
-    /// </summary>
-    public class ExternalData
+    public class ExternalData : IExternalData
     {
-        public byte[] Data { get; set; }
-        public int TimeSeconds { get; set; }
+        public uint NetGUID { get; init; }
+        public FArchive Archive { get; init; }
+        public int TimeSeconds { get; init; }
     }
 }

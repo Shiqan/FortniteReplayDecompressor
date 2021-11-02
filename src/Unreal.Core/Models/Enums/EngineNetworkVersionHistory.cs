@@ -3,7 +3,6 @@
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33
     /// </summary>
-    [System.Flags]
     public enum EngineNetworkVersionHistory
     {
         HISTORY_INITIAL = 1,
@@ -24,8 +23,10 @@
         HISTORY_REPLAY_DORMANCY = 16,                   // Bump version to support dormancy properly in replays
         HISTORY_ENUM_SERIALIZATION_COMPAT = 17,         // Bump version to include enum bits required for serialization into compat checksums, as well as unify enum and byte property enum serialization (TODO)
         HISTORY_SUBOBJECT_OUTER_CHAIN = 18,             // Bump version to support subobject outer chains matching on client and server
+        HISTORY_HITRESULT_INSTANCEHANDLE = 19,          // Bump version to support FHitResult change of Actor to HitObjectHandle. This change was made in CL 14369221 but a net version wasn't added at the time.
+        HISTORY_INTERFACE_PROPERTY_SERIALIZATION = 20,	// Bump version to support net serialization of FInterfaceProperty
 
         HISTORY_ENGINENETVERSION_PLUS_ONE,
-        HISTORY_ENGINENETVERSION_LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,
+        LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,
     }
 }

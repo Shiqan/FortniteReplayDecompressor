@@ -9,11 +9,11 @@
     public class Actor
     {
         public NetworkGUID ActorNetGUID { get; set; }
-        public NetworkGUID Archetype { get; set; }
-        public NetworkGUID Level { get; set; }
-        public FVector Location { get; set; }
-        public FRotator Rotation { get; set; }
-        public FVector Scale { get; set; }
-        public FVector Velocity { get; set; }
+        public NetworkGUID? Archetype { get; set; }
+        public NetworkGUID? Level { get; set; }
+        public FVector? Location { get; set; }
+        public FRotator? Rotation { get; set; }
+        public FVector? Scale { get; set; }
+        public FVector? Velocity { get; set; }
     }
 }

@@ -7,4 +7,6 @@ Special thanks to [ApertureC](https://github.com/ApertureC/) for the collaborati
 
 Special thanks to [AlpaGit](https://github.com/AlpaGit) for seeing the bits I did not see.
 
-Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) for his amazing work on the NetFieldParser (among other things).
+Special thanks to [SL-x-TnT](https://github.com/SL-x-TnT) for his amazing work on the NetFieldParser (among many other things).
+
+Special thanks to [razfriman](https://github.com/razfriman/) for his help on performance.

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Unreal.Core.Models
+﻿namespace Unreal.Core.Models
 {
     /// <summary>
     /// Struct containing common header data that is written / read when serializing Fast Arrays.

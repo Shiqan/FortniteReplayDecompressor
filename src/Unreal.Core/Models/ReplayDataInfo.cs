@@ -7,6 +7,6 @@
     {
         public uint Start { get; set; }
         public uint End { get; set; }
-        public uint Length { get; set; }
+        public int Length { get; set; }
     }
 }

@@ -6,9 +6,10 @@ namespace BenchmarkReader
     {
         static void Main(string[] args)
         {
-            //BenchmarkRunner.Run<BenchmarkBitReader>();
+            BenchmarkRunner.Run<BenchmarkBitReader>();
             //BenchmarkRunner.Run<BenchmarkBinaryReader>();
-            BenchmarkRunner.Run<BenchmarkNetGuidCache>();
+            //BenchmarkRunner.Run<BenchmarkNetGuidCache>();
+            //BenchmarkRunner.Run<BenchmarkReader>();
         }
     }
 }

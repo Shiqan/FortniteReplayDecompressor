@@ -5,10 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- .net 6 and C# 10
+- More changes and improvements by [SL-x-TnT](https://github.com/SL-x-TnT)
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
-## [2.0.0] - 2021-
+## [2.0.0] - 2021-02-11
 ### Added
 - Additional information on Player Elim event (by [SL-x-TnT](https://github.com/SL-x-TnT))
 - PlayerNames on PlayerData (by [SL-x-TnT](https://github.com/SL-x-TnT) and [xNocken](https://github.com/xNocken/))

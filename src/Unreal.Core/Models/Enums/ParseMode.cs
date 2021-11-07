@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums;
+﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
 /// Setting to determines how much should be parsed.

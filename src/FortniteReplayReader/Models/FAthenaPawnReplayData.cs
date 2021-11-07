@@ -1,5 +1,4 @@
-﻿using System;
-using Unreal.Core;
+﻿using Unreal.Core;
 using Unreal.Core.Contracts;
 
 namespace FortniteReplayReader.Models;

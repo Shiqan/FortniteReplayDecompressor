@@ -1,4 +1,3 @@
-using System.IO;
 using Xunit;
 
 namespace OozSharp.Test;

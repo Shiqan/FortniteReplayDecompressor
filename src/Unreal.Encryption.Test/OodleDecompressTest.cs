@@ -1,5 +1,4 @@
 ﻿using OozSharp.Exceptions;
-using System.IO;
 using Xunit;
 
 namespace Unreal.Encryption.Test;

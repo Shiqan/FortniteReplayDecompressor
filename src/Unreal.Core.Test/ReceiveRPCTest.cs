@@ -1,4 +1,3 @@
-using Unreal.Core.Models;
 using Xunit;
 
 namespace Unreal.Core.Test;

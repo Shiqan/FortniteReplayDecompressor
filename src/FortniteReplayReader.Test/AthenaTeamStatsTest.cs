@@ -1,7 +1,3 @@
-using FortniteReplayReader.Extensions;
-using FortniteReplayReader.Models;
-using System;
-using System.IO;
 using Xunit;
 
 namespace FortniteReplayReader.Test;

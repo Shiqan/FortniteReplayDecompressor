@@ -1,5 +1,4 @@
 using FortniteReplayReader.Test.Mocks;
-using System.IO;
 using Xunit;
 
 namespace FortniteReplayReader.Test;

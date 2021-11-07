@@ -1,5 +1,3 @@
-using System;
-
 namespace FortniteReplayReader.Models.Events;
 
 public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>

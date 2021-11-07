@@ -1,6 +1,5 @@
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Test.Mocks;
-using System.IO;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;

@@ -1,10 +1,7 @@
 ﻿using FortniteReplayReader;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader;

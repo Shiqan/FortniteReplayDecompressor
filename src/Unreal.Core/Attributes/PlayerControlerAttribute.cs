@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Attributes;
+﻿namespace Unreal.Core.Attributes;
 
 /// <summary>
 /// Attribute to mark PlayerControllers, which require an additional byte to be parsed in 

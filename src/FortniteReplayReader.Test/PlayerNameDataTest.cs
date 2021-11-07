@@ -1,5 +1,4 @@
 ﻿using FortniteReplayReader.Models.NetFieldExports;
-using System.IO;
 using Xunit;
 
 namespace FortniteReplayReader.Test;

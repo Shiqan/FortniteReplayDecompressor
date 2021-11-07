@@ -1,5 +1,4 @@
-﻿using System;
-using Unreal.Core.Contracts;
+﻿using Unreal.Core.Contracts;
 
 namespace Unreal.Core.Models;
 

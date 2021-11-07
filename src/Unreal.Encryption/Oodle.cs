@@ -1,5 +1,4 @@
 ﻿using OozSharp;
-using System;
 
 namespace Unreal.Encryption;
 
@@ -8,7 +7,7 @@ namespace Unreal.Encryption;
 /// </summary>
 public static class Oodle
 {
-    static readonly Kraken kraken = new();
+    private static readonly Kraken kraken = new();
 
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleUtils.cpp#L14

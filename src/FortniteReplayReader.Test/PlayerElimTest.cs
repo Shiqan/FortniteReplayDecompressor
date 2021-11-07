@@ -1,8 +1,4 @@
 using FortniteReplayReader.Exceptions;
-using FortniteReplayReader.Extensions;
-using FortniteReplayReader.Models;
-using System;
-using System.IO;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Xunit;

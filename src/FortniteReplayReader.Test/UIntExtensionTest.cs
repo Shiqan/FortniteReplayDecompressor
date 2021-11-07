@@ -1,7 +1,4 @@
 ﻿using FortniteReplayReader.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace FortniteReplayReader.Test;

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace FortniteReplayReader.Models;
+﻿namespace FortniteReplayReader.Models;
 
 public class TeamData
 {

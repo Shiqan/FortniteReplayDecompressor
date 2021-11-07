@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OozSharp.Extensions;
+﻿namespace OozSharp.Extensions;
 
 public unsafe static class Util
 {

@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Unreal.Core;
 
+/// <summary>
+/// 
+/// </summary>
 public class KeyList<K, V>
 {
-    private readonly List<V> _vals = new List<V>();
-    private readonly Dictionary<K, int> _keys = new Dictionary<K, int>();
+    private readonly List<V> _vals = new();
+    private readonly Dictionary<K, int> _keys = new();
     public int Length => _vals.Count;
 
     public int Count(Func<V, bool> func)

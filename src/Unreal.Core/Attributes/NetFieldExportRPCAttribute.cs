@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Attributes;
+﻿namespace Unreal.Core.Attributes;
 
 /// <summary>
 /// Attribute to map a property to the specified path. Used for function RPC property replication.

@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using System;
 using Unreal.Core.Models;
 
 namespace BenchmarkReader;

@@ -1,9 +1,4 @@
-﻿using OozSharp.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace OozSharp;
+﻿namespace OozSharp;
 
 public unsafe struct MermaidLzTable
 {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums;
+﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
 ///  Describes rules for network replicating a vector efficiently

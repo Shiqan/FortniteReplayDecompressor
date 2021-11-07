@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums;
+﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
 /// Flags relevant to network serialization of a unique id

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Unreal.Core.Extensions;
+﻿namespace Unreal.Core.Extensions;
 
 public static class StringExtensions
 {

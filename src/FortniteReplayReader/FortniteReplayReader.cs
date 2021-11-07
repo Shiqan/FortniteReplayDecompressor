@@ -6,8 +6,6 @@ using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Unreal.Core;

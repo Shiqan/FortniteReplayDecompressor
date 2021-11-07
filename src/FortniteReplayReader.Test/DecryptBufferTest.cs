@@ -2,14 +2,14 @@ using FortniteReplayReader.Test.Mocks;
 using System.IO;
 using Xunit;
 
-namespace FortniteReplayReader.Test
+namespace FortniteReplayReader.Test;
+
+public class DecryptBufferTest
 {
-    public class DecryptBufferTest
+    [Fact]
+    public void DecryptTest()
     {
-        [Fact]
-        public void DecryptTest()
-        {
-            byte[] rawData = {
+        byte[] rawData = {
                 0xBD, 0x84, 0x4B, 0x84, 0x9B, 0xA6, 0x2D, 0x14, 0x02, 0x10, 0x1D, 0xB3,
                 0xB6, 0xA1, 0x45, 0xE2, 0x34, 0x13, 0x7E, 0x42, 0x27, 0x39, 0xDE, 0xC4,
                 0x54, 0x8F, 0xBF, 0xA3, 0x3E, 0xCA, 0xC2, 0xA6, 0x02, 0x2F, 0x72, 0xC8,
@@ -23,34 +23,33 @@ namespace FortniteReplayReader.Test
                 0xE7, 0xBF, 0x1E, 0x13, 0xE3, 0x62, 0xB4, 0x44
             };
 
-            using var archive = new Unreal.Core.BinaryReader(new MemoryStream(rawData))
+        using var archive = new Unreal.Core.BinaryReader(new MemoryStream(rawData))
+        {
+            EngineNetworkVersion = Unreal.Core.Models.Enums.EngineNetworkVersionHistory.LATEST, // 16
+        };
+        var reader = new MockReplayReader()
+        {
+            Branch = "++Fortnite+Release-12.00"
+        };
+        reader.SetReplay(new Models.FortniteReplay()
+        {
+            Info = new Unreal.Core.Models.ReplayInfo()
             {
-                EngineNetworkVersion = Unreal.Core.Models.Enums.EngineNetworkVersionHistory.LATEST, // 16
-            };
-            var reader = new MockReplayReader()
-            {
-                Branch = "++Fortnite+Release-12.00"
-            };
-            reader.SetReplay(new Models.FortniteReplay()
-            {
-                Info = new Unreal.Core.Models.ReplayInfo()
-                {
-                    IsEncrypted = true,
-                    EncryptionKey = new byte[] {
+                IsEncrypted = true,
+                EncryptionKey = new byte[] {
                         0xEE, 0x14, 0x20, 0xF9, 0x1C, 0x54, 0x38, 0x2F, 0x10, 0x66, 0xFA, 0xC1,
                         0x56, 0xB0, 0x6E, 0xBC, 0x14, 0xFA, 0xCE, 0xEF, 0xCB, 0xFB, 0xB2, 0xE6,
                         0x78, 0xC5, 0x77, 0xE8, 0xD4, 0x5B, 0xF3, 0x5C
                     }
-                }
-            });
-            var result = reader.DecryptBuffer(archive, 128);
+            }
+        });
+        var result = reader.DecryptBuffer(archive, 128);
 
-            Assert.True(archive.AtEnd());
-            Assert.False(archive.IsError);
+        Assert.True(archive.AtEnd());
+        Assert.False(archive.IsError);
 
-            reader.ParseElimination(result, new Unreal.Core.Models.EventInfo { StartTime = 0 });
-            Assert.True(result.AtEnd());
-            Assert.False(result.IsError);
-        }
+        reader.ParseElimination(result, new Unreal.Core.Models.EventInfo { StartTime = 0 });
+        Assert.True(result.AtEnd());
+        Assert.False(result.IsError);
     }
 }

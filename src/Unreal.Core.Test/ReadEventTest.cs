@@ -4,14 +4,14 @@ using Unreal.Core.Models.Enums;
 using Unreal.Core.Test.Mocks;
 using Xunit;
 
-namespace Unreal.Core.Test
+namespace Unreal.Core.Test;
+
+public class ReadEventTest
 {
-    public class ReadEventTest
+    [Fact]
+    public void ReadEventTestThrows()
     {
-        [Fact]
-        public void ReadEventTestThrows()
-        {
-            byte[] rawData = {
+        byte[] rawData = {
                 0x43, 0x00, 0x00, 0x00, 0x55, 0x6E, 0x73, 0x61, 0x76, 0x65, 0x64, 0x52, 0x65,
                 0x70, 0x6C, 0x61, 0x79, 0x2D, 0x32, 0x30, 0x31, 0x39, 0x2E, 0x31, 0x31, 0x2E,
                 0x31, 0x38, 0x2D, 0x32, 0x30, 0x2E, 0x33, 0x36, 0x2E, 0x31, 0x33, 0x5F, 0x42,
@@ -22,11 +22,10 @@ namespace Unreal.Core.Test
                 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6E, 0x74,
                 0x00, 0x66, 0xD3, 0x13, 0x00, 0x66, 0xD3, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00
             };
-            using var stream = new MemoryStream(rawData);
-            using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new MockReplayReader();
+        using var stream = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(stream);
+        var reader = new MockReplayReader();
 
-            Assert.Throws<UnknownEventException>(() => reader.ReadEvent(archive));
-        }
+        Assert.Throws<UnknownEventException>(() => reader.ReadEvent(archive));
     }
 }

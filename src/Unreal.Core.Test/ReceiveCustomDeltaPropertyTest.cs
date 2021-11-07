@@ -1,15 +1,15 @@
 using Unreal.Core.Models;
 using Xunit;
 
-namespace Unreal.Core.Test
+namespace Unreal.Core.Test;
+
+public class ReceiveCustomDeltaPropertyTest
 {
-    public class ReceiveCustomDeltaPropertyTest
+    [Fact]
+    public void CustomDeltaPropertyTest()
     {
-        [Fact]
-        public void CustomDeltaPropertyTest()
-        {
-            // Inventory
-            byte[] rawData = {
+        // Inventory
+        byte[] rawData = {
                 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x30, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x12, 0x01, 0x40, 0x00,
                 0x00, 0x00, 0x32, 0x02, 0x61, 0x18, 0x0A, 0x02, 0x00, 0x00, 0x2A, 0x01,
@@ -61,30 +61,29 @@ namespace Unreal.Core.Test
                 0x00, 0x00
             };
 
-            //var archive = new BitReader(rawData, 4623)
-            //{
-            //    EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER,
-            //    NetworkVersion = Models.Enums.NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP
-            //};
-            //var reader = new Mocks.MockReplayReader();
-            //reader.ReceiveCustomDeltaProperty(archive);
-        }
+        //var archive = new BitReader(rawData, 4623)
+        //{
+        //    EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER,
+        //    NetworkVersion = Models.Enums.NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP
+        //};
+        //var reader = new Mocks.MockReplayReader();
+        //reader.ReceiveCustomDeltaProperty(archive);
+    }
 
-        [Fact]
-        public void CustomDeltaPropertyTest2()
-        {
-            // CurrentPlayListInfo
-            byte[] rawData = {
+    [Fact]
+    public void CustomDeltaPropertyTest2()
+    {
+        // CurrentPlayListInfo
+        byte[] rawData = {
                 0xFB, 0x34, 0x00, 0x00, 0x00, 0x00
             };
 
-            //var archive = new BitReader(rawData, 48)
-            //{
-            //    EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER,
-            //    NetworkVersion = Models.Enums.NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP
-            //};
-            //var reader = new Mocks.MockReplayReader();
-            //reader.ReceiveCustomDeltaProperty(archive);
-        }
+        //var archive = new BitReader(rawData, 48)
+        //{
+        //    EngineNetworkVersion = Models.Enums.EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER,
+        //    NetworkVersion = Models.Enums.NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP
+        //};
+        //var reader = new Mocks.MockReplayReader();
+        //reader.ReceiveCustomDeltaProperty(archive);
     }
 }

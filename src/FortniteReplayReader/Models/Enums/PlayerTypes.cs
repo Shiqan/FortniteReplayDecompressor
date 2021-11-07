@@ -1,9 +1,8 @@
-﻿namespace FortniteReplayReader.Models.Enums
+﻿namespace FortniteReplayReader.Models.Enums;
+
+public enum PlayerTypes
 {
-    public enum PlayerTypes
-    {
-        BOT = 0x03,
-        NAMED_BOT = 0x10,
-        PLAYER = 0x11
-    }
+    BOT = 0x03,
+    NAMED_BOT = 0x10,
+    PLAYER = 0x11
 }

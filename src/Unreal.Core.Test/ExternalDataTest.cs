@@ -2,12 +2,12 @@
 using Unreal.Core.Test.Mocks;
 using Xunit;
 
-namespace Unreal.Core.Test
+namespace Unreal.Core.Test;
+
+public class ExternalDataTest
 {
-    public class ExternalDataTest
-    {
-        [Theory]
-        [InlineData(new byte[] { 
+    [Theory]
+    [InlineData(new byte[] {
             0xB1, 0x02, 0x39, 0x06, 0x19, 0xFB, 0x01, 0xF6, 0xFF, 0xFF, 0xFF, 0x13,
             0x5F, 0x19, 0x00, 0x50, 0x00, 0x63, 0x00, 0x61, 0x00, 0x62, 0x00, 0x61,
             0x00, 0x60, 0x00, 0x6E, 0x00, 0x00, 0x00, 0x81, 0x02, 0x69, 0x06, 0x19,
@@ -28,15 +28,14 @@ namespace Unreal.Core.Test
             0xAD, 0x08, 0x19, 0xFB, 0x01, 0x08, 0x00, 0x00, 0x00, 0x3B, 0x62, 0x61,
             0x26, 0x50, 0x28, 0x33, 0x00, 0x00
         })]
-        [InlineData(new byte[] { 0x00 })]
-        public void ReadExternalDataTest(byte[] rawData)
-        {
-            using var stream = new MemoryStream(rawData);
-            using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new MockReplayReader();
-            reader.ReadExternalData(archive);
-            Assert.True(archive.AtEnd());
-            Assert.False(archive.IsError);
-        }
+    [InlineData(new byte[] { 0x00 })]
+    public void ReadExternalDataTest(byte[] rawData)
+    {
+        using var stream = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(stream);
+        var reader = new MockReplayReader();
+        reader.ReadExternalData(archive);
+        Assert.True(archive.AtEnd());
+        Assert.False(archive.IsError);
     }
 }

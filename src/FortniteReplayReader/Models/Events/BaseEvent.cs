@@ -1,10 +1,9 @@
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 
-namespace FortniteReplayReader.Models.Events
+namespace FortniteReplayReader.Models.Events;
+
+public abstract class BaseEvent : IEvent
 {
-    public abstract class BaseEvent : IEvent
-    {
-        public EventInfo Info { get; set; }
-    }
+    public EventInfo Info { get; set; }
 }

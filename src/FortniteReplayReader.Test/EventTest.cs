@@ -6,12 +6,12 @@ using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Xunit;
 
-namespace FortniteReplayReader.Test
+namespace FortniteReplayReader.Test;
+
+public class EventTest
 {
-    public class EventTest
-    {
-        [Theory]
-        [InlineData(new byte[] {
+    [Theory]
+    [InlineData(new byte[] {
             0x33, 0x00, 0x00, 0x00, 0x55, 0x6E, 0x73, 0x61, 0x76, 0x65, 0x64, 0x52, 0x65,
             0x70, 0x6C, 0x61, 0x79, 0x2D, 0x32, 0x30, 0x31, 0x39, 0x2E, 0x31, 0x31, 0x2E,
             0x31, 0x38, 0x2D, 0x32, 0x30, 0x2E, 0x33, 0x36, 0x2E, 0x31, 0x33, 0x5F, 0x41,
@@ -26,7 +26,7 @@ namespace FortniteReplayReader.Test
             0x00, 0x00, 0x00, 0xA7, 0x00, 0x00, 0x00, 0x60, 0x3C, 0x00, 0x00, 0xED, 0x08,
             0x00, 0x00, 0xAA, 0x05, 0x00, 0x00, 0x78, 0x48, 0x05, 0x00
         })]
-        [InlineData(new byte[] {
+    [InlineData(new byte[] {
             0x2C, 0x00, 0x00, 0x00, 0x55, 0x6E, 0x73, 0x61, 0x76, 0x65, 0x64, 0x52, 0x65,
             0x70, 0x6C, 0x61, 0x79, 0x2D, 0x32, 0x30, 0x31, 0x39, 0x2E, 0x31, 0x31, 0x2E,
             0x31, 0x38, 0x2D, 0x32, 0x30, 0x2E, 0x33, 0x36, 0x2E, 0x31, 0x33, 0x5F, 0x52,
@@ -40,28 +40,28 @@ namespace FortniteReplayReader.Test
             0xDA, 0xBE, 0x31, 0x3F, 0x4A, 0xDC, 0x5B, 0x3F, 0xB7, 0xA0, 0x02, 0x3E, 0x64,
             0xE8, 0x2C, 0x3F, 0xF0, 0x87, 0x83, 0x3E
         })]
-        public void ReadEventTest(byte[] rawData)
+    public void ReadEventTest(byte[] rawData)
+    {
+        using var stream = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(stream);
+        var reader = new MockReplayReader();
+        reader.SetReplay(new FortniteReplay()
         {
-            using var stream = new MemoryStream(rawData);
-            using var archive = new Unreal.Core.BinaryReader(stream);
-            var reader = new MockReplayReader();
-            reader.SetReplay(new FortniteReplay()
+            Info = new ReplayInfo()
             {
-                Info = new ReplayInfo()
-                {
-                    IsEncrypted = false
-                }
-            });
-            reader.ReadEvent(archive);
+                IsEncrypted = false
+            }
+        });
+        reader.ReadEvent(archive);
 
-            Assert.True(archive.AtEnd());
-            Assert.False(archive.IsError);
-        }
+        Assert.True(archive.AtEnd());
+        Assert.False(archive.IsError);
+    }
 
-        [Fact]
-        public void ReadEventTestThrows()
-        {
-            byte[] rawData = {
+    [Fact]
+    public void ReadEventTestThrows()
+    {
+        byte[] rawData = {
                 0x43, 0x00, 0x00, 0x00, 0x55, 0x6E, 0x73, 0x61, 0x76, 0x65, 0x64, 0x52, 0x65,
                 0x70, 0x6C, 0x61, 0x79, 0x2D, 0x32, 0x30, 0x31, 0x39, 0x2E, 0x31, 0x31, 0x2E,
                 0x31, 0x38, 0x2D, 0x32, 0x30, 0x2E, 0x33, 0x36, 0x2E, 0x31, 0x33, 0x5F, 0x42,
@@ -72,28 +72,27 @@ namespace FortniteReplayReader.Test
                 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6E, 0x74,
                 0x00, 0x66, 0xD3, 0x13, 0x00, 0x66, 0xD3, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00
             };
-            using var stream = new MemoryStream(rawData);
-            using var archive = new Unreal.Core.BinaryReader(stream)
+        using var stream = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(stream)
+        {
+            EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER
+        };
+        var reader = new MockReplayReader();
+        reader.SetReplay(new FortniteReplay()
+        {
+            Info = new ReplayInfo()
             {
-                EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER
-            };
-            var reader = new MockReplayReader();
-            reader.SetReplay(new FortniteReplay()
-            {
-                Info = new ReplayInfo()
-                {
-                    IsEncrypted = false
-                }
-            });
-            reader.SetMode(ParseMode.Debug);
+                IsEncrypted = false
+            }
+        });
+        reader.SetMode(ParseMode.Debug);
 
-            Assert.Throws<UnknownEventException>(() => reader.ReadEvent(archive));
+        Assert.Throws<UnknownEventException>(() => reader.ReadEvent(archive));
 
-            archive.Reset();
-            reader.SetMode(ParseMode.Normal);
+        archive.Reset();
+        reader.SetMode(ParseMode.Normal);
 
-            var exception = Record.Exception(() => reader.ReadEvent(archive));
-            Assert.Null(exception);
-        }
+        var exception = Record.Exception(() => reader.ReadEvent(archive));
+        Assert.Null(exception);
     }
 }

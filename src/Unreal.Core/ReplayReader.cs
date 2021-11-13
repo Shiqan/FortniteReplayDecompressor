@@ -1833,16 +1833,6 @@ namespace Unreal.Core
                 }
             }
 
-            if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
-            {
-                var bActorIsOuter = bunch.Archive.ReadBit();
-                if (!bActorIsOuter)
-                {
-                    // outerobject
-                    InternalLoadObject(bunch.Archive, false);
-                }
-            }
-
             return classNetGUID.Value;
         }
 

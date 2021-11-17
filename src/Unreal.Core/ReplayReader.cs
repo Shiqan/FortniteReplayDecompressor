@@ -1831,18 +1831,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
         }
 
-        if (bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_SUBOBJECT_OUTER_CHAIN)
-        {
-            var bActorIsOuter = bunch.Archive.ReadBit();
-            if (!bActorIsOuter)
-            {
-                // outerobject
-                InternalLoadObject(bunch.Archive, false);
-            }
+            return classNetGUID.Value;
         }
-
-        return classNetGUID.Value;
-    }
 
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007

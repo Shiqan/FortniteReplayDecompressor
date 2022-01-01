@@ -8,7 +8,7 @@ namespace FortniteReplayReader.Models.Events
         public PlayerEliminationInfo EliminatorInfo { get; internal set; } = new PlayerEliminationInfo();
 
         public string? Eliminated => EliminatedInfo?.Id;
-        public string? Eliminator => EliminatedInfo?.Id;
+        public string? Eliminator => EliminatorInfo?.Id;
         public byte GunType { get; internal set; }
         public string Time { get; internal set; }
         public bool Knocked { get; internal set; }
@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Models.Events
 
         public bool Equals(PlayerElimination other)
         {
-            if (other.Equals(null))
+            if (other is null)
             {
                 return false;
             }

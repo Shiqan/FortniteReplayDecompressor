@@ -6,9 +6,9 @@ using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader;
 
-class Program
+internal class Program
 {
-    static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var serviceCollection = new ServiceCollection()
             .AddLogging(loggingBuilder => loggingBuilder
@@ -19,7 +19,7 @@ class Program
 
         //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-        var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\season 11\";
+        var replayFilesFolder = @"H:\Projects\FortniteReplayCollection\_upload\season 11\";
         var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
         var sw = new Stopwatch();

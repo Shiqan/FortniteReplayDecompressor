@@ -1,4 +1,6 @@
-﻿using FortniteReplayReader.Exceptions;
+﻿using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.Enums;
@@ -6,8 +8,6 @@ using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Microsoft.Extensions.Logging;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
@@ -42,9 +42,9 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     }
 
     private string _branch;
-    public int Major { get; set; }
-    public int Minor { get; set; }
-    public string Branch
+    protected int Major { get; set; }
+    protected int Minor { get; set; }
+    protected string Branch
     {
         get => _branch;
         set
@@ -150,18 +150,18 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         }
     }
 
-    public override void ReadReplayHeader(FArchive archive)
+    protected override void ReadReplayHeader(FArchive archive)
     {
         base.ReadReplayHeader(archive);
         Branch = Replay.Header.Branch;
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363"/>
     /// </summary>
     /// <param name="archive"></param>
     /// <returns></returns>
-    public override void ReadEvent(FArchive archive)
+    protected override void ReadEvent(FArchive archive)
     {
         var info = new EventInfo
         {
@@ -210,7 +210,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         }
     }
 
-    public virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)
+    protected virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)
     {
         return new EncryptionKey()
         {
@@ -219,7 +219,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         };
     }
 
-    public virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
+    protected virtual TeamStats ParseTeamStats(FArchive archive, EventInfo info)
     {
         return new TeamStats()
         {
@@ -230,7 +230,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         };
     }
 
-    public virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
+    protected virtual Stats ParseMatchStats(FArchive archive, EventInfo info)
     {
         return new Stats()
         {
@@ -250,7 +250,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         };
     }
 
-    public virtual PlayerElimination ParseElimination(FArchive archive, EventInfo info)
+    protected virtual PlayerElimination ParseElimination(FArchive archive, EventInfo info)
     {
         try
         {
@@ -305,7 +305,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         }
     }
 
-    public virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info, int version)
+    protected virtual void ParsePlayer(FArchive archive, PlayerEliminationInfo info, int version)
     {
         if (version < 6)
         {
@@ -327,13 +327,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
         if (!Replay.Info.IsEncrypted)
         {
-            return new Unreal.Core.BinaryReader(archive.ReadBytes(size))
-            {
-                EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
-                NetworkVersion = Replay.Header.NetworkVersion,
-                ReplayHeaderFlags = Replay.Header.Flags,
-                ReplayVersion = Replay.Info.FileVersion
-            };
+            return archive;
         }
 
         var key = Replay.Info.EncryptionKey;

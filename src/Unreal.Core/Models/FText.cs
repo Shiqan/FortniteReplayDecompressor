@@ -3,7 +3,7 @@
 namespace Unreal.Core.Models;
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L325
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L325"/>
 /// </summary>
 public class FText : IProperty
 {
@@ -12,7 +12,7 @@ public class FText : IProperty
     public string Text { get; set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/Text.cpp#L794
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/Text.cpp#L794"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)
@@ -31,7 +31,7 @@ public class FText : IProperty
 }
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L35
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Public/Internationalization/Text.h#L35"/>
 /// </summary>
 [Flags]
 public enum FTextType
@@ -44,7 +44,7 @@ public enum FTextType
 };
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/TextHistory.h#L16
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Core/Private/Internationalization/TextHistory.h#L16"/>
 /// </summary>
 public enum ETextHistoryType
 {

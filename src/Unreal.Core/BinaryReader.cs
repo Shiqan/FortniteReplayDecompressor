@@ -9,8 +9,8 @@ namespace Unreal.Core;
 /// </summary>
 public class BinaryReader : FArchive
 {
-    public ReadOnlyMemory<byte> Bytes;
-    private int _length;
+    private readonly ReadOnlyMemory<byte> Bytes;
+    private readonly int _length;
     private int _position;
     public override int Position { get => _position; protected set => Seek(value); }
 

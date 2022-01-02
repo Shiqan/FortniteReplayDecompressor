@@ -1,31 +1,23 @@
+using FortniteReplayReader.Test.Mocks;
 using Xunit;
 
 namespace FortniteReplayReader.Test;
 
 public class BranchTest
 {
-    [Fact]
-    public void ParseBranchTest()
+    [Theory]
+    [InlineData("++PUBG+Release-11.11", 0, 0)]
+    [InlineData("++Fortnite+Release-5.41", 5, 41)]
+    [InlineData("++Fortnite+Release-7.10", 7, 10)]
+    [InlineData("++Fortnite+Release-11.11", 11, 11)]
+    [InlineData("++Fortnite+Release-999.999", 999, 999)]
+    public void ParseBranchTest(string branch, int major, int minor)
     {
-        var reader = new FortniteReplayReader.ReplayReader();
-        reader.Branch = "++PUBG+Release-11.11";
-        Assert.Equal(0, reader.Major);
-        Assert.Equal(0, reader.Minor);
-
-        reader.Branch = "++Fortnite+Release-5.41";
-        Assert.Equal(5, reader.Major);
-        Assert.Equal(41, reader.Minor);
-
-        reader.Branch = "++Fortnite+Release-7.10";
-        Assert.Equal(7, reader.Major);
-        Assert.Equal(10, reader.Minor);
-
-        reader.Branch = "++Fortnite+Release-11.11";
-        Assert.Equal(11, reader.Major);
-        Assert.Equal(11, reader.Minor);
-
-        reader.Branch = "++Fortnite+Release-999.999";
-        Assert.Equal(999, reader.Major);
-        Assert.Equal(999, reader.Minor);
+        var reader = new MockReplayReader
+        {
+            Branch = branch
+        };
+        Assert.Equal(major, reader.Major);
+        Assert.Equal(minor, reader.Minor);
     }
 }

@@ -1,27 +1,12 @@
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models.Events;
+using FortniteReplayReader.Test.Mocks;
 using Xunit;
 
 namespace FortniteReplayReader.Test;
 
 public class TestAthenaMatchStats
 {
-    private void AssertEqual(Stats expected, Stats actual)
-    {
-        Assert.Equal(expected.Eliminations, actual.Eliminations);
-        Assert.Equal(expected.Assists, actual.Assists);
-        Assert.Equal(expected.Revives, actual.Revives);
-        Assert.Equal(expected.Accuracy, (float)Math.Round(actual.Accuracy * 100));
-        Assert.Equal(expected.MaterialsUsed, actual.MaterialsUsed);
-        Assert.Equal(expected.MaterialsGathered, actual.MaterialsGathered);
-        Assert.Equal(expected.DamageTaken, actual.DamageTaken);
-        Assert.Equal(expected.WeaponDamage, actual.WeaponDamage);
-        Assert.Equal(expected.OtherDamage, actual.OtherDamage);
-        Assert.Equal(expected.DamageToPlayers, actual.DamageToPlayers);
-        Assert.Equal(expected.DamageToStructures, actual.DamageToStructures);
-        Assert.Equal(expected.TotalTraveled, (uint)actual.TotalTraveled.CentimetersToDistance());
-    }
-
     [Fact]
     public void TestAthenaMatchStats0()
     {
@@ -33,7 +18,7 @@ public class TestAthenaMatchStats
             };
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new ReplayReader();
+        var reader = new MockReplayReader();
         var result = reader.ParseMatchStats(archive, null);
 
         Assert.True(archive.AtEnd());
@@ -71,7 +56,7 @@ public class TestAthenaMatchStats
 
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new ReplayReader();
+        var reader = new MockReplayReader();
         var result = reader.ParseMatchStats(archive, null);
 
         Assert.True(archive.AtEnd());
@@ -107,7 +92,7 @@ public class TestAthenaMatchStats
             };
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new ReplayReader();
+        var reader = new MockReplayReader();
         var result = reader.ParseMatchStats(archive, null);
 
         Assert.True(archive.AtEnd());
@@ -129,5 +114,21 @@ public class TestAthenaMatchStats
         };
 
         AssertEqual(expected, result);
+    }
+
+    private void AssertEqual(Stats expected, Stats actual)
+    {
+        Assert.Equal(expected.Eliminations, actual.Eliminations);
+        Assert.Equal(expected.Assists, actual.Assists);
+        Assert.Equal(expected.Revives, actual.Revives);
+        Assert.Equal(expected.Accuracy, (float) Math.Round(actual.Accuracy * 100));
+        Assert.Equal(expected.MaterialsUsed, actual.MaterialsUsed);
+        Assert.Equal(expected.MaterialsGathered, actual.MaterialsGathered);
+        Assert.Equal(expected.DamageTaken, actual.DamageTaken);
+        Assert.Equal(expected.WeaponDamage, actual.WeaponDamage);
+        Assert.Equal(expected.OtherDamage, actual.OtherDamage);
+        Assert.Equal(expected.DamageToPlayers, actual.DamageToPlayers);
+        Assert.Equal(expected.DamageToStructures, actual.DamageToStructures);
+        Assert.Equal(expected.TotalTraveled, (uint) actual.TotalTraveled.CentimetersToDistance());
     }
 }

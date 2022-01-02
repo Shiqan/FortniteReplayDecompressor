@@ -1,7 +1,7 @@
 ﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Misc/NetworkVersion.h#L33"/>
 /// </summary>
 public enum EngineNetworkVersionHistory
 {

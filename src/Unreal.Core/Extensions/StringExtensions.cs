@@ -3,7 +3,7 @@
 public static class StringExtensions
 {
     /// <summary>
-    /// see UObjectBaseUtility
+    /// <see href="UObjectBaseUtility"/>
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>

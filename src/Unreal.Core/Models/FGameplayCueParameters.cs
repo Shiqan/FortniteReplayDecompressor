@@ -107,7 +107,7 @@ public class FGameplayCueParameters : IProperty
     public uint TargetAttachComponent { get; private set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L789
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayEffectTypes.cpp#L789"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)

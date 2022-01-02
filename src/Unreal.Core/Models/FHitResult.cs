@@ -4,7 +4,7 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core.Models;
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/298e9af268d1982835fc86ca3e6cdb7fb2777a51/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L1926
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/298e9af268d1982835fc86ca3e6cdb7fb2777a51/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L1926"/>
 /// </summary>
 public class FHitResult : IProperty
 {
@@ -113,7 +113,7 @@ public class FHitResult : IProperty
     public string MyBoneName { get; private set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c10022aa46e208b1593dd537c2607784aac158f1/Engine/Source/Runtime/Engine/Private/Collision/Collision.cpp#L42"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)

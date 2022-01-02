@@ -4,7 +4,7 @@ namespace Unreal.Core.Models;
 
 /// <summary>
 /// Data about montages that is replicated to simulated clients
-/// see https://github.com/EpicGames/UnrealEngine/blob/4f421ab90c6e9ff4f0b5c9ec4de6dcd3297ad488/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbilityTypes.h#L177
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/4f421ab90c6e9ff4f0b5c9ec4de6dcd3297ad488/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public/Abilities/GameplayAbilityTypes.h#L177"/>
 /// </summary>
 public class FGameplayAbilityRepAnimMontage : IProperty
 {

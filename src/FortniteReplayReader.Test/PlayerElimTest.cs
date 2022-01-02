@@ -1,4 +1,5 @@
 using FortniteReplayReader.Exceptions;
+using FortniteReplayReader.Test.Mocks;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Xunit;
@@ -139,7 +140,7 @@ public class PlayerElimTest
         {
             EngineNetworkVersion = version
         };
-        var reader = new ReplayReader()
+        var reader = new MockReplayReader()
         {
             Branch = branch
         };
@@ -166,7 +167,7 @@ public class PlayerElimTest
         {
             EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_JITTER_IN_HEADER
         };
-        var reader = new ReplayReader()
+        var reader = new MockReplayReader()
         {
             Branch = "++Fortnite+Release-11.31"
         };

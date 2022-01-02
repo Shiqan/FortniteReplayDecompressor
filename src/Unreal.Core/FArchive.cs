@@ -4,8 +4,8 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core;
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Serialization/Archive.h
-/// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Serialization/Archive.cpp
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Public/Serialization/Archive.h"/>
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Serialization/Archive.cpp"/>
 /// </summary>
 public abstract class FArchive : IDisposable
 {
@@ -59,7 +59,7 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Returns whether or not this replay was recorded / is playing with Level Streaming fixes.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L693
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L693"/>
     /// </summary>
     public virtual bool HasLevelStreamingFixes()
     {
@@ -68,7 +68,7 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Returns whether or not this replay was recorded / is playing with Game Specific Frame Data.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/0218ad46444accdba786b9a82bee3f445d9fa938/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L928
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/0218ad46444accdba786b9a82bee3f445d9fa938/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L928"/>
     /// </summary>
     public virtual bool HasGameSpecificFrameData()
     {
@@ -77,7 +77,7 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Returns whether or not this replay was recorded / is playing with delta checkpoints.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/feeb3c7469e8e881cd4fb67dbcd830d6f94e5e8b/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L901
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/feeb3c7469e8e881cd4fb67dbcd830d6f94e5e8b/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L901"/>
     /// </summary>
     public virtual bool HasDeltaCheckpoints()
     {
@@ -115,7 +115,7 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Reads an array of <typeparamref name="T"/> from the current stream. The array is prefixed with the number of items in it.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Containers/Array.h#L1069
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Containers/Array.h#L1069"/>
     /// </summary>
     /// <typeparam name="T">The type of the value.</typeparam>
     /// <param name="func1">The function to the value.</param>
@@ -173,28 +173,28 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Reads a string from the current stream. The string is prefixed with the length as an 4-byte signed integer.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390"/>
     /// </summary>
     /// <returns>A string read from this stream.</returns>
     public abstract string ReadFString();
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/CoreUObject/Private/UObject/CoreNet.cpp#L277"/>
     /// </summary>
     public abstract string ReadFName();
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/TransformNonVectorized.h#L631
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Math/TransformNonVectorized.h#L631"/>
     /// </summary>
     public abstract FTransform ReadFTransfrom();
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/Math/Quat.h#L582
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c3caf7b6bf12ae4c8e09b606f10a09776b4d1f38/Engine/Source/Runtime/Core/Public/Math/Quat.h#L582"/>
     /// </summary>
     public abstract FQuat ReadFQuat();
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1210"/>
     /// </summary>
     public abstract FVector ReadFVector();
 
@@ -213,14 +213,14 @@ public abstract class FArchive : IDisposable
 
     /// <summary>
     /// Retuns uint
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/BitReader.cpp#L254"/>
     /// </summary>
     /// <returns>uint</returns>
     public abstract uint ReadIntPacked();
 
     /// <summary>
     /// Reads an array of tuples from the current stream. The array is prefixed with the number of items in it.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Containers/Array.h#L1069
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/7d9919ac7bfd80b7483012eab342cb427d60e8c9/Engine/Source/Runtime/Core/Public/Containers/Array.h#L1069"/>
     /// </summary>
     /// <typeparam name="T">The type of the first value.</typeparam>
     /// <typeparam name="U">The type of the second value.</typeparam>

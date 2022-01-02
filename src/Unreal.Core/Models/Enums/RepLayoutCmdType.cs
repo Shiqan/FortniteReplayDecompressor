@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Various types of Properties supported for Replication.
-/// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L677
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L677"/>
 /// </summary>
 public enum RepLayoutCmdType
 {

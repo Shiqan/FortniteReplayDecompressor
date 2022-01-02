@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Struct containing common header data that is written / read when serializing Fast Arrays.
-/// see https://github.com/EpicGames/UnrealEngine/blob/a097c209d382ada36690612ad8eaf8ee57d0887f/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L556
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/a097c209d382ada36690612ad8eaf8ee57d0887f/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L556"/>
 /// </summary>
 public class FFastArraySerializerHeader
 {

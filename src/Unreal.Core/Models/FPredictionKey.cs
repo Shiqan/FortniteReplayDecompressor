@@ -20,7 +20,7 @@ public class FPredictionKey : IProperty
     public bool bIsServerInitiated { get; set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayPrediction.cpp#L7
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Private/GameplayPrediction.cpp#L7"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)

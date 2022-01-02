@@ -26,7 +26,7 @@ public class FQuat : IProperty
     public float W { get; set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/099c2469b494de4752e9d63535767bb9fcc90d16/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L832
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/099c2469b494de4752e9d63535767bb9fcc90d16/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L832"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)

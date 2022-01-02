@@ -9,44 +9,44 @@ using Unreal.Core.Models.Enums;
 namespace Unreal.Core;
 
 /// <summary>
-/// Abstract base class implementation of default UE replays.
+/// Abstract base class implementation of default UE LocalFileNetworkReplayStreaming.<br/>
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp" />
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public abstract class ReplayReader<T> where T : Replay, new()
 {
     /// <summary>
     /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; 
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L84
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L84"/>
     /// </summary>
     protected const int DefaultMaxChannelSize = 32767;
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L59
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L59"/>
     /// </summary>
     protected const uint FileMagic = 0x1CA2E27F;
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L107
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L107"/>
     /// </summary>
     protected const uint NetworkMagic = 0x2CF5A13D;
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L111
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L111"/>
     /// </summary>
     protected const uint MetadataMagic = 0x3D06B24E;
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L83"/>
     /// </summary>
     protected const int MaxPacketSizeInBits = 16384; // 2 * 1024 * 8
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1669"/>
     /// </summary>
     protected const int OLD_MAX_ACTOR_CHANNELS = 10240;
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1027
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1027"/>
     /// </summary>
     protected const int MAX_GUID_COUNT = 2048;
 
@@ -58,25 +58,24 @@ public abstract class ReplayReader<T> where T : Replay, new()
     protected NetGuidCache _netGuidCache;
     protected NetFieldParser _netFieldParser;
 
-    private int replayDataIndex = 0;
-    private int checkpointIndex = 0;
-    private int packetIndex = 0;
-    private int bunchIndex = 0;
+    protected int replayDataIndex = 0;
+    protected int checkpointIndex = 0;
+    protected int packetIndex = 0;
+    protected int bunchIndex = 0;
 
-    private int InPacketId;
-    private DataBunch? PartialBunch;
+    protected int InPacketId;
+    protected DataBunch? PartialBunch;
 
     // Allocate these once
-    private readonly DataBunch _currentBunch = new();
-    private readonly NetBitReader _packetReader = new();
-    private readonly NetBitReader _exportReader = new();
-    private readonly NetBitReader _cmdReader = new();
-    private readonly NetDeltaUpdate _deltaUpdate = new();
+    protected readonly NetBitReader _packetReader = new();
+    protected readonly NetBitReader _exportReader = new();
+    protected readonly NetBitReader _cmdReader = new();
+    protected readonly NetDeltaUpdate _deltaUpdate = new();
 
     /// <summary>
     /// Index of latest received bunch sequence.
     /// </summary>
-    private int InReliable = 0;
+    protected int InReliable = 0;
 
     /// <summary>
     /// Received channels during replay parsing.
@@ -86,7 +85,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// <summary>
     /// Tracks channels that we should ignore when handling special demo data.
     /// </summary>
-    private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
+    protected uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
     public ReplayReader(ILogger logger, ParseMode mode)
     {
@@ -134,7 +133,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
 #if DEBUG
-    public virtual void Debug(string filename, string directory, ReadOnlySpan<byte> data)
+    protected virtual void Debug(string filename, string directory, ReadOnlySpan<byte> data)
     {
         if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
         {
@@ -144,7 +143,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         File.WriteAllBytes($"{directory}/{filename}.dump", data.ToArray());
     }
 
-    public void Debug(string filename, string line)
+    protected void Debug(string filename, string line)
     {
         if (IsDebugMode)
         {
@@ -154,10 +153,10 @@ public abstract class ReplayReader<T> where T : Replay, new()
 #endif
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L4892"/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L282"/>
     /// </summary>
-    public virtual void ReadCheckpoint(FArchive archive)
+    protected virtual void ReadCheckpoint(FArchive archive)
     {
         // TODO add support for bDeltaCheckpoint ??
 
@@ -287,9 +286,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L363"/>
     /// </summary>
-    public virtual void ReadEvent(FArchive archive)
+    protected virtual void ReadEvent(FArchive archive)
     {
         var info = new EventInfo
         {
@@ -305,13 +304,13 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L243"/>
     /// </summary>
-    public virtual void ReadReplayChunks(FArchive archive)
+    protected virtual void ReadReplayChunks(FArchive archive)
     {
         while (!archive.AtEnd())
         {
-            ReplayChunkType chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
+            var chunkType = archive.ReadUInt32AsEnum<ReplayChunkType>();
             var chunkSize = archive.ReadInt32();
             var offset = archive.Position;
 
@@ -347,16 +346,16 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318"/>
     /// </summary> 
-    public virtual void ReadReplayData(FArchive archive, int fallbackChunkSize)
+    protected virtual void ReadReplayData(FArchive archive, int fallbackChunkSize)
     {
         var info = new ReplayDataInfo();
         if (archive.ReplayVersion.HasFlag(ReplayVersionHistory.HISTORY_STREAM_CHUNK_TIMES))
         {
             info.Start = archive.ReadUInt32();
             info.End = archive.ReadUInt32();
-            info.Length = (int)archive.ReadUInt32();
+            info.Length = (int) archive.ReadUInt32();
         }
         else
         {
@@ -369,8 +368,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
             archive.ReadInt32();
         }
 
-        using FArchive? decrypted = DecryptBuffer(archive, info.Length);
-        using FArchive? binaryArchive = Decompress(decrypted);
+        using var decrypted = DecryptBuffer(archive, info.Length);
+        using var binaryArchive = Decompress(decrypted);
         while (!binaryArchive.AtEnd())
         {
             ReadDemoFrameIntoPlaybackPackets(binaryArchive);
@@ -380,9 +379,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// Parse the replay header and set it to the <see cref="Replay"/>.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L191
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L191"/>
     /// </summary>
-    public virtual void ReadReplayHeader(FArchive archive)
+    protected virtual void ReadReplayHeader(FArchive archive)
     {
         var magic = archive.ReadUInt32();
 
@@ -483,9 +482,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// Parse the replay info and set it on the <see cref="Replay"/>.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L183"/>
     /// </summary>
-    public virtual void ReadReplayInfo(FArchive archive)
+    protected virtual void ReadReplayInfo(FArchive archive)
     {
         var magicNumber = archive.ReadUInt32();
 
@@ -495,7 +494,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             throw new InvalidReplayException("Invalid replay file");
         }
 
-        ReplayVersionHistory fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
+        var fileVersion = archive.ReadUInt32AsEnum<ReplayVersionHistory>();
         archive.ReplayVersion = fileVersion;
 
         if (fileVersion > ReplayVersionHistory.LATEST)
@@ -546,9 +545,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3220
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3220"/>
     /// </summary>
-    public virtual PacketState ReadPacket(FArchive archive)
+    protected virtual PacketState ReadPacket(FArchive archive)
     {
         var bufferSize = archive.ReadInt32();
         if (bufferSize == 0)
@@ -572,9 +571,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2106
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2106"/>
     /// </summary>
-    public virtual void ReadExternalData(FArchive archive)
+    protected virtual void ReadExternalData(FArchive archive)
     {
         while (true)
         {
@@ -605,9 +604,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L64"/>
     /// </summary>
-    public virtual NetFieldExport? ReadNetFieldExport(FArchive archive)
+    protected virtual NetFieldExport? ReadNetFieldExport(FArchive archive)
     {
         var isExported = archive.ReadBoolean();
         if (isExported)
@@ -638,9 +637,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L133
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L133"/>
     /// </summary>
-    public virtual NetFieldExportGroup ReadNetFieldExportGroupMap(FArchive archive)
+    protected virtual NetFieldExportGroup ReadNetFieldExportGroupMap(FArchive archive)
     {
         var group = new NetFieldExportGroup()
         {
@@ -652,7 +651,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
         for (var i = 0; i < group.NetFieldExportsLength; i++)
         {
-            NetFieldExport? netFieldExport = ReadNetFieldExport(archive);
+            var netFieldExport = ReadNetFieldExport(archive);
             if (netFieldExport != null)
             {
                 group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
@@ -663,18 +662,18 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1348"/>
     /// </summary>
-    public virtual void ReadExportData(FArchive archive)
+    protected virtual void ReadExportData(FArchive archive)
     {
         ReadNetFieldExports(archive);
         ReadNetExportGuids(archive);
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1579"/>
     /// </summary>
-    public virtual void ReadNetExportGuids(FArchive archive)
+    protected virtual void ReadNetExportGuids(FArchive archive)
     {
         var numGuids = archive.ReadIntPacked();
         // TODO bIgnoreReceivedExportGUIDs ?
@@ -687,9 +686,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1571"/>
     /// </summary>
-    public virtual void ReadNetFieldExports(FArchive archive)
+    protected virtual void ReadNetFieldExports(FArchive archive)
     {
         var numLayoutCmdExports = archive.ReadIntPacked();
         for (var i = 0; i < numLayoutCmdExports; i++)
@@ -723,7 +722,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
             }
 
-            NetFieldExport? netField = ReadNetFieldExport(archive);
+            var netField = ReadNetFieldExport(archive);
             if (group != null && netField != null)
             {
                 group.NetFieldExports[netField.Handle] = netField;
@@ -736,9 +735,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L2848"/>
     /// </summary>
-    public virtual void ReadDemoFrameIntoPlaybackPackets(FArchive archive)
+    protected virtual void ReadDemoFrameIntoPlaybackPackets(FArchive archive)
     {
         if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_MULTIPLE_LEVELS)
         {
@@ -794,7 +793,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             if (skipExternalOffset > 0)
             {
                 // ignore it for now
-                archive.SkipBytes((int)skipExternalOffset);
+                archive.SkipBytes((int) skipExternalOffset);
             }
             // else skip externalOffset
         }
@@ -819,9 +818,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1409
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1409"/>
     /// </summary>
-    public virtual void ReceiveNetFieldExportsCompat(FBitArchive bitArchive)
+    protected virtual void ReceiveNetFieldExportsCompat(FBitArchive bitArchive)
     {
         var numLayoutCmdExports = bitArchive.ReadUInt32();
         for (var i = 0; i < numLayoutCmdExports; i++)
@@ -852,7 +851,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 group = _netGuidCache.GetNetFieldExportGroupFromIndex(pathNameIndex);
             }
 
-            NetFieldExport? netField = ReadNetFieldExport(bitArchive);
+            var netField = ReadNetFieldExport(bitArchive);
             if (group != null && netField is not null && group.IsValidIndex(netField.Handle))
             {
                 //netField.Incompatible = group.NetFieldExports[(int)netField.Handle].Incompatible;
@@ -865,9 +864,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// Loads a UObject from an FArchive stream. Reads object path if there, and tries to load object if its not already loaded
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L804"/>
     /// </summary>
-    public virtual NetworkGUID InternalLoadObject(FArchive archive, bool isExportingNetGUIDBunch, int internalLoadObjectRecursionCount = 0)
+    protected virtual NetworkGUID InternalLoadObject(FArchive archive, bool isExportingNetGUIDBunch, int internalLoadObjectRecursionCount = 0)
     {
         if (internalLoadObjectRecursionCount > 16)
         {
@@ -887,7 +886,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
         if (netGuid.IsDefault() || isExportingNetGUIDBunch)
         {
-            ExportFlags flags = archive.ReadByteAsEnum<ExportFlags>();
+            var flags = archive.ReadByteAsEnum<ExportFlags>();
 
             if (flags.HasFlag(ExportFlags.bHasPath))
             {
@@ -915,9 +914,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1203
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1203"/>
     /// </summary>
-    public virtual void ReceiveNetGUIDBunch(FBitArchive bitArchive)
+    protected virtual void ReceiveNetGUIDBunch(FBitArchive bitArchive)
     {
         var bHasRepLayoutExport = bitArchive.ReadBit();
 
@@ -944,21 +943,19 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L384"/>
     /// </summary>
-    public virtual void ReceivedRawBunch(DataBunch bunch)
+    protected virtual void ReceivedRawBunch(DataBunch bunch)
     {
         // bDeleted =
         ReceivedNextBunch(bunch);
-
-        // if (bDeleted) return;
-        // else { We shouldn't hit this path on 100% reliable connections }
+        // if (bDeleted) return;// else { We shouldn't hit this path on 100% reliable connections }
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L517
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L517"/>
     /// </summary>
-    public virtual void ReceivedNextBunch(DataBunch bunch)
+    protected virtual void ReceivedNextBunch(DataBunch bunch)
     {
         // We received the next bunch. Basically at this point:
         // -We know this is in order if reliable
@@ -1095,9 +1092,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L348
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L348"/>
     /// </summary>
-    public virtual bool ReceivedSequencedBunch(DataBunch bunch)
+    protected virtual bool ReceivedSequencedBunch(DataBunch bunch)
     {
         ReceivedActorBunch(bunch);
 
@@ -1115,9 +1112,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2298"/>
     /// </summary>
-    public virtual void ReceivedActorBunch(DataBunch bunch)
+    protected virtual void ReceivedActorBunch(DataBunch bunch)
     {
         if (bunch.bHasMustBeMappedGUIDs)
         {
@@ -1135,7 +1132,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// <summary>
     /// https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L490
     /// </summary>
-    public virtual FVector ConditionallySerializeQuantizedVector(FBitArchive archive, FVector defaultVector)
+    protected virtual FVector ConditionallySerializeQuantizedVector(FBitArchive archive, FVector defaultVector)
     {
         var bWasSerialized = archive.ReadBit();
         if (bWasSerialized)
@@ -1148,11 +1145,11 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2411
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L2411"/>
     /// </summary>
-    public virtual void ProcessBunch(DataBunch bunch)
+    protected virtual void ProcessBunch(DataBunch bunch)
     {
-        UChannel? channel = Channels[bunch.ChIndex];
+        var channel = Channels[bunch.ChIndex];
 
         if (channel != null && channel.Actor is null)
         {
@@ -1218,14 +1215,14 @@ public abstract class ReplayReader<T> where T : Replay, new()
         //  Read chunks of actor content
         while (!bunch.Archive.AtEnd())
         {
-            var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out uint? payload);
+            var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var payload);
 
             if (payload is null)
             {
                 continue;
             }
 
-            bunch.Archive.SetTempEnd((int)payload, FBitArchiveEndIndex.CONTENT_BLOCK_PAYLOAD);
+            bunch.Archive.SetTempEnd((int) payload, FBitArchiveEndIndex.CONTENT_BLOCK_PAYLOAD);
 
             try
             {
@@ -1260,11 +1257,11 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L896"/>
     /// </summary>
-    public virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint? repObject, bool bHasRepLayout)
+    protected virtual bool ReceivedReplicatorBunch(DataBunch bunch, FBitArchive archive, uint? repObject, bool bHasRepLayout)
     {
-        NetFieldExportGroup? netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
+        var netFieldExportGroup = _netGuidCache.GetNetFieldExportGroup(repObject);
 
         if (netFieldExportGroup is null)
         {
@@ -1289,21 +1286,21 @@ public abstract class ReplayReader<T> where T : Replay, new()
             return true;
         }
 
-        if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup.PathName, out NetFieldExportGroup? classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
+        if (!_netGuidCache.TryGetClassNetCache(netFieldExportGroup.PathName, out var classNetCache, bunch.Archive.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_CLASSNETCACHE_FULLNAME))
         {
             _logger?.LogDebug("Couldnt find ClassNetCache for {}", netFieldExportGroup.PathName);
             return false;
         }
 
         // Read fields from stream
-        while (ReadFieldHeaderAndPayload(archive, classNetCache, out NetFieldExport? fieldCache, out uint? payload))
+        while (ReadFieldHeaderAndPayload(archive, classNetCache, out var fieldCache, out var payload))
         {
             if (payload is null)
             {
                 continue;
             }
 
-            archive.SetTempEnd((int)payload, FBitArchiveEndIndex.FIELD_HEADER_PAYLOAD);
+            archive.SetTempEnd((int) payload, FBitArchiveEndIndex.FIELD_HEADER_PAYLOAD);
             try
             {
                 if (fieldCache == null)
@@ -1330,12 +1327,12 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     continue;
                 }
 
-                if (_netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out NetFieldParser.ClassNetCachePropertyInfo? classNetProperty))
+                if (_netFieldParser.TryGetClassNetCacheProperty(fieldCache.Name, classNetCache.PathName, out var classNetProperty))
                 {
                     if (classNetProperty.IsFunction)
                     {
                         // Handle function call
-                        NetFieldExportGroup? functionGroup = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                        var functionGroup = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
                         if (!ReceivedRPC(archive, functionGroup, bunch.ChIndex))
                         {
                             return false;
@@ -1354,7 +1351,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                         }
                         else
                         {
-                            NetFieldExportGroup? group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
+                            var group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
                             if (group is null || !_netFieldParser.WillReadType(group.PathName))
                             {
                                 continue;
@@ -1390,7 +1387,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// If there is any <see cref="ExternalData"> for this group and netguid, read it and pass it back.
     /// There is no info in UE on how to handle external data.
     /// </summary>
-    public virtual bool ReceiveExternalData(NetFieldExportGroup group, uint channelIndex)
+    protected virtual bool ReceiveExternalData(NetFieldExportGroup group, uint channelIndex)
     {
         if (Channels[channelIndex] is null)
         {
@@ -1405,7 +1402,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         _logger?.LogDebug("ReceiveExternalData: group {}", group.PathName);
-        if (_netGuidCache.TryGetExternalData(Channels[channelIndex]?.Actor?.ActorNetGUID?.Value, out IExternalData? externalData))
+        if (_netGuidCache.TryGetExternalData(Channels[channelIndex]?.Actor?.ActorNetGUID?.Value, out var externalData))
         {
             OnExternalDataRead(channelIndex, externalData);
         }
@@ -1414,10 +1411,10 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158
-    /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataReplication.cpp#L1158"/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L5801"/>
     /// </summary>
-    public virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup? netFieldExportGroup, uint channelIndex)
+    protected virtual bool ReceivedRPC(FBitArchive reader, NetFieldExportGroup? netFieldExportGroup, uint channelIndex)
     {
         if (netFieldExportGroup is null)
         {
@@ -1450,7 +1447,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// <param name="fieldCache"></param>
     /// <param name="channelIndex"></param>
     /// <returns></returns>
-    public virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
+    protected virtual bool ReceiveCustomProperty(FBitArchive reader, NetFieldExportGroup classNetCache, NetFieldExport fieldCache, uint channelIndex)
     {
         var export = _netFieldParser.CreatePropertyType(classNetCache.PathName, fieldCache.Name);
         if (export != null)
@@ -1469,7 +1466,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 _logger?.LogWarning("Custom Property {name} didnt read proper number of bits: {bitsLeft} out of {bits}", fieldCache.Name, (_cmdReader.LastBit - _cmdReader.GetBitsLeft()), _cmdReader.LastBit);
             }
 
-            (export as IResolvable)?.Resolve(_netGuidCache);
+        (export as IResolvable)?.Resolve(_netGuidCache);
 
             OnExportRead(channelIndex, export as INetFieldExportGroup);
 
@@ -1479,9 +1476,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3744
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3744"/>
     /// </summary>
-    public virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
+    protected virtual bool ReceiveCustomDeltaProperty(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
     {
         if (reader.EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_FAST_ARRAY_DELTA_STRUCT)
         {
@@ -1504,23 +1501,20 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L895
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L895"/>
     /// </summary>
-    public virtual FFastArraySerializerHeader NetDeltaSerializeHeader(FBitArchive reader)
+    protected virtual FFastArraySerializerHeader NetDeltaSerializeHeader(FBitArchive reader) => new FFastArraySerializerHeader()
     {
-        return new FFastArraySerializerHeader()
-        {
-            ArrayReplicationKey = reader.ReadInt32(),
-            BaseReplicationKey = reader.ReadInt32(),
-            NumDeletes = reader.ReadInt32(),
-            NumChanged = reader.ReadInt32()
-        };
-    }
+        ArrayReplicationKey = reader.ReadInt32(),
+        BaseReplicationKey = reader.ReadInt32(),
+        NumDeletes = reader.ReadInt32(),
+        NumChanged = reader.ReadInt32()
+    };
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1064
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1064"/>
     /// </summary>
-    public virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
+    protected virtual bool NetDeltaSerialize(FBitArchive reader, NetFieldExportGroup group, uint channelIndex, bool enablePropertyChecksum)
     {
         // https://github.com/EpicGames/UnrealEngine/blob/8776a8e357afff792806b997fbbd8e715111a271/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L6302
         // DeltaSerializeFastArrayProperty
@@ -1571,7 +1565,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2971
     ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
     /// </summary>
-    public virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, [NotNullWhen(returnValue: true)] out INetFieldExportGroup? exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
+    protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, [NotNullWhen(returnValue: true)] out INetFieldExportGroup? exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
     {
         exportGroup = default;
 
@@ -1594,7 +1588,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
 #if DEBUG
             Debug("not-reading-groups", group.PathName);
-            foreach (NetFieldExport? field in group.NetFieldExports)
+            foreach (var field in group.NetFieldExports)
             {
                 if (field == null)
                 {
@@ -1669,7 +1663,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             hasdata = true;
             try
             {
-                _cmdReader.FillBuffer(archive.ReadBits(numBits), (int)numBits);
+                _cmdReader.FillBuffer(archive.ReadBits(numBits), (int) numBits);
                 if (!_netFieldParser.ReadField(exportGroup, export, handle, group, _cmdReader))
                 {
                     // Set field incompatible since we couldnt (or didnt want to) parse it.
@@ -1684,7 +1678,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
                     _cmdReader.Reset();
-                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int)Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
+                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int) Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
 #endif
                     continue;
                 }
@@ -1697,7 +1691,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(_cmdReader.LastBit - _cmdReader.GetBitsLeft())} out of {numBits}");
                     _cmdReader.Reset();
-                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int)Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
+                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int) Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
 #endif
                     continue;
                 }
@@ -1725,9 +1719,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3579"/>
     /// </summary>
-    public virtual bool ReadFieldHeaderAndPayload(FBitArchive archive, NetFieldExportGroup group, out NetFieldExport? outField, [NotNullWhen(returnValue: true)] out uint? payload)
+    protected virtual bool ReadFieldHeaderAndPayload(FBitArchive archive, NetFieldExportGroup group, out NetFieldExport? outField, [NotNullWhen(returnValue: true)] out uint? payload)
     {
         if (archive.AtEnd())
         {
@@ -1737,7 +1731,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-        var netFieldExportHandle = archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
+        var netFieldExportHandle = archive.ReadSerializedInt(Math.Max((int) group.NetFieldExportsLength, 2));
         if (archive.IsError)
         {
             payload = null;
@@ -1747,7 +1741,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
-        outField = group.NetFieldExports[(int)netFieldExportHandle];
+        outField = group.NetFieldExports[(int) netFieldExportHandle];
 
         payload = archive.ReadIntPacked();
         if (archive.IsError)
@@ -1758,7 +1752,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             return false;
         }
 
-        if (!archive.CanRead((int)payload))
+        if (!archive.CanRead((int) payload))
         {
             payload = null;
             return false;
@@ -1769,9 +1763,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3391"/>
     /// </summary>
-    public virtual uint? ReadContentBlockPayload(DataBunch bunch, out bool bObjectDeleted, out bool bOutHasRepLayout, out uint? payload)
+    protected virtual uint? ReadContentBlockPayload(DataBunch bunch, out bool bObjectDeleted, out bool bOutHasRepLayout, out uint? payload)
     {
         // Read the content block header and payload
         var repObject = ReadContentBlockHeader(bunch, out bOutHasRepLayout, out bObjectDeleted);
@@ -1788,9 +1782,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DataChannel.cpp#L3175"/>
     /// </summary>
-    public virtual uint? ReadContentBlockHeader(DataBunch bunch, out bool bOutHasRepLayout, out bool bObjectDeleted)
+    protected virtual uint? ReadContentBlockHeader(DataBunch bunch, out bool bOutHasRepLayout, out bool bObjectDeleted)
     {
         bObjectDeleted = false;
         bOutHasRepLayout = bunch.Archive.ReadBit();
@@ -1831,13 +1825,13 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
         }
 
-            return classNetGUID.Value;
-        }
+        return classNetGUID.Value;
+    }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1007"/>
     /// </summary>
-    public virtual void ReceivedRawPacket(ReadOnlySpan<byte> packet)
+    protected virtual void ReceivedRawPacket(ReadOnlySpan<byte> packet)
     {
         var lastByte = packet[^1];
 
@@ -1870,10 +1864,10 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3352
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L3352"/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L1525"/>
     /// </summary>
-    public virtual void ReceivedPacket(FBitArchive bitReader)
+    protected virtual void ReceivedPacket(FBitArchive bitReader)
     {
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/DemoNetDriver.cpp#L5101
         // InternalAck always true!
@@ -1908,7 +1902,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
             else
             {
-                bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)bitReader.ReadSerializedInt((int)ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
+                bunch.CloseReason = bunch.bClose ? (ChannelCloseReason) bitReader.ReadSerializedInt((int) ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
                 bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
             }
 
@@ -1951,7 +1945,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
             if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
             {
-                var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
+                var type = bitReader.ReadSerializedInt((int) ChannelType.MAX);
                 //    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
                 //    chName = chType switch
@@ -1986,7 +1980,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             // If there's an existing channel and the bunch specified it's channel type, make sure they match.
             // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
 
-            var bunchDataBits = (int)bitReader.ReadSerializedInt(MaxPacketSizeInBits);
+            var bunchDataBits = (int) bitReader.ReadSerializedInt(MaxPacketSizeInBits);
 
             if (bunch.bPartial)
             {
@@ -2135,10 +2129,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// or if it can be ignored for the rest of the replay. 
     /// Useful to minimize the parsing, e.g. if you're only interested in the initial values and not subsequent updates. 
     /// </summary>
-    protected virtual bool IgnoreGroupOnChannel(uint channelIndex, INetFieldExportGroup exportGroup)
-    {
-        return true;
-    }
+    protected virtual bool IgnoreGroupOnChannel(uint channelIndex, INetFieldExportGroup exportGroup) => true;
 
     /// <summary>
     /// Notifies when a new actor channel is created.
@@ -2158,7 +2149,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// Chunks can be encrypted with the <see cref="ReplayInfo.EncryptionKey"/>. If the replay is encrypted this method needs to be implemented.
-    /// see https://github.com/EpicGames/UnrealEngine/blob/12dbd9877379223a839e59ceb92131a7e400aae5/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L475
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/12dbd9877379223a839e59ceb92131a7e400aae5/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L475"/>
     /// </summary>
     protected virtual FArchive DecryptBuffer(FArchive archive, int size)
     {
@@ -2172,8 +2163,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9
-    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Serialization/CompressedChunkInfo.cpp#L9"/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleArchives.cpp#L21"/>
     /// </summary>
     protected virtual FArchive Decompress(FArchive archive)
     {

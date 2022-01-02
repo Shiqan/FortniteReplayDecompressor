@@ -5,7 +5,7 @@ namespace Unreal.Core;
 
 /// <summary>
 /// A <see cref="BitReader"/> used for reading everything related to RepLayout. 
-/// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L303
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L303"/>
 /// </summary>
 public class NetBitReader : BitReader
 {
@@ -52,7 +52,7 @@ public class NetBitReader : BitReader
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074"/>
     /// </summary>
     public FRepMovement SerializeRepMovement(
         VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
@@ -79,7 +79,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L57"/>
     /// </summary>
     public FVector SerializePropertyVector()
     {
@@ -87,7 +87,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L65
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L65"/>
     /// </summary>
     public FVector2D SerializePropertyVector2D()
     {
@@ -95,7 +95,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2044
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2044"/>
     /// </summary>
     public FVector SerializePropertyVectorNormal()
     {
@@ -103,7 +103,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1954
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1954"/>
     /// </summary>
     public FVector SerializePropertyVector10()
     {
@@ -111,7 +111,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2000
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L2000"/>
     /// </summary>
     public FVector SerializePropertyVector100()
     {
@@ -124,7 +124,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1821
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Engine/Classes/Engine/NetSerialization.h#L1821"/>
     /// </summary>
     public float ReadFixedCompressedFloat(int maxValue, int numBits)
     {
@@ -151,7 +151,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L72
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/c920e8b7d7b2d8c7168bebd63b4cd32cba422d49/Engine/Source/Runtime/Core/Private/Math/UnrealMath.cpp#L72"/>
     /// </summary>
     public FRotator SerializePropertyRotator()
     {
@@ -159,7 +159,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyByte.cpp#L83
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyByte.cpp#L83"/>
     /// </summary>
     public int SerializePropertyByte(int enumMaxValue)
     {
@@ -173,7 +173,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331"/>
     /// </summary>
     public bool SerializePropertyBool()
     {
@@ -181,7 +181,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBool.cpp#L331"/>
     /// </summary>
     public bool SerializePropertyNativeBool()
     {
@@ -189,7 +189,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/EnumProperty.cpp#L142
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/EnumProperty.cpp#L142"/>
     /// </summary>
     public int SerializePropertyEnum()
     {
@@ -198,7 +198,7 @@ public class NetBitReader : BitReader
     }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBaseObject.cpp#L84
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/CoreUObject/Private/UObject/PropertyBaseObject.cpp#L84"/>
     /// </summary>
     public uint SerializePropertyObject()
     {
@@ -208,7 +208,7 @@ public class NetBitReader : BitReader
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3047
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3047"/>
     /// </summary>
     public FVector SerializePropertyQuantizedVector(VectorQuantization quantizationLevel = VectorQuantization.RoundWholeNumber)
     {
@@ -222,7 +222,7 @@ public class NetBitReader : BitReader
 
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/OnlineReplStructs.cpp#L209
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/5677c544747daa1efc3b5ede31642176644518a6/Engine/Source/Runtime/Engine/Private/OnlineReplStructs.cpp#L209"/>
     /// </summary>
     public string SerializePropertyNetId()
     {

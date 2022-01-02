@@ -1,7 +1,7 @@
 ﻿namespace Unreal.Core.Models;
 
 /// <summary>
-/// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L124
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Classes/Engine/PackageMapClient.h#L124"/>
 /// </summary>
 public class NetFieldExportGroup
 {

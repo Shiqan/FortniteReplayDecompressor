@@ -4,14 +4,14 @@ namespace Unreal.Core.Models;
 
 /// <summary>
 /// A Tag Container holds a collection of FGameplayTags.
-/// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Classes/GameplayTagContainer.h#L275
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Classes/GameplayTagContainer.h#L275"/>
 /// </summary>
 public class FGameplayTagContainer : IProperty, IResolvable
 {
     public FGameplayTag[] Tags { get; private set; }
 
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Private/GameplayTagContainer.cpp#L970
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/GameplayTags/Private/GameplayTagContainer.cpp#L970"/>
     /// </summary>
     /// <param name="reader"></param>
     public void Serialize(NetBitReader reader)

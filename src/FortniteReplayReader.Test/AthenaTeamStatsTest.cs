@@ -1,3 +1,4 @@
+using FortniteReplayReader.Test.Mocks;
 using Xunit;
 
 namespace FortniteReplayReader.Test;
@@ -15,7 +16,7 @@ public class AthenaTeamStatsTest
     {
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new ReplayReader();
+        var reader = new MockReplayReader();
         var result = reader.ParseTeamStats(archive, null);
 
         Assert.True(archive.AtEnd());

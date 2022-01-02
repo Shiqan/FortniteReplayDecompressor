@@ -2,7 +2,7 @@
 
 /// <summary>
 /// Various flags that describe how a Property should be handled.
-/// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L794
+/// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Public/Net/RepLayout.h#L794"/>
 /// </summary>
 public enum RepLayoutFlags
 {

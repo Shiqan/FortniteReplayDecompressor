@@ -18,7 +18,7 @@ public class BenchmarkNetGuidCache
 
         for (var i = 0; i < iterations; i++)
         {
-            netGuidCache.AddToExportGroupMap(i.ToString(), new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = i.ToString() });
+            netGuidCache.AddToExportGroupMap(new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = i.ToString() });
         }
     }
 

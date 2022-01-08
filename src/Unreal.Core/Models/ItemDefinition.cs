@@ -9,7 +9,7 @@ public class ItemDefinition : NetworkGUID, IResolvable
 {
     public string Name { get; set; }
 
-    public void Resolve(NetGuidCache cache)
+    public void Resolve(INetGuidCache cache)
     {
         if (IsValid())
         {

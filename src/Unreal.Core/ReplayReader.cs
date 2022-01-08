@@ -55,8 +55,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
     protected ParseMode _parseMode;
     protected bool IsDebugMode => _parseMode == ParseMode.Debug;
 
-    protected NetGuidCache _netGuidCache;
-    protected NetFieldParser _netFieldParser;
+    protected INetGuidCache _netGuidCache;
+    protected INetFieldParser _netFieldParser;
 
     protected int replayDataIndex = 0;
     protected int checkpointIndex = 0;
@@ -240,9 +240,6 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
 
             cacheObject.Flags = binaryArchive.ReadByte();
-
-            // DemoNetDriver 5319
-            // GuidCache->ObjectLookup.Add(Guid, CacheObject);
         }
 
         if (binaryArchive.HasDeltaCheckpoints())
@@ -252,8 +249,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         else
         {
             // Clear all of our mappings, since we're starting over
-            _netGuidCache.NetFieldExportGroupMap.Clear();
-            _netGuidCache.NetFieldExportGroupIndexToGroup.Clear();
+            _netGuidCache.Cleanup(cleanForCheckpoint: true);
 
             // SerializeNetFieldExportGroupMap 
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
@@ -263,8 +259,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 var group = ReadNetFieldExportGroupMap(binaryArchive);
 
                 // Add the export group to the map
-                _netGuidCache.NetFieldExportGroupIndexToGroup[group.PathNameIndex] = group.PathName;
-                _netGuidCache.AddToExportGroupMap(group.PathName, group);
+                _netGuidCache.AddToExportGroupMap(group);
             }
         }
 
@@ -588,18 +583,19 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
             _logger?.LogDebug("External data found for netguid {}, bits: {}", netGuid, externalDataNumBits);
 
-            _netGuidCache.ExternalData[netGuid] = new ExternalData()
-            {
-                Archive = new BinaryReader(archive.ReadBytes((externalDataNumBits + 7) >> 3))
+            _netGuidCache.AddToExternalData(
+                new ExternalData()
                 {
-                    NetworkReplayVersion = archive.NetworkReplayVersion,
-                    EngineNetworkVersion = archive.EngineNetworkVersion,
-                    ReplayHeaderFlags = archive.ReplayHeaderFlags,
-                    ReplayVersion = archive.ReplayVersion,
-                    NetworkVersion = archive.NetworkVersion
-                },
-                NetGUID = netGuid
-            };
+                    Archive = new BinaryReader(archive.ReadBytes((externalDataNumBits + 7) >> 3))
+                    {
+                        NetworkReplayVersion = archive.NetworkReplayVersion,
+                        EngineNetworkVersion = archive.EngineNetworkVersion,
+                        ReplayHeaderFlags = archive.ReplayHeaderFlags,
+                        ReplayVersion = archive.ReplayVersion,
+                        NetworkVersion = archive.NetworkVersion
+                    },
+                    NetGUID = netGuid
+                });
         }
     }
 
@@ -702,7 +698,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 var pathName = archive.ReadFString();
                 var numExports = archive.ReadIntPacked();
 
-                if (!_netGuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                group = _netGuidCache.GetNetFieldExportGroup(pathName);
+                if (group is null)
                 {
                     group = new NetFieldExportGroup
                     {
@@ -712,7 +709,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     };
 
                     group.NetFieldExports = new NetFieldExport[numExports];
-                    _netGuidCache.AddToExportGroupMap(pathName, group);
+                    _netGuidCache.AddToExportGroupMap(group);
                 }
                 //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
                 //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
@@ -833,7 +830,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 var pathName = bitArchive.ReadFString();
                 var numExports = bitArchive.ReadUInt32();
 
-                if (!_netGuidCache.NetFieldExportGroupMap.TryGetValue(pathName, out group))
+                group = _netGuidCache.GetNetFieldExportGroup(pathName);
+                if (group is null)
                 {
                     group = new NetFieldExportGroup
                     {
@@ -843,7 +841,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     };
 
                     group.NetFieldExports = new NetFieldExport[numExports];
-                    _netGuidCache.AddToExportGroupMap(pathName, group);
+                    _netGuidCache.AddToExportGroupMap(group);
                 }
             }
             else
@@ -902,7 +900,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
                 if (isExportingNetGUIDBunch)
                 {
-                    _netGuidCache.NetGuidToPathName[netGuid.Value] = pathName.RemoveAllPathPrefixes();
+                    _netGuidCache.AddNetGuidToPathName(netGuid.Value, pathName.RemoveAllPathPrefixes());
                 }
 
                 return netGuid;
@@ -1200,11 +1198,10 @@ public abstract class ReplayReader<T> where T : Replay, new()
             channel.Actor = inActor;
             OnChannelOpened(channel.ChannelIndex, inActor.ActorNetGUID);
 
-            // OnActorChannelOpen
-            // see https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338
+            // OnActorChannelOpen            
             if (_netGuidCache.TryGetPathName(channel.ArchetypeId ?? 0, out var path))
             {
-                if (_netFieldParser.PlayerControllerGroups.Contains(path))
+                if (_netFieldParser.IsPlayerController(path))
                 {
                     // netPlayerIndex
                     bunch.Archive.ReadByte();

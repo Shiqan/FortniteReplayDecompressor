@@ -1,22 +1,27 @@
 ﻿using FortniteReplayReader;
+using FortniteReplayReader.Models.NetFieldExports;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Unreal.Core;
+using Unreal.Core.Contracts;
+using Unreal.Core.Extensions;
 using Unreal.Core.Models.Enums;
 
 namespace ConsoleReader;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
+    private static void Main(string[] args)
     {
         var serviceCollection = new ServiceCollection()
             .AddLogging(loggingBuilder => loggingBuilder
                 .AddConsole()
                 .SetMinimumLevel(LogLevel.Warning));
+        serviceCollection.AddSingleton<INetFieldParser, NetFieldParser>();
+        serviceCollection.AddNetFieldExportGroup<Aircraft>();
         var provider = serviceCollection.BuildServiceProvider();
         var logger = provider.GetService<ILogger<Program>>();
-
         //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
         var replayFilesFolder = @"H:\Projects\FortniteReplayCollection\_upload\season 11\";

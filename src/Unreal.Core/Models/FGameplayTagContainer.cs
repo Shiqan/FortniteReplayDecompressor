@@ -30,7 +30,7 @@ public class FGameplayTagContainer : IProperty, IResolvable
         }
     }
 
-    public void Resolve(NetGuidCache cache)
+    public void Resolve(INetGuidCache cache)
     {
         if (Tags == null) return;
 

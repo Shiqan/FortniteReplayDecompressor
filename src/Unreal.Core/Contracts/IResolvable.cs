@@ -8,5 +8,5 @@ namespace Unreal.Core.Contracts;
 /// </summary>
 public interface IResolvable
 {
-    void Resolve(NetGuidCache cache);
+    void Resolve(INetGuidCache cache);
 }

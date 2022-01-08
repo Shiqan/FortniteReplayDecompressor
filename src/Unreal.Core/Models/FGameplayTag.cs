@@ -29,7 +29,7 @@ public class FGameplayTag : IProperty, IResolvable
         TagIndex = reader.ReadIntPacked();
     }
 
-    public void Resolve(NetGuidCache cache)
+    public void Resolve(INetGuidCache cache)
     {
         if (cache.TryGetTagName(TagIndex, out var name))
         {

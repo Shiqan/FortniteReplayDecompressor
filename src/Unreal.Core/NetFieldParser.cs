@@ -8,14 +8,11 @@ using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core;
 
-/// <summary>
-/// Responsible for parsing received properties to the correct <see cref="Type"/> and setting the parsed value on the created object.
-/// Only parses the properties marked with <see cref="NetFieldExportAttribute"/>.
-/// </summary>
-public class NetFieldParser
+
+public class NetFieldParser : INetFieldParser
 {
-    private readonly NetGuidCache GuidCache;
-    public HashSet<string> PlayerControllerGroups { get; private set; } = new();
+    private readonly INetGuidCache GuidCache;
+    private HashSet<string> PlayerControllerGroups { get; set; } = new();
 
     //private readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new();
     private readonly KeyList<string, NetFieldGroupInfo> NetFieldGroups = new();
@@ -30,7 +27,7 @@ public class NetFieldParser
     /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
     /// <param name="mode"></param>
     /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
-    public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
+    public NetFieldParser(INetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
     {
         GuidCache = cache;
 
@@ -117,7 +114,7 @@ public class NetFieldParser
 
             _objects[group.TypeId] = new SingleInstanceExport
             {
-                Instance = (INetFieldExportGroup)Activator.CreateInstance(group.Type),
+                Instance = (INetFieldExportGroup) Activator.CreateInstance(group.Type),
                 ChangedProperties = new List<NetFieldInfo>(group.Properties.Length),
             };
         }
@@ -147,7 +144,7 @@ public class NetFieldParser
         }
         gen.Emit(OpCodes.Ret);
 
-        return (Action<INetFieldExportGroup, object>)setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
+        return (Action<INetFieldExportGroup, object>) setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
 
         FieldInfo GetBackingField(PropertyInfo property)
         {
@@ -235,31 +232,12 @@ public class NetFieldParser
         }
     }
 
-    /// <summary>
-    /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
-    /// </summary>
-    /// <param name="group"></param>
-    /// <returns>true if group should be parsed further, false otherwise</returns>
-    public bool WillReadType(string group)
-    {
-        return NetFieldGroups.TryGetValue(group, out var _);
-    }
+    public bool WillReadType(string group) => NetFieldGroups.TryGetValue(group, out var _);
 
-    /// <summary>
-    /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
-    /// </summary>
-    /// <param name="group"></param>
-    /// <returns>true if group should be parsed further, false otherwise</returns>
-    public bool WillReadClassNetCache(string group)
-    {
-        return _classNetCacheToNetFieldGroup.ContainsKey(group);
-    }
+    public bool WillReadClassNetCache(string group) => _classNetCacheToNetFieldGroup.ContainsKey(group);
 
-    /// <summary>
-    /// Returns whether or not the property of this classnetcache was found.
-    /// </summary>
-    /// <param name="group"></param>
-    /// <returns>true if classnetcache property was found, false otherwise</returns>
+    public bool IsPlayerController(string group) => PlayerControllerGroups.Contains(group);
+
     public bool TryGetClassNetCacheProperty(string property, string group, [NotNullWhen(returnValue: true)] out ClassNetCachePropertyInfo? info)
     {
         info = null;
@@ -270,14 +248,6 @@ public class NetFieldParser
         return false;
     }
 
-    /// <summary>
-    /// Tries to read the property and update the value accordingly.
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="export"></param>
-    /// <param name="handle"></param>
-    /// <param name="exportGroup"></param>
-    /// <param name="netBitReader"></param>
     public bool ReadField(INetFieldExportGroup obj, NetFieldExport export, uint handle, NetFieldExportGroup exportGroup, NetBitReader netBitReader, bool singleInstance = true)
     {
         if (export.PropertyId == -2 || exportGroup.GroupId == -2)
@@ -537,17 +507,17 @@ public class NetFieldParser
 
                 if (export == null)
                 {
-                    netBitReader.SkipBits((int)numBits);
+                    netBitReader.SkipBits((int) numBits);
                     continue;
                 }
 
                 try
                 {
-                    netBitReader.SetTempEnd((int)numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
+                    netBitReader.SetTempEnd((int) numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
 
                     if (groupInfo != null)
                     {
-                        ReadField((INetFieldExportGroup)data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
+                        ReadField((INetFieldExportGroup) data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
                     }
                     else
                     {
@@ -564,11 +534,6 @@ public class NetFieldParser
         }
     }
 
-    /// <summary>
-    /// Create the object associated with the NetFieldExportGroup. 
-    /// </summary>
-    /// <param name="group"></param>
-    /// <returns></returns>
     public INetFieldExportGroup? CreateType(string group)
     {
         if (!NetFieldGroups.TryGetValue(group, out var exportGroup))
@@ -588,10 +553,6 @@ public class NetFieldParser
         return cachedEntry.Instance;
     }
 
-    /// <summary>
-    /// Create the object associated with the property that should be read.
-    /// Used as a workaround for RPC structs.
-    /// </summary>
     public IProperty? CreatePropertyType(string group, string propertyName)
     {
         if (_classNetCacheToNetFieldGroup.TryGetValue(group, out var groupInfo))

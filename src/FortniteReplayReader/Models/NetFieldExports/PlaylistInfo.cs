@@ -10,7 +10,7 @@ namespace FortniteReplayReader.Models.NetFieldExports;
 public class PlaylistInfo : INetFieldExportGroup, IProperty, IResolvable
 {
     public uint Id { get; set; }
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     public void Serialize(NetBitReader reader)
     {
@@ -23,7 +23,7 @@ public class PlaylistInfo : INetFieldExportGroup, IProperty, IResolvable
         reader.SkipBits(31);
     }
 
-    public void Resolve(NetGuidCache cache)
+    public void Resolve(INetGuidCache cache)
     {
         if (cache.TryGetPathName(Id, out var name))
         {

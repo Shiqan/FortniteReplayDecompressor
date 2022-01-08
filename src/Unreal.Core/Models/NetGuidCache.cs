@@ -7,34 +7,34 @@ namespace Unreal.Core.Models;
 /// <summary>
 /// Class to track all NetGuids being loaded during a replay.
 /// </summary>
-public class NetGuidCache
+public class NetGuidCache : INetGuidCache
 {
     //public Dictionary<uint, NetGuidCacheObject> ObjectLookup { get; private set; } = new Dictionary<uint, NetGuidCacheObject>();
 
     /// <summary>
     /// Maps net field export group name to the respective NetFieldExportGroup
     /// </summary>
-    public Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; private set; } = new Dictionary<string, NetFieldExportGroup>();
+    private Dictionary<string, NetFieldExportGroup> NetFieldExportGroupMap { get; set; } = new Dictionary<string, NetFieldExportGroup>();
 
     /// <summary>
     /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
     /// </summary>
-    public Dictionary<uint, string> NetFieldExportGroupIndexToGroup { get; private set; } = new Dictionary<uint, string>();
+    private Dictionary<uint, string> NetFieldExportGroupIndexToGroup { get; set; } = new Dictionary<uint, string>();
 
     /// <summary>
     /// Maps netguid to the respective FNetFieldExportGroup name.
     /// </summary>
-    public Dictionary<uint, string> NetGuidToPathName { get; private set; } = new Dictionary<uint, string>();
+    private Dictionary<uint, string> NetGuidToPathName { get; set; } = new Dictionary<uint, string>();
 
     /// <summary>
     /// Maps assigned net field export group index to the respective FNetFieldExportGroup name.
     /// </summary>
-    public Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; private set; } = new Dictionary<uint, NetFieldExportGroup>();
+    private Dictionary<uint, NetFieldExportGroup> NetFieldExportGroupMapPathFixed { get; set; } = new Dictionary<uint, NetFieldExportGroup>();
 
     /// <summary>
     /// Holds data about the tag dictionary
     /// </summary>
-    public NetFieldExportGroup? NetworkGameplayTagNodeIndex
+    private NetFieldExportGroup? NetworkGameplayTagNodeIndex
     {
         get
         {
@@ -52,7 +52,7 @@ public class NetGuidCache
     /// <summary>
     /// Maps a netguid to received <see cref="IExternalData"/>.
     /// </summary>
-    public Dictionary<uint, IExternalData> ExternalData { get; private set; } = new();
+    private Dictionary<uint, IExternalData> ExternalData { get; set; } = new();
 
     private Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new();
     private Dictionary<uint, string> _cleanedPaths = new();
@@ -60,25 +60,28 @@ public class NetGuidCache
     private HashSet<string> _failedPaths = new(); //Path names that didn't find an export group
     private NetFieldExportGroup? _networkGameplayTagNodeIndex { get; set; }
 
-    /// <summary>
-    /// Add a <see cref="NetFieldExportGroup"/> to the GuidCache.
-    /// </summary>
-    public void AddToExportGroupMap(string group, NetFieldExportGroup exportGroup)
+
+    public void AddToExportGroupMap(NetFieldExportGroup exportGroup)
     {
-        if (group.EndsWith("ClassNetCache"))
+        if (exportGroup.PathName.EndsWith("ClassNetCache"))
         {
             exportGroup.PathName = exportGroup.PathName.RemoveAllPathPrefixes();
         }
 
-        NetFieldExportGroupMap[group] = exportGroup;
-        NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = group;
+        NetFieldExportGroupMap[exportGroup.PathName] = exportGroup;
+        NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = exportGroup.PathName;
     }
 
-    /// <summary>
-    /// Get the <see cref="NetFieldExportGroup"/> by the index.
-    /// </summary>
-    /// <param name="index"></param>
-    /// <returns><see cref="NetFieldExportGroup"/></returns>
+    public void AddNetGuidToPathName(uint netguid, string pathName)
+    {
+        NetGuidToPathName[netguid] = pathName;
+    }
+
+    public void AddToExternalData(IExternalData data)
+    {
+        ExternalData[data.NetGUID] = data; 
+    }
+
     public NetFieldExportGroup? GetNetFieldExportGroupFromIndex(uint? index)
     {
         if (index is null || !NetFieldExportGroupIndexToGroup.TryGetValue(index.Value, out var group))
@@ -88,11 +91,6 @@ public class NetGuidCache
         return NetFieldExportGroupMap[group];
     }
 
-    /// <summary>
-    /// Get the <see cref="NetFieldExportGroup"/> by the path.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns><see cref="NetFieldExportGroup"/></returns>
     public NetFieldExportGroup? GetNetFieldExportGroup(string path)
     {
         if (string.IsNullOrEmpty(path) || !NetFieldExportGroupMap.TryGetValue(path, out var group))
@@ -102,11 +100,7 @@ public class NetGuidCache
         return group;
     }
 
-    /// <summary>
-    /// Get the <see cref="NetFieldExportGroup"/> by the Actor guid.
-    /// </summary>
-    /// <param name="netguid"></param>
-    /// <returns><see cref="NetFieldExportGroup"/></returns>
+
     public NetFieldExportGroup? GetNetFieldExportGroup(uint? netguid)
     {
         if (!netguid.HasValue)
@@ -176,11 +170,6 @@ public class NetGuidCache
         return group;
     }
 
-    /// <summary>
-    /// Tries to find the ClassNetCache for the given group path.
-    /// </summary>
-    /// <param name="group"></param>
-    /// <returns>true if ClassNetCache was found, false otherwise</returns>
     public bool TryGetClassNetCache(string? group, [NotNullWhen(returnValue: true)] out NetFieldExportGroup? netFieldExportGroup, bool useFullName)
     {
         if (string.IsNullOrEmpty(group))
@@ -198,23 +187,11 @@ public class NetGuidCache
         return NetFieldExportGroupMap.TryGetValue(classNetCachePath, out netFieldExportGroup);
     }
 
-    /// <summary>
-    /// Tries to resolve the netguid using the <see cref="NetGuidToPathName"/>
-    /// </summary>
-    /// <param name="netguid"></param>
-    /// <param name="pathName"></param>
-    /// <returns>true if netguid was resolved, false otherwise</returns>
-    public bool TryGetPathName(uint netguid, [NotNullWhen(returnValue: true)] out string pathName)
+    public bool TryGetPathName(uint netguid, [NotNullWhen(returnValue: true)] out string? pathName)
     {
         return NetGuidToPathName.TryGetValue(netguid, out pathName);
     }
 
-    /// <summary>
-    /// Tries to resolve the tagIndex using the <see cref="NetworkGameplayTagNodeIndex"/>
-    /// </summary>
-    /// <param name="tagIndex"></param>
-    /// <param name="tagName"></param>
-    /// <returns>true if tag was resolved, false otherwise</returns>
     public bool TryGetTagName(uint tagIndex, [NotNullWhen(returnValue: true)] out string tagName)
     {
         tagName = "";
@@ -229,12 +206,6 @@ public class NetGuidCache
         return false;
     }
 
-    /// <summary>
-    /// Tries to resolve the netguid using the <see cref="NetGuidToPathName"/>
-    /// </summary>
-    /// <param name="netguid"></param>
-    /// <param name="pathName"></param>
-    /// <returns>true if netguid was resolved, false otherwise</returns>
     public bool TryGetExternalData(uint? netguid, [NotNullWhen(returnValue: true)] out IExternalData? externalData)
     {
         externalData = null;
@@ -245,22 +216,22 @@ public class NetGuidCache
         return false;
     }
 
-
-    /// <summary>
-    /// Empty the NetGuidCache
-    /// </summary>
-    public void Cleanup()
+    public void Cleanup(bool cleanForCheckpoint = false)
     {
-        NetFieldExportGroupIndexToGroup.Clear();
         NetFieldExportGroupMap.Clear();
-        NetGuidToPathName.Clear();
-        //ObjectLookup.Clear();
-        NetFieldExportGroupMapPathFixed.Clear();
-        ExternalData.Clear();
-        _networkGameplayTagNodeIndex = null;
-        _archTypeToExportGroup.Clear();
-        _cleanedPaths.Clear();
-        _cleanedClassNetCache.Clear();
-        _failedPaths.Clear();
+        NetFieldExportGroupIndexToGroup.Clear();
+
+        if (!cleanForCheckpoint)
+        {
+            NetGuidToPathName.Clear();
+            //ObjectLookup.Clear();
+            NetFieldExportGroupMapPathFixed.Clear();
+            ExternalData.Clear();
+            _networkGameplayTagNodeIndex = null;
+            _archTypeToExportGroup.Clear();
+            _cleanedPaths.Clear();
+            _cleanedClassNetCache.Clear();
+            _failedPaths.Clear();
+        }
     }
 }

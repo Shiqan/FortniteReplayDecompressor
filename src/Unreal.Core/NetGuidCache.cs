@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Unreal.Core.Contracts;
 using Unreal.Core.Extensions;
+using Unreal.Core.Models;
 
-namespace Unreal.Core.Models;
+namespace Unreal.Core;
 
 /// <summary>
 /// Class to track all NetGuids being loaded during a replay.

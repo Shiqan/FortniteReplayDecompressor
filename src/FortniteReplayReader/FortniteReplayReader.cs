@@ -21,22 +21,22 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
 {
     private FortniteReplayBuilder Builder;
 
-    public ReplayReader(ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(logger, parseMode)
+    public ReplayReader(INetGuidCache guidCache, INetFieldParser parser, ILogger? logger = null) : base(guidCache, parser, logger)
     {
     }
 
-    public FortniteReplay ReadReplay(string fileName)
+    public FortniteReplay ReadReplay(string fileName, ParseMode parseMode)
     {
         using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        return ReadReplay(stream);
+        return ReadReplay(stream, parseMode);
     }
 
-    public FortniteReplay ReadReplay(Stream stream)
+    public FortniteReplay ReadReplay(Stream stream, ParseMode parseMode)
     {
         using var archive = new Unreal.Core.BinaryReader(stream);
 
         Builder = new FortniteReplayBuilder();
-        ReadReplay(archive);
+        ReadReplay(archive, parseMode);
 
         return Builder.Build(Replay);
     }

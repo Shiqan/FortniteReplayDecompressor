@@ -41,7 +41,7 @@ public class NetExportGuidsTest
     {
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new MockReplayReader();
+        var reader = new MockReplayReader(guidCache: new NetGuidCache());
         reader.InternalLoadObject(archive, true);
         Assert.True(archive.AtEnd());
         Assert.False(archive.IsError);
@@ -104,7 +104,7 @@ public class NetExportGuidsTest
     {
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new MockReplayReader();
+        var reader = new MockReplayReader(guidCache: new NetGuidCache());
         reader.ReadNetExportGuids(archive);
         Assert.True(archive.AtEnd());
         Assert.False(archive.IsError);

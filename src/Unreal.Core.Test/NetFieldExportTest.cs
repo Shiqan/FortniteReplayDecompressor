@@ -110,7 +110,7 @@ public class NetFieldExportTest
             ReplayHeaderFlags = ReplayHeaderFlags.HasStreamingFixes
         };
 
-        var reader = new MockReplayReader();
+        var reader = new MockReplayReader(guidCache: new NetGuidCache());
         reader.ReadNetFieldExports(archive);
         Assert.True(archive.AtEnd());
         Assert.False(archive.IsError);

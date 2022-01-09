@@ -18,28 +18,29 @@ internal class Program
             .AddLogging(loggingBuilder => loggingBuilder
                 .AddConsole()
                 .SetMinimumLevel(LogLevel.Warning));
+        serviceCollection.AddSingleton<INetGuidCache, NetGuidCache>();
         serviceCollection.AddSingleton<INetFieldParser, NetFieldParser>();
-        serviceCollection.AddNetFieldExportGroup<Aircraft>();
+        serviceCollection.AddSingleton<ReplayReader>();
+
         var provider = serviceCollection.BuildServiceProvider();
+        serviceCollection.AddNetFieldExportGroupsFrom<ReplayReader>(provider);
+
         var logger = provider.GetService<ILogger<Program>>();
+        var reader = provider.GetRequiredService<ReplayReader>();
+
         //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
         var replayFilesFolder = @"H:\Projects\FortniteReplayCollection\_upload\season 11\";
         var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
         var sw = new Stopwatch();
-#if DEBUG
-        var reader = new ReplayReader(logger, ParseMode.Minimal);
-#else
-            var reader = new ReplayReader(null, ParseMode.Minimal);
-#endif
         long total = 0;
         foreach (var replayFile in replayFiles)
         {
             sw.Restart();
             try
             {
-                var replay = reader.ReadReplay(replayFile);
+                var replay = reader.ReadReplay(replayFile, ParseMode.Minimal);
             }
             catch (Exception ex)
             {

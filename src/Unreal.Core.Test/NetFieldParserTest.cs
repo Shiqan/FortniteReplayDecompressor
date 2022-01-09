@@ -64,51 +64,76 @@ public class NetFieldParserTest
     public void WillReadTypesOnMinimalTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Minimal, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache); 
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
-        Assert.True(parser.WillReadType("group1"));
-        Assert.False(parser.WillReadType("group2"));
-        Assert.False(parser.WillReadType("ignore"));
+        Assert.True(parser.WillReadType("group1", ParseMode.Minimal));
+        Assert.False(parser.WillReadType("group2", ParseMode.Minimal));
+        Assert.False(parser.WillReadType("ignore", ParseMode.Minimal));
     }
 
     [Fact]
     public void WillReadTypesOnFullTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
-        Assert.True(parser.WillReadType("group1"));
-        Assert.True(parser.WillReadType("group2"));
-        Assert.False(parser.WillReadType("ignore"));
+        Assert.True(parser.WillReadType("group1", ParseMode.Full));
+        Assert.True(parser.WillReadType("group2", ParseMode.Full));
+        Assert.False(parser.WillReadType("ignore", ParseMode.Full));
     }
 
     [Fact]
     public void WillReadClassNetCacheOnMinimalTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Minimal, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
-        Assert.True(parser.WillReadClassNetCache("classnetcache1"));
-        Assert.False(parser.WillReadClassNetCache("classnetcache2"));
-        Assert.False(parser.WillReadClassNetCache("classnetcacheignore"));
+        Assert.True(parser.WillReadClassNetCache("classnetcache1", ParseMode.Minimal));
+        Assert.False(parser.WillReadClassNetCache("classnetcache2", ParseMode.Minimal));
+        Assert.False(parser.WillReadClassNetCache("classnetcacheignore", ParseMode.Minimal));
     }
 
     [Fact]
     public void WillReadClassNetCacheOnFullTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
-        Assert.True(parser.WillReadClassNetCache("classnetcache1"));
-        Assert.True(parser.WillReadClassNetCache("classnetcache2"));
-        Assert.False(parser.WillReadClassNetCache("classnetcacheignore"));
+        Assert.True(parser.WillReadClassNetCache("classnetcache1", ParseMode.Full));
+        Assert.True(parser.WillReadClassNetCache("classnetcache2", ParseMode.Full));
+        Assert.False(parser.WillReadClassNetCache("classnetcacheignore", ParseMode.Full));
     }
 
     [Fact]
     public void TryGetClassNetCachePropertyTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
         var result = parser.TryGetClassNetCacheProperty("DefaultRPCProperty", "classnetcache1", out var info);
         Assert.True(result);
@@ -148,7 +173,7 @@ public class NetFieldParserTest
     public void TryGetClassNetCachePropertyDoesNotThrowTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
 
         var result = parser.TryGetClassNetCacheProperty("doesnotexist", "classnetcache1", out var info);
         Assert.False(result);
@@ -176,7 +201,12 @@ public class NetFieldParserTest
         };
 
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
         var data = parser.CreateType(group.PathName);
         parser.ReadField(data, export, export.Handle, group, reader);
@@ -204,7 +234,12 @@ public class NetFieldParserTest
         };
 
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
         var data = parser.CreateType(group.PathName);
         parser.ReadField(data, export, export.Handle, group, reader);
@@ -238,7 +273,12 @@ public class NetFieldParserTest
         };
 
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
         var data = parser.CreateType(group.PathName);
         parser.ReadField(data, export, export.Handle, group, reader);
@@ -276,7 +316,12 @@ public class NetFieldParserTest
         group.NetFieldExports[182] = export;
 
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache, ParseMode.Full, "Unreal.Core.Test");
+        var parser = new NetFieldParser(guidCache);
+        parser.RegisterType(typeof(NetFieldGroup1));
+        parser.RegisterType(typeof(NetFieldGroup2));
+        parser.RegisterType(typeof(ClassNetCache1));
+        parser.RegisterType(typeof(ClassNetCache2));
+        parser.RegisterType(typeof(ClassNetCacheIgnore));
 
         var data = parser.CreateType(group.PathName);
         parser.ReadField(data, export, export.Handle, group, reader);

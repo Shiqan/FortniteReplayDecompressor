@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Unreal.Core.Models;
+using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Contracts;
 
@@ -31,18 +32,30 @@ public interface INetFieldParser
     bool TryGetClassNetCacheProperty(string property, string group, [NotNullWhen(true)] out NetFieldParser.ClassNetCachePropertyInfo? info);
 
     /// <summary>
-    /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
+    /// Returns whether or not this <paramref name="group"/> is marked to be parsed given the <see cref="ParseMode"/>.
     /// </summary>
-    bool WillReadClassNetCache(string group);
+    bool WillReadClassNetCache(string group, ParseMode mode);
 
     /// <summary>
-    /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
+    /// Returns whether or not this <paramref name="group"/> is marked to be parsed given the <see cref="ParseMode"/>.
     /// </summary>
-    bool WillReadType(string group);
+    bool WillReadType(string group, ParseMode mode);
 
     /// <summary>
     /// Returns whether or not this <paramref name="group"/> is a PlayerController.<br/>
     /// <see href="https://github.com/EpicGames/UnrealEngine/blob/6c20d9831a968ad3cb156442bebb41a883e62152/Engine/Source/Runtime/Engine/Private/PlayerController.cpp#L1338"/>
     /// </summary>
     bool IsPlayerController(string group);
+
+    /// <summary>
+    /// Register types to be used for the parsing.
+    /// For example <see cref="Unreal.Core.Attributes.NetFieldExportAttribute"/> or <see cref="Unreal.Core.Attributes.NetFieldExportClassNetCacheAttribute"/>.
+    /// </summary>
+    void RegisterType(IEnumerable<Type> types);
+
+    /// <summary>
+    /// Register a type to be used for the parsing.
+    /// For example <see cref="Unreal.Core.Attributes.NetFieldExportAttribute"/> or <see cref="Unreal.Core.Attributes.NetFieldExportClassNetCacheAttribute"/>.
+    /// </summary>
+    void RegisterType(Type type);
 }

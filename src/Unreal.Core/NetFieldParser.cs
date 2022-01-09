@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using Unreal.Core.Attributes;
@@ -11,12 +12,11 @@ namespace Unreal.Core;
 
 public class NetFieldParser : INetFieldParser
 {
-    private readonly INetGuidCache GuidCache;
-    private HashSet<string> PlayerControllerGroups { get; set; } = new();
-
-    //private readonly Dictionary<string, NetFieldGroupInfo> _netFieldGroups = new();
-    private readonly KeyList<string, NetFieldGroupInfo> NetFieldGroups = new();
-    private readonly SingleInstanceExport[] _objects;
+    private readonly INetGuidCache _guidCache;
+    private readonly ILogger<NetFieldParser>? _logger;
+    private readonly HashSet<string> _playerControllerGroups = new();
+    private readonly KeyList<string, NetFieldGroupInfo> _netFieldGroups = new();
+    private readonly KeyList<int, SingleInstanceExport> _objects = new();
     private readonly Dictionary<Type, RepLayoutCmdType> _primitiveTypeLayout = new();
     private readonly Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new();
     private readonly CompiledLinqCache _linqCache = new();
@@ -27,67 +27,19 @@ public class NetFieldParser : INetFieldParser
     /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
     /// <param name="mode"></param>
     /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
-    public NetFieldParser(INetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
+    public NetFieldParser(INetGuidCache cache, ILogger<NetFieldParser>? logger = null)
     {
-        GuidCache = cache;
+        _guidCache = cache;
+        _logger = logger;
 
-        var types = AppDomain.CurrentDomain.GetAssemblies()
-            .Where(a => a.FullName.Contains(assemblyNameFilter) || a.FullName.Contains("Unreal.Core"))
-            .SelectMany(i => i.GetTypes())
-            .ToList();
-
-        // Add all netfieldexportgroups
-        var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
-        foreach (var type in netFields)
+        // Add types included in Unreal.Core
+        var types = typeof(INetFieldParser).Assembly.GetTypes();
+        foreach (var type in types)
         {
-            var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
-            if (attribute.MinimalParseMode <= mode)
-            {
-                var info = new NetFieldGroupInfo
-                {
-                    Type = type,
-                    TypeId = _linqCache.AddExportType(type),
-                };
-
-                NetFieldGroups.Add(attribute.Path, info);
-                AddNetFieldInfo(type, info, mode);
-            }
+            RegisterType(type);
         }
 
-        // Add all subgroups
-        var netSubFields = types.Where(c => c.GetCustomAttribute<NetFieldExportSubGroupAttribute>() != null);
-        foreach (var type in netSubFields)
-        {
-            var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-            if (attribute.MinimalParseMode <= mode)
-            {
-                NetFieldGroups.TryGetValue(attribute.Path, out var info);
-                AddNetFieldInfo(type, info, mode);
-            }
-        }
-
-        // ClassNetCaches
-        var classNetCaches = types.Where(c => c.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>() != null);
-        foreach (var type in classNetCaches)
-        {
-            var attribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
-            if (attribute.MinimalParseMode <= mode)
-            {
-                var info = new ClassNetCacheInfo();
-                AddClassNetInfo(type, info);
-                _classNetCacheToNetFieldGroup[attribute.Path] = info;
-            }
-        }
-
-        // PlayerControllers
-        var controllers = types.Where(c => c.GetCustomAttribute<PlayerControllerAttribute>() != null);
-        foreach (var type in controllers)
-        {
-            var attribute = type.GetCustomAttribute<PlayerControllerAttribute>();
-            PlayerControllerGroups.Add(attribute.Path);
-        }
-
-        // Type layout for dynamic arrays
+        // Add default type layout for dynamic arrays
         _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
         _primitiveTypeLayout.Add(typeof(byte), RepLayoutCmdType.PropertyByte);
         _primitiveTypeLayout.Add(typeof(ushort), RepLayoutCmdType.PropertyUInt16);
@@ -97,27 +49,102 @@ public class NetFieldParser : INetFieldParser
         _primitiveTypeLayout.Add(typeof(float), RepLayoutCmdType.PropertyFloat);
         _primitiveTypeLayout.Add(typeof(string), RepLayoutCmdType.PropertyString);
         _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
+    }
+
+    public void RegisterType(IEnumerable<Type> types)
+    {
+        foreach (var type in types)
+        {
+            RegisterType(type);
+        }
+    }
+
+    public void RegisterType(Type type)
+    {
+        // Add netfieldexportgroups
+        var netFieldExportGroupAttribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
+        if (netFieldExportGroupAttribute is not null)
+        {
+            RegisterNetFieldExportGroup(type, netFieldExportGroupAttribute);
+        }
+
+        // Add subgroups
+        var netFieldExportSubGroupAttribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
+        if (netFieldExportSubGroupAttribute is not null) 
+        {
+            RegisterNetFieldExportSubGroup(type, netFieldExportSubGroupAttribute);
+        }
+
+        // Add classNetCache
+        var netFieldExportClassNetCacheAttribute = type.GetCustomAttribute<NetFieldExportClassNetCacheAttribute>();
+        if (netFieldExportClassNetCacheAttribute is not null)
+        {
+            RegisterClassNetExport(type, netFieldExportClassNetCacheAttribute);
+        }
+
+        // Add playerController
+        var playerControllerAttribute = type.GetCustomAttribute<PlayerControllerAttribute>();
+        if (playerControllerAttribute is not null)
+        {
+            RegisterPlayerController(playerControllerAttribute);
+        }
 
         // Allows deserializing type arrays
-        var iPropertyTypes = types.Where(x => typeof(IProperty).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
-        foreach (var iPropertyType in iPropertyTypes)
+        if (typeof(IProperty).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
         {
-            _primitiveTypeLayout.Add(iPropertyType, RepLayoutCmdType.Property);
+            RegisterPrimitiveType(type);
         }
+    }
 
-        //Load object instances
-        _objects = new SingleInstanceExport[_linqCache.TotalTypes];
-
-        for (var i = 0; i < NetFieldGroups.Length; i++)
+    private void RegisterNetFieldExportGroup(Type type, NetFieldExportGroupAttribute netFieldExportGroupAttribute)
+    {
+        var info = new NetFieldGroupInfo
         {
-            var group = NetFieldGroups[i];
+            Type = type,
+            ParseMode = netFieldExportGroupAttribute.MinimalParseMode,
+            TypeId = _linqCache.AddExportType(type),
+        };
 
-            _objects[group.TypeId] = new SingleInstanceExport
-            {
-                Instance = (INetFieldExportGroup) Activator.CreateInstance(group.Type),
-                ChangedProperties = new List<NetFieldInfo>(group.Properties.Length),
-            };
+        AddPropertiesToInfo(type, info);
+        _netFieldGroups.Add(netFieldExportGroupAttribute.Path, info);
+        
+        LoadSingleObject(info);
+    }
+    
+    private void RegisterNetFieldExportSubGroup(Type type, NetFieldExportSubGroupAttribute netFieldExportSubGroupAttribute)
+    {
+        if (_netFieldGroups.TryGetValue(netFieldExportSubGroupAttribute.Path, out var info)) {
+            AddPropertiesToInfo(type, info);
         }
+    }
+
+    private void RegisterClassNetExport(Type type, NetFieldExportClassNetCacheAttribute netFieldExportClassNetCacheAttribute)
+    {
+        var info = new ClassNetCacheInfo
+        {
+            ParseMode = netFieldExportClassNetCacheAttribute.MinimalParseMode,
+        };
+        AddPropertiesToInfo(type, info);
+        _classNetCacheToNetFieldGroup[netFieldExportClassNetCacheAttribute.Path] = info;
+    }
+
+    private void RegisterPlayerController(PlayerControllerAttribute playerControllerAttribute)
+    {
+        _playerControllerGroups.Add(playerControllerAttribute.Path);
+    }
+
+    private void RegisterPrimitiveType(Type type)
+    {
+        _primitiveTypeLayout.Add(type, RepLayoutCmdType.Property);
+    }
+
+    private void LoadSingleObject(NetFieldGroupInfo groupInfo)
+    {
+        _objects.Add(groupInfo.TypeId, new SingleInstanceExport
+        {
+            Instance = (INetFieldExportGroup) Activator.CreateInstance(groupInfo.Type),
+            ChangedProperties = new List<NetFieldInfo>(groupInfo.Properties.Length),
+        });
     }
 
     /// <summary>
@@ -146,13 +173,13 @@ public class NetFieldParser : INetFieldParser
 
         return (Action<INetFieldExportGroup, object>) setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
 
-        FieldInfo GetBackingField(PropertyInfo property)
+        static FieldInfo? GetBackingField(PropertyInfo property)
         {
-            return property.DeclaringType.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            return property.DeclaringType?.GetField($"<{property.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
         }
     }
 
-    private void AddNetFieldInfo(Type type, NetFieldGroupInfo info, ParseMode mode)
+    private void AddPropertiesToInfo(Type type, NetFieldGroupInfo info)
     {
         foreach (var property in type.GetProperties())
         {
@@ -164,13 +191,8 @@ public class NetFieldParser : INetFieldParser
                 continue;
             }
 
-            if (netFieldExportAttribute != null)
+            if (netFieldExportAttribute is not null)
             {
-                if (netFieldExportAttribute.MinimalParseMode != null && netFieldExportAttribute.MinimalParseMode > mode)
-                {
-                    continue;
-                }
-
                 int? elementTypeId = null;
                 if (property.PropertyType.IsArray)
                 {
@@ -212,7 +234,7 @@ public class NetFieldParser : INetFieldParser
         }
     }
 
-    private void AddClassNetInfo(Type type, ClassNetCacheInfo info)
+    private void AddPropertiesToInfo(Type type, ClassNetCacheInfo info)
     {
         foreach (var property in type.GetProperties())
         {
@@ -232,11 +254,25 @@ public class NetFieldParser : INetFieldParser
         }
     }
 
-    public bool WillReadType(string group) => NetFieldGroups.TryGetValue(group, out var _);
+    public bool WillReadType(string group, ParseMode mode)
+    {
+        if (_netFieldGroups.TryGetValue(group, out var netFieldGroupInfo))
+        {
+            return netFieldGroupInfo.ParseMode <= mode;
+        }
+        return false;
+    }
 
-    public bool WillReadClassNetCache(string group) => _classNetCacheToNetFieldGroup.ContainsKey(group);
+    public bool WillReadClassNetCache(string group, ParseMode mode)
+    {
+        if (_classNetCacheToNetFieldGroup.TryGetValue(group, out var classNetCacheInfo))
+        {
+            return classNetCacheInfo.ParseMode <= mode;
+        }
+        return false;
+    }
 
-    public bool IsPlayerController(string group) => PlayerControllerGroups.Contains(group);
+    public bool IsPlayerController(string group) => _playerControllerGroups.Contains(group);
 
     public bool TryGetClassNetCacheProperty(string property, string group, [NotNullWhen(returnValue: true)] out ClassNetCachePropertyInfo? info)
     {
@@ -257,7 +293,7 @@ public class NetFieldParser : INetFieldParser
 
         if (exportGroup.GroupId == -1)
         {
-            if (!NetFieldGroups.TryGetIndex(exportGroup.PathName, out var groupIndex))
+            if (!_netFieldGroups.TryGetIndex(exportGroup.PathName, out var groupIndex))
             {
                 exportGroup.GroupId = -2;
                 return false;
@@ -265,7 +301,7 @@ public class NetFieldParser : INetFieldParser
             exportGroup.GroupId = groupIndex;
         }
 
-        var netGroupInfo = NetFieldGroups[exportGroup.GroupId];
+        var netGroupInfo = _netFieldGroups[exportGroup.GroupId];
         NetFieldInfo netFieldInfo;
         if (netGroupInfo.UsesHandles)
         {
@@ -332,7 +368,7 @@ public class NetFieldParser : INetFieldParser
             case RepLayoutCmdType.Property:
                 data = _linqCache.CreatePropertyObject(objectType);
                 (data as IProperty)?.Serialize(netBitReader);
-                (data as IResolvable)?.Resolve(GuidCache);
+                (data as IResolvable)?.Resolve(_guidCache);
                 break;
             case RepLayoutCmdType.PropertyBool:
                 data = netBitReader.SerializePropertyBool();
@@ -536,7 +572,7 @@ public class NetFieldParser : INetFieldParser
 
     public INetFieldExportGroup? CreateType(string group)
     {
-        if (!NetFieldGroups.TryGetValue(group, out var exportGroup))
+        if (!_netFieldGroups.TryGetValue(group, out var exportGroup))
         {
             return null;
         }
@@ -570,6 +606,7 @@ public class NetFieldParser : INetFieldParser
         public Type Type { get; set; }
         public int TypeId { get; set; }
         public bool UsesHandles { get; set; }
+        public ParseMode ParseMode { get; set; }
         public KeyList<string, NetFieldInfo> Properties { get; set; } = new();
         public Dictionary<uint, NetFieldInfo> Handles { get; set; } = new();
     }
@@ -597,6 +634,7 @@ public class NetFieldParser : INetFieldParser
 
     private sealed class ClassNetCacheInfo
     {
+        public ParseMode ParseMode { get; set; }
         public Dictionary<string, ClassNetCachePropertyInfo> Properties { get; set; } = new();
     }
 

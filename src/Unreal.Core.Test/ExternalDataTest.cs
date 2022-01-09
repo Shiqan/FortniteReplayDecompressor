@@ -32,7 +32,7 @@ public class ExternalDataTest
     {
         using var stream = new MemoryStream(rawData);
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new MockReplayReader();
+        var reader = new MockReplayReader(guidCache: new NetGuidCache());
         reader.ReadExternalData(archive);
         Assert.True(archive.AtEnd());
         Assert.False(archive.IsError);

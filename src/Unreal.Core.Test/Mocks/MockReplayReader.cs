@@ -7,10 +7,9 @@ namespace Unreal.Core.Test.Mocks;
 
 public class MockReplayReader : ReplayReader<MockReplay>
 {
-    public MockReplayReader(ILogger logger = null, ParseMode parseMode = ParseMode.Minimal) : base(logger, parseMode)
+    public MockReplayReader(INetGuidCache guidCache = null, INetFieldParser parser = null, ILogger logger = null) : base(guidCache, parser, logger)
     {
         Replay = new MockReplay();
-        _netGuidCache = new NetGuidCache();
     }
 
     public void SetReplay(MockReplay replay) => Replay = replay;

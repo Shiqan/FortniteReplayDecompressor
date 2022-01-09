@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Unreal.Core;
 using Unreal.Core.Models;
 
 namespace BenchmarkReader;
@@ -10,7 +11,7 @@ public class BenchmarkNetGuidCache
 
     private const int iterations = 10000;
 
-    private Random random = new();
+    private readonly Random random = new();
 
     public BenchmarkNetGuidCache()
     {
@@ -18,27 +19,18 @@ public class BenchmarkNetGuidCache
 
         for (var i = 0; i < iterations; i++)
         {
-            netGuidCache.AddToExportGroupMap(new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = i.ToString() });
+            netGuidCache.AddToExportGroupMap(new NetFieldExportGroup() { PathNameIndex = (uint) i, PathName = i.ToString() });
         }
     }
 
     [Benchmark]
-    public void GetNetFieldExportGroupFromIndex()
-    {
-        netGuidCache.GetNetFieldExportGroupFromIndex((uint)random.Next(iterations));
-    }
+    public void GetNetFieldExportGroupFromIndex() => netGuidCache.GetNetFieldExportGroupFromIndex((uint) random.Next(iterations));
 
     [Benchmark]
-    public void GetNetFieldExportGroup()
-    {
-        netGuidCache.GetNetFieldExportGroup(random.Next(iterations).ToString());
-    }
+    public void GetNetFieldExportGroup() => netGuidCache.GetNetFieldExportGroup(random.Next(iterations).ToString());
 
     [Benchmark]
-    public void TryGetClassNetCache()
-    {
-        netGuidCache.TryGetClassNetCache(random.Next(iterations).ToString(), out var group, true);
-    }
+    public void TryGetClassNetCache() => netGuidCache.TryGetClassNetCache(random.Next(iterations).ToString(), out var group, true);
 
 
 }

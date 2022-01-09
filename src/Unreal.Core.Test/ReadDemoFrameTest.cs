@@ -25,7 +25,7 @@ public class ReadDemoFrameTest
         archive.NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP;
         archive.ReplayHeaderFlags = ReplayHeaderFlags.HasStreamingFixes;
 
-        var reader = new MockReplayReader();
+        var reader = new MockReplayReader(guidCache: new NetGuidCache());
 
         reader.SetReplay(new MockReplay
         {

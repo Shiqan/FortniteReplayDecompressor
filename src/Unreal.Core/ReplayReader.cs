@@ -50,7 +50,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// </summary>
     protected const int MAX_GUID_COUNT = 2048;
 
-    protected ILogger _logger;
+    protected ILogger? _logger;
     protected T Replay { get; set; }
     protected ParseMode _parseMode;
     protected bool IsDebugMode => _parseMode == ParseMode.Debug;
@@ -87,22 +87,21 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// </summary>
     protected uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-    public ReplayReader(ILogger logger, ParseMode mode)
+    public ReplayReader(INetGuidCache guidCache, INetFieldParser parser, ILogger? logger)
     {
         _logger = logger;
-        _parseMode = mode;
-
-        _netGuidCache = new NetGuidCache();
-        _netFieldParser = new NetFieldParser(_netGuidCache, mode);
+        _netGuidCache = guidCache;
+        _netFieldParser = parser;
     }
 
     /// <summary>
     /// Parses the entire replay. 
     /// It first parses the info section, and then all chunks.
     /// </summary>
-    public virtual T ReadReplay(FArchive archive)
+    public virtual T ReadReplay(FArchive archive, ParseMode mode)
     {
         Replay = new T();
+        _parseMode = mode;
 
         ReadReplayInfo(archive);
         ReadReplayChunks(archive);
@@ -1319,7 +1318,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     continue;
                 }
 
-                if (!_netFieldParser.WillReadClassNetCache(classNetCache.PathName))
+                if (!_netFieldParser.WillReadClassNetCache(classNetCache.PathName, _parseMode))
                 {
                     continue;
                 }
@@ -1349,7 +1348,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                         else
                         {
                             var group = _netGuidCache.GetNetFieldExportGroup(classNetProperty.PathName);
-                            if (group is null || !_netFieldParser.WillReadType(group.PathName))
+                            if (group is null || !_netFieldParser.WillReadType(group.PathName, _parseMode))
                             {
                                 continue;
                             }
@@ -1427,7 +1426,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             return false;
         }
 
-        if (!Channels[channelIndex]!.IsIgnoringGroup(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName) && !reader.AtEnd())
+        if (!Channels[channelIndex]!.IsIgnoringGroup(netFieldExportGroup.PathName) && _netFieldParser.WillReadType(netFieldExportGroup.PathName, _parseMode) && !reader.AtEnd())
         {
             _logger?.LogWarning("ReceivedRPC: ReceivePropertiesForRPC - Mismatch read. (bunch: {})", bunchIndex);
             return false;
@@ -1558,9 +1557,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2895
-    ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2971
-    ///  https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2895"/><br/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L2971"/><br/>
+    /// <see href="https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Private/RepLayout.cpp#L3022"/>
     /// </summary>
     protected virtual bool ReceiveProperties(FBitArchive archive, NetFieldExportGroup group, uint channelIndex, [NotNullWhen(returnValue: true)] out INetFieldExportGroup? exportGroup, bool enablePropertyChecksum = true, bool netDeltaUpdate = false)
     {
@@ -1578,7 +1577,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             return false;
         }
 
-        if (!_netFieldParser.WillReadType(group.PathName))
+        if (!_netFieldParser.WillReadType(group.PathName, _parseMode))
         {
             _logger?.LogInformation("Not reading type {}", group.PathName);
             Channels[channelIndex]!.IgnoreGroup(group.PathName);

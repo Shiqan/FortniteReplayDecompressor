@@ -1,5 +1,4 @@
-﻿using Unreal.Core.Models.Enums;
-using Unreal.Core.Test.Mocks;
+﻿using Unreal.Core.Test.Mocks;
 using Xunit;
 
 namespace Unreal.Core.Test;
@@ -27,7 +26,7 @@ public class ReadReplayChunksTest
                 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00
             });
         using var archive = new Unreal.Core.BinaryReader(stream);
-        var reader = new MockReplayReader(parseMode: ParseMode.EventsOnly);
+        var reader = new MockReplayReader();
 
         reader.ReadReplayChunks(archive);
         Assert.True(archive.AtEnd());

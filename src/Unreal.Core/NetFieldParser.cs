@@ -34,10 +34,7 @@ public class NetFieldParser : INetFieldParser
 
         // Add types included in Unreal.Core
         var types = typeof(INetFieldParser).Assembly.GetTypes();
-        foreach (var type in types)
-        {
-            RegisterType(type);
-        }
+        RegisterTypes(types);
 
         // Add default type layout for dynamic arrays
         _primitiveTypeLayout.Add(typeof(bool), RepLayoutCmdType.PropertyBool);
@@ -51,7 +48,7 @@ public class NetFieldParser : INetFieldParser
         _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
     }
 
-    public void RegisterType(IEnumerable<Type> types)
+    public void RegisterTypes(IEnumerable<Type> types)
     {
         foreach (var type in types)
         {
@@ -70,7 +67,7 @@ public class NetFieldParser : INetFieldParser
 
         // Add subgroups
         var netFieldExportSubGroupAttribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-        if (netFieldExportSubGroupAttribute is not null) 
+        if (netFieldExportSubGroupAttribute is not null)
         {
             RegisterNetFieldExportSubGroup(type, netFieldExportSubGroupAttribute);
         }
@@ -107,13 +104,14 @@ public class NetFieldParser : INetFieldParser
 
         AddPropertiesToInfo(type, info);
         _netFieldGroups.Add(netFieldExportGroupAttribute.Path, info);
-        
+
         LoadSingleObject(info);
     }
-    
+
     private void RegisterNetFieldExportSubGroup(Type type, NetFieldExportSubGroupAttribute netFieldExportSubGroupAttribute)
     {
-        if (_netFieldGroups.TryGetValue(netFieldExportSubGroupAttribute.Path, out var info)) {
+        if (_netFieldGroups.TryGetValue(netFieldExportSubGroupAttribute.Path, out var info))
+        {
             AddPropertiesToInfo(type, info);
         }
     }
@@ -191,45 +189,44 @@ public class NetFieldParser : INetFieldParser
                 continue;
             }
 
+            int? elementTypeId = null;
+            if (property.PropertyType.IsArray)
+            {
+                var elementType = property.PropertyType.GetElementType();
+
+                if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
+                {
+                    elementTypeId = _linqCache.AddExportType(elementType);
+                }
+            }
+
+            var netFieldInfo = new NetFieldInfo
+            {
+                MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
+                PropertyInfo = property,
+                ElementTypeId = elementTypeId
+            };
+
+            if (property.PropertyType.IsEnum)
+            {
+                netFieldInfo.DefaultValue = Enum.GetValues(property.PropertyType).Cast<int>().Max();
+            }
+            else if (property.PropertyType.IsValueType)
+            {
+                netFieldInfo.DefaultValue = Activator.CreateInstance(property.PropertyType);
+            }
+
             if (netFieldExportAttribute is not null)
             {
-                int? elementTypeId = null;
-                if (property.PropertyType.IsArray)
-                {
-                    var elementType = property.PropertyType.GetElementType();
-
-                    if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
-                    {
-                        elementTypeId = _linqCache.AddExportType(elementType);
-                    }
-                }
-
-                var netFieldInfo = new NetFieldInfo
-                {
-                    MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
-                    Attribute = netFieldExportAttribute,
-                    PropertyInfo = property,
-                    ElementTypeId = elementTypeId
-                };
-                if (property.PropertyType.IsEnum)
-                {
-                    netFieldInfo.DefaultValue = Enum.GetValues(property.PropertyType).Cast<int>().Max();
-                }
-                else if (property.PropertyType.IsValueType)
-                {
-                    netFieldInfo.DefaultValue = Activator.CreateInstance(property.PropertyType);
-                }
+                netFieldInfo.Attribute = netFieldExportAttribute;
                 info.Properties.Add(netFieldExportAttribute.Name, netFieldInfo);
             }
             else
             {
                 info.UsesHandles = true;
-                info.Handles[handleAttribute.Handle] = new NetFieldInfo
-                {
-                    MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
-                    Attribute = handleAttribute,
-                    PropertyInfo = property
-                };
+                netFieldInfo.Attribute = handleAttribute;
+
+                info.Handles.Add(handleAttribute.Handle, netFieldInfo);
             }
         }
     }
@@ -582,6 +579,11 @@ public class NetFieldParser : INetFieldParser
         for (var i = 0; i < cachedEntry.ChangedProperties.Count; i++)
         {
             var fieldInfo = cachedEntry.ChangedProperties[i];
+            if (fieldInfo.SetMethod is null)
+            {
+                _logger?.LogWarning("SetMethod for property '{}' is null ({group})", fieldInfo.PropertyInfo.Name, group);
+                continue;
+            }
             fieldInfo.SetMethod(cachedEntry.Instance, fieldInfo.DefaultValue);
         }
 
@@ -617,8 +619,8 @@ public class NetFieldParser : INetFieldParser
         public NetFieldAttribute Attribute { get; set; }
         public PropertyInfo PropertyInfo { get; set; }
         public int? ElementTypeId { get; set; }
-        public object DefaultValue { get; set; }
-        public Action<INetFieldExportGroup, object> SetMethod { get; set; }
+        public object? DefaultValue { get; set; }
+        public Action<INetFieldExportGroup, object?>? SetMethod { get; set; }
     }
 
     // TODO make private

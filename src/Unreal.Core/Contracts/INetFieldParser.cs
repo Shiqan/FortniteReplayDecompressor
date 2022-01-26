@@ -51,7 +51,7 @@ public interface INetFieldParser
     /// Register types to be used for the parsing.
     /// For example <see cref="Unreal.Core.Attributes.NetFieldExportAttribute"/> or <see cref="Unreal.Core.Attributes.NetFieldExportClassNetCacheAttribute"/>.
     /// </summary>
-    void RegisterType(IEnumerable<Type> types);
+    void RegisterTypes(IEnumerable<Type> types);
 
     /// <summary>
     /// Register a type to be used for the parsing.

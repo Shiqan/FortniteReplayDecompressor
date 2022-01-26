@@ -31,6 +31,7 @@ internal class Program
         //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
         var replayFilesFolder = @"H:\Projects\FortniteReplayCollection\_upload\season 11\";
+
         var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
         var sw = new Stopwatch();
@@ -40,7 +41,7 @@ internal class Program
             sw.Restart();
             try
             {
-                var replay = reader.ReadReplay(replayFile, ParseMode.Minimal);
+                var replay = reader.ReadReplay(replayFile, ParseMode.Full);
             }
             catch (Exception ex)
             {

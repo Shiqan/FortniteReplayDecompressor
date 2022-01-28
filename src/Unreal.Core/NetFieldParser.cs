@@ -120,7 +120,7 @@ namespace Unreal.Core
 
                 _objects[group.TypeId] = new SingleInstanceExport
                 {
-                    Instance = (INetFieldExportGroup)Activator.CreateInstance(group.Type),
+                    Instance = (INetFieldExportGroup) Activator.CreateInstance(group.Type),
                     ChangedProperties = new List<NetFieldInfo>(group.Properties.Length),
                 };
             }
@@ -150,7 +150,7 @@ namespace Unreal.Core
             }
             gen.Emit(OpCodes.Ret);
 
-            return (Action<INetFieldExportGroup, object>)setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
+            return (Action<INetFieldExportGroup, object>) setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
 
             FieldInfo GetBackingField(PropertyInfo property)
             {
@@ -170,50 +170,53 @@ namespace Unreal.Core
                     continue;
                 }
 
+                if (netFieldExportAttribute != null && netFieldExportAttribute.MinimalParseMode != null && netFieldExportAttribute.MinimalParseMode > mode)
+                {
+                    continue;
+                }
+
+                if (handleAttribute != null && handleAttribute.MinimalParseMode != null && handleAttribute.MinimalParseMode > mode)
+                {
+                    continue;
+                }
+
+                int? elementTypeId = null;
+                if (property.PropertyType.IsArray)
+                {
+                    var elementType = property.PropertyType.GetElementType();
+
+                    if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
+                    {
+                        elementTypeId = _linqCache.AddExportType(elementType);
+                    }
+                }
+
+                var netFieldInfo = new NetFieldInfo
+                {
+                    MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
+                    PropertyInfo = property,
+                    ElementTypeId = elementTypeId
+                };
+
+                if (property.PropertyType.IsEnum)
+                {
+                    netFieldInfo.DefaultValue = Enum.GetValues(property.PropertyType).Cast<int>().Max();
+                }
+                else if (property.PropertyType.IsValueType)
+                {
+                    netFieldInfo.DefaultValue = Activator.CreateInstance(property.PropertyType);
+                }
+
                 if (netFieldExportAttribute != null)
                 {
-                    if (netFieldExportAttribute.MinimalParseMode != null && netFieldExportAttribute.MinimalParseMode > mode)
-                    {
-                        continue;
-                    }
-
-                    int? elementTypeId = null;
-                    if (property.PropertyType.IsArray)
-                    {
-                        var elementType = property.PropertyType.GetElementType();
-
-                        if (typeof(INetFieldExportGroup).IsAssignableFrom(elementType))
-                        {
-                            elementTypeId = _linqCache.AddExportType(elementType);
-                        }
-                    }
-
-                    var netFieldInfo = new NetFieldInfo
-                    {
-                        MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
-                        Attribute = netFieldExportAttribute,
-                        PropertyInfo = property,
-                        ElementTypeId = elementTypeId
-                    };
-                    if (property.PropertyType.IsEnum)
-                    {
-                        netFieldInfo.DefaultValue = Enum.GetValues(property.PropertyType).Cast<int>().Max();
-                    }
-                    else if (property.PropertyType.IsValueType)
-                    {
-                        netFieldInfo.DefaultValue = Activator.CreateInstance(property.PropertyType);
-                    }
+                    netFieldInfo.Attribute = netFieldExportAttribute;
                     info.Properties.Add(netFieldExportAttribute.Name, netFieldInfo);
                 }
                 else
                 {
                     info.UsesHandles = true;
-                    info.Handles[handleAttribute.Handle] = new NetFieldInfo
-                    {
-                        MovementAttribute = property.GetCustomAttribute<RepMovementAttribute>(),
-                        Attribute = handleAttribute,
-                        PropertyInfo = property
-                    };
+                    netFieldInfo.Attribute = handleAttribute;
+                    info.Handles.Add(handleAttribute.Handle, netFieldInfo);
                 }
             }
         }
@@ -540,17 +543,17 @@ namespace Unreal.Core
 
                     if (export == null)
                     {
-                        netBitReader.SkipBits((int)numBits);
+                        netBitReader.SkipBits((int) numBits);
                         continue;
                     }
 
                     try
                     {
-                        netBitReader.SetTempEnd((int)numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
+                        netBitReader.SetTempEnd((int) numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
 
                         if (groupInfo != null)
                         {
-                            ReadField((INetFieldExportGroup)data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
+                            ReadField((INetFieldExportGroup) data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
                         }
                         else
                         {

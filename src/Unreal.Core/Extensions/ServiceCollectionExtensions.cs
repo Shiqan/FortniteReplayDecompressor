@@ -18,9 +18,10 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddNetFieldExportGroups(this IServiceCollection services, IServiceProvider serviceProvider, IEnumerable<Type> netFieldExportGroups)
     {
+        var netfieldParser = serviceProvider.GetRequiredService<INetFieldParser>();
         foreach (var netFieldExportGroup in netFieldExportGroups)
         {
-            services.AddNetFieldExportGroup(serviceProvider, netFieldExportGroup);
+            netfieldParser.RegisterType(netFieldExportGroup);
         }
         return services;
     }

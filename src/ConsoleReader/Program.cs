@@ -1,5 +1,5 @@
 ﻿using FortniteReplayReader;
-using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
@@ -18,11 +18,13 @@ internal class Program
             .AddLogging(loggingBuilder => loggingBuilder
                 .AddConsole()
                 .SetMinimumLevel(LogLevel.Warning));
-        serviceCollection.AddSingleton<INetGuidCache, NetGuidCache>();
-        serviceCollection.AddSingleton<INetFieldParser, NetFieldParser>();
-        serviceCollection.AddSingleton<ReplayReader>();
+        serviceCollection.UseFortniteReplayReader();
+        //serviceCollection.AddSingleton<INetGuidCache, NetGuidCache>();
+        //serviceCollection.AddSingleton<INetFieldParser, NetFieldParser>();
+        //serviceCollection.AddSingleton<ReplayReader>();
 
         var provider = serviceCollection.BuildServiceProvider();
+        var p = provider.GetRequiredService<INetFieldParser>();
         serviceCollection.AddNetFieldExportGroupsFrom<ReplayReader>(provider);
 
         var logger = provider.GetService<ILogger<Program>>();

@@ -7,7 +7,9 @@ using FortniteReplayReader.Models.Enums;
 using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
+using FortniteReplayReader.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Unreal.Core;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
@@ -19,10 +21,12 @@ namespace FortniteReplayReader;
 
 public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
 {
-    private FortniteReplayBuilder Builder;
+    private FortniteReplayBuilder _builder;
+    private FortniteReplayOptions? _options;
 
-    public ReplayReader(INetGuidCache guidCache, INetFieldParser parser, ILogger? logger = null) : base(guidCache, parser, logger)
+    public ReplayReader(INetGuidCache guidCache, INetFieldParser parser, ILogger? logger = null, IOptions<FortniteReplayOptions>? options = default) : base(guidCache, parser, logger)
     {
+        _options = options?.Value;
     }
 
     public FortniteReplay ReadReplay(string fileName, ParseMode parseMode)
@@ -35,10 +39,10 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
         using var archive = new Unreal.Core.BinaryReader(stream);
 
-        Builder = new FortniteReplayBuilder();
+        _builder = new FortniteReplayBuilder();
         ReadReplay(archive, parseMode);
 
-        return Builder.Build(Replay);
+        return _builder.Build(Replay);
     }
 
     private string _branch;
@@ -64,7 +68,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
         if (actor != null)
         {
-            Builder.AddActorChannel(channelIndex, actor.Value);
+            _builder.AddActorChannel(channelIndex, actor.Value);
         }
     }
 
@@ -72,7 +76,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
         if (actor != null)
         {
-            Builder.RemoveChannel(channelIndex);
+            _builder.RemoveChannel(channelIndex);
         }
     }
 
@@ -81,7 +85,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         switch (update.Export)
         {
             case ActiveGameplayModifier modifier:
-                Builder.UpdateGameplayModifiers(modifier);
+                _builder.UpdateGameplayModifiers(modifier);
                 break;
             //case FortPickup pickup:
             //Builder.CreatePickupEvent(channelIndex, pickup);
@@ -90,7 +94,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
             //    Builder.UpdateInventory(channelIndex, inventory);
             //    break;
             case SpawnMachineRepData spawnMachine:
-                Builder.UpdateRebootVan(channelIndex, spawnMachine);
+                _builder.UpdateRebootVan(channelIndex, spawnMachine);
                 break;
         }
     }
@@ -100,16 +104,16 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         switch (exportGroup)
         {
             case GameState state:
-                Builder.UpdateGameState(state);
+                _builder.UpdateGameState(state);
                 break;
             case PlaylistInfo playlist:
-                Builder.UpdatePlaylistInfo(playlist);
+                _builder.UpdatePlaylistInfo(playlist);
                 break;
             case FortPlayerState state:
-                Builder.UpdatePlayerState(channelIndex, state);
+                _builder.UpdatePlayerState(channelIndex, state);
                 break;
             case PlayerPawn pawn:
-                Builder.UpdatePlayerPawn(channelIndex, pawn);
+                _builder.UpdatePlayerPawn(channelIndex, pawn);
                 break;
             //case FortPickup pickup:
             //Builder.CreatePickupEvent(channelIndex, pickup);
@@ -121,22 +125,22 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
             //    Builder.UpdateExplosion(explosion);
             //    break;
             case SafeZoneIndicator safeZone:
-                Builder.UpdateSafeZones(safeZone);
+                _builder.UpdateSafeZones(safeZone);
                 break;
             case SupplyDropLlama llama:
-                Builder.UpdateLlama(channelIndex, llama);
+                _builder.UpdateLlama(channelIndex, llama);
                 break;
             case Models.NetFieldExports.SupplyDrop drop:
-                Builder.UpdateSupplyDrop(channelIndex, drop);
+                _builder.UpdateSupplyDrop(channelIndex, drop);
                 break;
             case FortPoiManager poimanager:
-                Builder.UpdatePoiManager(poimanager);
+                _builder.UpdatePoiManager(poimanager);
                 break;
             //case GameplayCue gameplayCue:
             //    Builder.UpdateGameplayCue(channelIndex, gameplayCue);
             //    break;
             case BaseWeapon weapon:
-                Builder.UpdateWeapon(channelIndex, weapon);
+                _builder.UpdateWeapon(channelIndex, weapon);
                 break;
         }
     }
@@ -146,7 +150,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         // TODO: at the very least, only use PlayerNameData when handle and netfieldgroup match...
         if (externalData != null)
         {
-            Builder.UpdatePrivateName(channelIndex, new PlayerNameData(externalData.Archive));
+            _builder.UpdatePrivateName(channelIndex, new PlayerNameData(externalData.Archive));
         }
     }
 

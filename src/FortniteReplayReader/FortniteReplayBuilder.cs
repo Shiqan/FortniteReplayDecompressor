@@ -222,7 +222,7 @@ namespace FortniteReplayReader
                 playerData.RebootCounter = state.RebootCounter;
             }
 
-            if (state.RebootCounter > 0 || state.bDBNO != null || state.DeathCause != null)
+            if (state.RebootCounter > 0 || state.bDBNO != null || state.DeathCause != null || state.DeathLocation != null)
             {
                 UpdateKillFeed(channelIndex, playerData, state);
             }

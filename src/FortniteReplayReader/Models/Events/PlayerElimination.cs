@@ -18,7 +18,7 @@ namespace FortniteReplayReader.Models.Events
 
         public bool Equals(PlayerElimination other)
         {
-            if (other.Equals(null))
+            if (other is null)
             {
                 return false;
             }

@@ -65,9 +65,14 @@ public class FGameplayAbilityRepAnimMontage : IProperty
     /// </summary>
     public int SectionIdToPlay { get; private set; }
 
-    public void Serialize(NetBitReader reader)
-    {
-        var repPosition = reader.ReadBoolean();
+        /// <summary>
+        /// ID incremented every time a montage is played, used to trigger replication when the same montage is played multiple times. This ID wraps around when it reaches its max value.
+        /// </summary>
+        public NetworkGUID PlayInstanceId;
+
+        public void Serialize(NetBitReader reader)
+        {
+            var repPosition = reader.ReadBoolean();
 
         if (repPosition)
         {
@@ -88,17 +93,27 @@ public class FGameplayAbilityRepAnimMontage : IProperty
             SectionIdToPlay = reader.ReadBitsToInt(7);
         }
 
-        IsStopped = reader.ReadBit();
-        ForcePlayBit = reader.ReadBit();
-        SkipPositionCorrection = reader.ReadBit();
-        bSkipPlayRate = reader.ReadBit();
+            if (reader.EngineNetworkVersion < Enums.EngineNetworkVersionHistory.HISTORY_MONTAGE_PLAY_INST_ID_SERIALIZATION)
+            {
+                ForcePlayBit = reader.ReadBit();
+            }
+
+            IsStopped = reader.ReadBit();
+            SkipPositionCorrection = reader.ReadBit();
+            bSkipPlayRate = reader.ReadBit();
 
         AnimMontage = new NetworkGUID { Value = reader.ReadIntPacked() };
         PlayRate = reader.SerializePropertyFloat();
         BlendTime = reader.SerializePropertyFloat();
         NextSectionID = reader.ReadByte();
 
-        PredictionKey = new FPredictionKey();
-        PredictionKey.Serialize(reader);
+            if (reader.EngineNetworkVersion >= Enums.EngineNetworkVersionHistory.HISTORY_MONTAGE_PLAY_INST_ID_SERIALIZATION)
+            {
+                PlayInstanceId = new NetworkGUID { Value = reader.ReadIntPacked() };
+            }
+
+
+            PredictionKey = new FPredictionKey();
+            PredictionKey.Serialize(reader);
+        }
     }
-}

@@ -197,8 +197,8 @@ public class FortPlayerState : INetFieldExportGroup
     [NetFieldExport("Distance", RepLayoutCmdType.PropertyFloat)]
     public float? Distance { get; set; }
 
-    [NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
-    public FGameplayTagContainer DeathTags { get; set; }
+        [NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
+        public FGameplayTagContainer? DeathTags { get; set; }
 
     [NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool)]
     public bool? bResurrectionChipAvailable { get; set; }
@@ -209,8 +209,8 @@ public class FortPlayerState : INetFieldExportGroup
     [NetFieldExport("ResurrectionExpirationLength", RepLayoutCmdType.PropertyFloat)]
     public float? ResurrectionExpirationLength { get; set; }
 
-    [NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore)]
-    public FVector WorldLocation { get; set; }
+        [NetFieldExport("WorldLocation", RepLayoutCmdType.Ignore)]
+        public FVector? WorldLocation { get; set; }
 
     [NetFieldExport("bResurrectingNow", RepLayoutCmdType.PropertyBool)]
     public bool? bResurrectingNow { get; set; }
@@ -221,11 +221,11 @@ public class FortPlayerState : INetFieldExportGroup
     [NetFieldExport("bHoldsRebootVanLock", RepLayoutCmdType.PropertyBool)]
     public bool? bHoldsRebootVanLock { get; set; }
 
-    [NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId)]
-    public string BotUniqueId { get; set; }
+        [NetFieldExport("BotUniqueId", RepLayoutCmdType.PropertyNetId)]
+        public string? BotUniqueId { get; set; }
 
-    [NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
-    public FVector DeathLocation { get; set; }
+        [NetFieldExport("DeathLocation", RepLayoutCmdType.PropertyVector)]
+        public FVector? DeathLocation { get; set; }
 
     [NetFieldExport("SimulatedAttributes", RepLayoutCmdType.Ignore)]
     public DebuggingObject SimulatedAttributes { get; set; }

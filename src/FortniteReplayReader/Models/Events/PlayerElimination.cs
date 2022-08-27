@@ -14,12 +14,12 @@ public class PlayerElimination : BaseEvent, IEquatable<PlayerElimination>
     public bool IsValidLocation => EliminatorInfo.Location.Size() != 0;
     public double? Distance => IsValidLocation ? EliminatorInfo.Location.DistanceTo(EliminatedInfo.Location) : null;
 
-    public bool Equals(PlayerElimination other)
-    {
-        if (other.Equals(null))
+        public bool Equals(PlayerElimination other)
         {
-            return false;
-        }
+            if (other is null)
+            {
+                return false;
+            }
 
         if (Eliminated == other.Eliminated && Eliminator == other.Eliminator && GunType == other.GunType && Time == other.Time && Knocked == other.Knocked)
         {

@@ -220,10 +220,10 @@ public class FortniteReplayBuilder
             playerData.RebootCounter = state.RebootCounter;
         }
 
-        if (state.RebootCounter > 0 || state.bDBNO != null || state.DeathCause != null)
-        {
-            UpdateKillFeed(channelIndex, playerData, state);
-        }
+            if (state.RebootCounter > 0 || state.bDBNO != null || state.DeathCause != null || state.DeathLocation != null)
+            {
+                UpdateKillFeed(channelIndex, playerData, state);
+            }
 
         if (state.TeamIndex > 0)
         {

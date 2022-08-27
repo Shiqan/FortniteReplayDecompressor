@@ -21,6 +21,7 @@ public enum NetworkVersionHistory
     HISTORY_CHARACTER_MOVEMENT_NOINTERP = 14,   // No longer recording interpolated movement samples
     HISTORY_GUID_NAMETABLE = 15,                // Added a string table for exported guids
     HISTORY_GUIDCACHE_CHECKSUMS = 16,           // Removing guid export checksums from saved data, they are ignored during playback
+    HISTORY_SAVE_PACKAGE_VERSION_UE = 17,		// Save engine and licensee package version as well, in case serialization functions need them for compatibility
 
     HISTORY_NETWORKVERSION_PLUS_ONE,
     LATEST = HISTORY_NETWORKVERSION_PLUS_ONE - 1,

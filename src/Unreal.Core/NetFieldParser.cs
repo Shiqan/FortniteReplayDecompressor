@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -6,6 +7,7 @@ using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Core.Options;
 
 namespace Unreal.Core;
 
@@ -27,10 +29,13 @@ public class NetFieldParser : INetFieldParser
     /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
     /// <param name="mode"></param>
     /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
-    public NetFieldParser(INetGuidCache cache, ILogger<NetFieldParser>? logger = null)
+    public NetFieldParser(INetGuidCache cache, IOptions<NetFieldParserOptions> options, ILogger<NetFieldParser>? logger = null)
     {
         _guidCache = cache;
         _logger = logger;
+
+        // Add register types
+        RegisterTypes(options?.Value.NetFieldExportGroups);
 
         // Add types included in Unreal.Core
         var types = typeof(INetFieldParser).Assembly.GetTypes();
@@ -48,8 +53,10 @@ public class NetFieldParser : INetFieldParser
         _primitiveTypeLayout.Add(typeof(object), RepLayoutCmdType.Ignore);
     }
 
-    public void RegisterTypes(IEnumerable<Type> types)
+    public void RegisterTypes(IEnumerable<Type>? types)
     {
+        if (types is null) return;
+
         foreach (var type in types)
         {
             RegisterType(type);

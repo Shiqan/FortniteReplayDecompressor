@@ -2,6 +2,7 @@
 using FortniteReplayReader;
 using FortniteReplayReader.Models;
 using Unreal.Core;
+using Unreal.Core.Options;
 
 namespace BenchmarkReader;
 
@@ -14,7 +15,8 @@ public class BenchmarkReader
     public BenchmarkReader()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var options = Microsoft.Extensions.Options.Options.Create<NetFieldParserOptions>(new NetFieldParserOptions());
+        var parser = new NetFieldParser(guidCache, options);
         _reader = new ReplayReader(guidCache, parser);
     }
 

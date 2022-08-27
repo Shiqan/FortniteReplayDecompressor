@@ -1,7 +1,9 @@
-﻿using Unreal.Core.Attributes;
+﻿using Microsoft.Extensions.Options;
+using Unreal.Core.Attributes;
 using Unreal.Core.Contracts;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
+using Unreal.Core.Options;
 using Xunit;
 
 namespace Unreal.Core.Test;
@@ -60,11 +62,19 @@ public class ClassNetCacheIgnore
 
 public class NetFieldParserTest
 {
+    private readonly IOptions<NetFieldParserOptions> _options;
+    private readonly INetGuidCache _guidCache = new NetGuidCache();
+
+    public NetFieldParserTest()
+    {
+        _options = Microsoft.Extensions.Options.Options.Create<NetFieldParserOptions>(new NetFieldParserOptions());
+    }
+
     [Fact]
     public void WillReadTypesOnMinimalTest()
     {
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache); 
+        var parser = new NetFieldParser(_guidCache, _options); 
+
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -79,8 +89,8 @@ public class NetFieldParserTest
     [Fact]
     public void WillReadTypesOnFullTest()
     {
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
+
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -96,7 +106,7 @@ public class NetFieldParserTest
     public void WillReadClassNetCacheOnMinimalTest()
     {
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -111,8 +121,7 @@ public class NetFieldParserTest
     [Fact]
     public void WillReadClassNetCacheOnFullTest()
     {
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -127,8 +136,7 @@ public class NetFieldParserTest
     [Fact]
     public void TryGetClassNetCachePropertyTest()
     {
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -172,8 +180,7 @@ public class NetFieldParserTest
     [Fact]
     public void TryGetClassNetCachePropertyDoesNotThrowTest()
     {
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
 
         var result = parser.TryGetClassNetCacheProperty("doesnotexist", "classnetcache1", out var info);
         Assert.False(result);
@@ -201,7 +208,7 @@ public class NetFieldParserTest
         };
 
         var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -233,8 +240,7 @@ public class NetFieldParserTest
             PathNameIndex = 1
         };
 
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -272,8 +278,7 @@ public class NetFieldParserTest
             PathNameIndex = 1
         };
 
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));
@@ -315,8 +320,7 @@ public class NetFieldParserTest
         };
         group.NetFieldExports[182] = export;
 
-        var guidCache = new NetGuidCache();
-        var parser = new NetFieldParser(guidCache);
+        var parser = new NetFieldParser(_guidCache, _options);
         parser.RegisterType(typeof(NetFieldGroup1));
         parser.RegisterType(typeof(NetFieldGroup2));
         parser.RegisterType(typeof(ClassNetCache1));

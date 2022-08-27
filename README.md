@@ -9,13 +9,21 @@ C# parser for your Fortnite replays.
 
 ## Getting Started
 
-.Net 5.0 is required.
+.Net 6.0 is required.
 
 ```powershell
 dotnet add package FortniteReplayReader
 ```
 
 ```csharp
+// Add required services to your service collection, e.g. with Microsoft.Extensions.DependencyInjection
+serviceCollection.UseFortniteReplayReader(netFieldParserOptions: o =>
+{
+    o.AddNetFieldExportGroupsFrom<ReplayReader>();
+});
+// or simplified to register all types from the given type assembly.
+serviceCollection.UseFortniteReplayReader<ReplayReader>();
+
 var replayFile = "your-amazing-fortnite.replay";
 var reader = new ReplayReader();
 var replay = reader.ReadReplay(replayFile);

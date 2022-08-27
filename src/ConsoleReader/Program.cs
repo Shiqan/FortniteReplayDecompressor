@@ -4,9 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using Unreal.Core;
-using Unreal.Core.Contracts;
-using Unreal.Core.Extensions;
 using Unreal.Core.Models.Enums;
+using Unreal.Core.Options;
 
 namespace ConsoleReader;
 
@@ -18,21 +17,22 @@ internal class Program
             .AddLogging(loggingBuilder => loggingBuilder
                 .AddConsole()
                 .SetMinimumLevel(LogLevel.Warning));
-        serviceCollection.UseFortniteReplayReader();
-        //serviceCollection.AddSingleton<INetGuidCache, NetGuidCache>();
-        //serviceCollection.AddSingleton<INetFieldParser, NetFieldParser>();
-        //serviceCollection.AddSingleton<ReplayReader>();
+
+        //serviceCollection.UseFortniteReplayReader(netFieldParserOptions: o =>
+        //{
+        //    o.AddNetFieldExportGroupsFromAssembly<ReplayReader>();
+        //});
+
+        serviceCollection.UseFortniteReplayReader<ReplayReader>();
 
         var provider = serviceCollection.BuildServiceProvider();
-        var p = provider.GetRequiredService<INetFieldParser>();
-        serviceCollection.AddNetFieldExportGroupsFrom<ReplayReader>(provider);
 
         var logger = provider.GetService<ILogger<Program>>();
         var reader = provider.GetRequiredService<ReplayReader>();
 
         //var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
-        var replayFilesFolder = @"H:\Projects\FortniteReplayCollection\_upload\season 11\";
+        var replayFilesFolder = @"C:\Users\ferro\Downloads";
 
         var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 

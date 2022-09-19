@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [2.0.3] - 2022-09-19
+### Changed
+- Fix new Large World Vectors in new Fortnite season (thanks to [bassner](https://github.com/bassner/) and [xNocken](https://github.com/xNocken/))
+
+## [2.0.2] - 2022-01-28
+### Changed
+- Fix for NetFieldGroups that uses handles
+
+## [2.0.1] - 2021-11-13
+### Changed
+- Fix issue where bActorIsOuter bit was read twice
+
 ## [2.0.0] - 2021-02-11
 ### Added
 - Additional information on Player Elim event (by [SL-x-TnT](https://github.com/SL-x-TnT))

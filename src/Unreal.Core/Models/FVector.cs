@@ -7,16 +7,18 @@ namespace Unreal.Core.Models
     /// </summary>
     public class FVector
     {
-        public FVector(float X, float Y, float Z)
+        public FVector(double X, double Y, double Z)
         {
             this.X = X;
             this.Y = Y;
             this.Z = Z;
         }
 
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Z { get; set; }
+        public int ScaleFactor { get; set; }
+        public int Bits { get; set; }
 
         public override string ToString()
         {

@@ -54,17 +54,29 @@ namespace Unreal.Core
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/Engine/Classes/Engine/EngineTypes.h#L3074
+        /// see https://github.com/EpicGames/UnrealEngine/blob/41caf70e76701a52b935fc1495c7992e41486f86/Engine/Source/Runtime/Engine/Private/Engine/ReplicatedState.cpp#L63
         /// </summary>
         public FRepMovement SerializeRepMovement(
             VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
             RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
             VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
         {
+            var bSimulatedPhysicSleep = ReadBit();
+            var bRepPhysics = ReadBit();
+            var bRepServerFrame = false;
+            var bRepServerHandle = false;
+
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_REPMOVE_SERVERFRAME_AND_HANDLE
+                && EngineNetworkVersion != EngineNetworkVersionHistory.HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE)
+            {
+                bRepServerFrame = ReadBit();
+                bRepServerHandle = ReadBit();
+            }
+
             var repMovement = new FRepMovement
             {
-                bSimulatedPhysicSleep = ReadBit(),
-                bRepPhysics = ReadBit(),
-
+                bSimulatedPhysicSleep = bSimulatedPhysicSleep,
+                bRepPhysics = bRepPhysics,
                 Location = SerializePropertyQuantizedVector(locationQuantizationLevel),
                 Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort(),
 
@@ -74,6 +86,16 @@ namespace Unreal.Core
             if (repMovement.bRepPhysics)
             {
                 repMovement.AngularVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel);
+            }
+
+            if (bRepServerFrame)
+            {
+                repMovement.ServerFrame = ReadIntPacked();
+            }
+
+            if (bRepServerHandle)
+            {
+                repMovement.ServerPhysicsHandle = ReadIntPacked();
             }
 
             return repMovement;
@@ -134,17 +156,17 @@ namespace Unreal.Core
             var serIntMax = (1 << (numBits - 0));
 
             var delta = ReadSerializedInt(serIntMax);
-            float unscaledValue = (int)delta - bias;
+            float unscaledValue = (int) delta - bias;
 
             if (maxValue > maxBitValue)
             {
-                var invScale = maxValue / (float)maxBitValue;
+                var invScale = maxValue / (float) maxBitValue;
 
                 return unscaledValue * invScale;
             }
             else
             {
-                var scale = maxBitValue / (float)maxValue;
+                var scale = maxBitValue / (float) maxValue;
                 var invScale = 1f / scale;
 
                 return unscaledValue * invScale;
@@ -165,7 +187,7 @@ namespace Unreal.Core
         public int SerializePropertyByte(int enumMaxValue)
         {
             //Ar.SerializeBits( Data, Enum ? FMath::CeilLogTwo(Enum->GetMaxEnumValue()) : 8 );
-            return ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
+            return ReadBitsToInt(enumMaxValue > 0 ? (int) Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
         }
 
         public int SerializePropertyByte()
@@ -243,7 +265,7 @@ namespace Unreal.Core
             }
 
             // Non empty and hex encoded
-            var typeHash = ((int)(encodingFlags & UniqueIdEncodingFlags.TypeMask)) >> 3;
+            var typeHash = ((int) (encodingFlags & UniqueIdEncodingFlags.TypeMask)) >> 3;
             if (typeHash == 0)
             {
                 // If no type was encoded, assume default

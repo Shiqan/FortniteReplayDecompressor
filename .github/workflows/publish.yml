@@ -38,6 +38,8 @@ jobs:
         DEFAULT_BUMP: patch
         WITH_V: false
         DRY_RUN: true
+        RELEASE_BRANCHES: master
+        VERBOSE: true
     - name: Create PackageVersion
       id: packageversion
       run: echo ::set-output name=tag::${{ steps.versioning.outputs.new_tag }}
@@ -84,4 +86,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch
         WITH_V: false
+        RELEASE_BRANCHES: master
       

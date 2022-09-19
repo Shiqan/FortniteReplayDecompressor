@@ -32,7 +32,7 @@ jobs:
       run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
     - name: Get next version
       id: versioning
-      uses: anothrNick/github-tag-action@1.40.0
+      uses: anothrNick/github-tag-action@1.46.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch
@@ -81,7 +81,7 @@ jobs:
       run: dotnet nuget push ./src/FortniteReplayReader/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@1.40.0
+      uses: anothrNick/github-tag-action@1.46.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEFAULT_BUMP: patch

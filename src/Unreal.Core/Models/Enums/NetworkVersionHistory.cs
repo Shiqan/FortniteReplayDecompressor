@@ -1,7 +1,7 @@
 ﻿namespace Unreal.Core.Models.Enums
 {
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/811c1ce579564fa92ecc22d9b70cbe9c8a8e4b9a/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L84
+    /// see https://github.com/EpicGames/UnrealEngine/blob/46544fa5e0aa9e6740c19b44b0628b72e7bbd5ce/Engine/Source/Runtime/Engine/Public/ReplayTypes.h#L200
     /// </summary>
     public enum NetworkVersionHistory
     {
@@ -22,6 +22,7 @@
         HISTORY_GUID_NAMETABLE = 15,                // Added a string table for exported guids
         HISTORY_GUIDCACHE_CHECKSUMS = 16,           // Removing guid export checksums from saved data, they are ignored during playback
         HISTORY_SAVE_PACKAGE_VERSION_UE = 17,		// Save engine and licensee package version as well, in case serialization functions need them for compatibility
+        HISTORY_RECORDING_METADATA = 18,			// Adding additional record-time information to the header
 
         HISTORY_NETWORKVERSION_PLUS_ONE,
         LATEST = HISTORY_NETWORKVERSION_PLUS_ONE - 1,

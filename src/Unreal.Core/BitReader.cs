@@ -120,9 +120,23 @@ namespace Unreal.Core
 
                 if (ReadBit())
                 {
-                    result |= (byte)(1 << i);
+                    result |= (byte) (1 << i);
                 }
             }
+            return result;
+        }
+
+        public override ulong ReadBitsToLong(int bitCount)
+        {
+            ulong result = new ulong();
+            for (var i = 0; i < bitCount; i++)
+            {
+                if (ReadBit())
+                {
+                    result |= (1UL << i);
+                }
+            }
+
             return result;
         }
 
@@ -176,7 +190,7 @@ namespace Unreal.Core
 
         public override ReadOnlySpan<byte> ReadBits(uint bitCount)
         {
-            return ReadBits((int)bitCount);
+            return ReadBits((int) bitCount);
         }
 
         public override bool ReadBoolean()
@@ -197,7 +211,7 @@ namespace Unreal.Core
             var bitCountUsedInByte = Position & 7;
             var bitCountLeftInByte = 8 - (Position & 7);
 
-            var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+            var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte) ((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
 
             Position += 8;
             return result;
@@ -205,7 +219,7 @@ namespace Unreal.Core
 
         public override T ReadByteAsEnum<T>()
         {
-            return (T)Enum.ToObject(typeof(T), ReadByte());
+            return (T) Enum.ToObject(typeof(T), ReadByte());
         }
 
         public override ReadOnlySpan<byte> ReadBytes(int byteCount)
@@ -228,7 +242,7 @@ namespace Unreal.Core
                 Span<byte> output = new byte[byteCount];
                 for (var i = 0; i < byteCount; i++)
                 {
-                    output[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+                    output[i] = (byte) ((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
                 }
                 result = output;
             }
@@ -239,7 +253,7 @@ namespace Unreal.Core
 
         public override ReadOnlySpan<byte> ReadBytes(uint byteCount)
         {
-            return ReadBytes((int)byteCount);
+            return ReadBytes((int) byteCount);
         }
 
         public override string ReadBytesToString(int count)
@@ -281,7 +295,7 @@ namespace Unreal.Core
                     nameIndex = ReadIntPacked();
                 }
 
-                return ((UnrealNames)nameIndex).ToString();
+                return ((UnrealNames) nameIndex).ToString();
             }
 
             var inString = ReadFString();
@@ -322,7 +336,7 @@ namespace Unreal.Core
         public override short ReadInt16()
         {
             var value = ReadBytes(2);
-            return IsError ? (short)0 : BitConverter.ToInt16(value);
+            return IsError ? (short) 0 : BitConverter.ToInt16(value);
         }
 
         public override int ReadInt32()
@@ -346,8 +360,8 @@ namespace Unreal.Core
         {
             var bitCountUsedInByte = Position & 7;
             var bitCountLeftInByte = 8 - (Position & 7);
-            var srcMaskByte0 = (byte)((1U << bitCountLeftInByte) - 1U);
-            var srcMaskByte1 = (byte)((1U << bitCountUsedInByte) - 1U);
+            var srcMaskByte0 = (byte) ((1U << bitCountLeftInByte) - 1U);
+            var srcMaskByte1 = (byte) ((1U << bitCountUsedInByte) - 1U);
             var srcIndex = CurrentByte;
             var nextSrcIndex = bitCountUsedInByte != 0 ? srcIndex + 1 : srcIndex;
 
@@ -367,8 +381,8 @@ namespace Unreal.Core
 
                 Position += 8;
 
-                var readByte = (byte)(((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
-                value = (uint)((readByte >> 1) << shiftCount) | value;
+                var readByte = (byte) (((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
+                value = (uint) ((readByte >> 1) << shiftCount) | value;
                 srcIndex++;
                 nextSrcIndex++;
 
@@ -387,10 +401,87 @@ namespace Unreal.Core
 
         public override FVector ReadFVector()
         {
-            return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT)
+            {
+                return new FVector(ReadDouble(), ReadDouble(), ReadDouble());
+            }
+            else
+            {
+                return new FVector(ReadSingle(), ReadSingle(), ReadSingle());
+            }
         }
 
         public override FVector ReadPackedVector(int scaleFactor, int maxBits)
+        {
+            if (EngineNetworkVersion >= EngineNetworkVersionHistory.HISTORY_PACKED_VECTOR_LWC_SUPPORT && EngineNetworkVersion != EngineNetworkVersionHistory.HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE)
+            {
+                return ReadQuantizedVector(scaleFactor);
+            }
+
+            return ReadPackedVectorLegacy(scaleFactor, maxBits);
+        }
+
+        /// <summary>
+        /// see https://github.com/EpicGames/UnrealEngine/commit/db095ed4a590f2ae0f42a2fbf9e22678fbb1fb9f#diff-2641717376a3189c7cc27e9e28c26b72ce57d5d3efcf4a26b6beb0dd92eaaa0f
+        /// </summary>
+        private FVector ReadQuantizedVector(int scaleFactor)
+        {
+            var componentBitCountAndExtraInfo = ReadSerializedInt(1 << 7);
+            var componentBitCount = (int) (componentBitCountAndExtraInfo & 63U);
+            var extraInfo = componentBitCountAndExtraInfo >> 6;
+
+            if (componentBitCount > 0U)
+            {
+                var X = ReadBitsToLong((int) componentBitCount);
+                var Y = ReadBitsToLong((int) componentBitCount);
+                var Z = ReadBitsToLong((int) componentBitCount);
+
+                ulong signBit = 1UL << (int) (componentBitCount - 1);
+
+                double fX = (long) (X ^ signBit) - (long) signBit;
+                double fY = (long) (Y ^ signBit) - (long) signBit;
+                double fZ = (long) (Z ^ signBit) - (long) signBit;
+
+                if (extraInfo > 0)
+                {
+                    fX /= scaleFactor;
+                    fY /= scaleFactor;
+                    fZ /= scaleFactor;
+                }
+
+                return new FVector(fX, fY, fZ)
+                {
+                    Bits = componentBitCount,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+            else if (extraInfo == 0)
+            {
+                double X = ReadSingle();
+                double Y = ReadSingle();
+                double Z = ReadSingle();
+
+                return new FVector(X, Y, Z)
+                {
+                    Bits = 32,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+            else
+            {
+                double X = ReadDouble();
+                double Y = ReadDouble();
+                double Z = ReadDouble();
+
+                return new FVector(X, Y, Z)
+                {
+                    Bits = 64,
+                    ScaleFactor = scaleFactor,
+                };
+            }
+        }
+        
+        private FVector ReadPackedVectorLegacy(int scaleFactor, int maxBits)
         {
             var bits = ReadSerializedInt(maxBits);
 
@@ -399,8 +490,8 @@ namespace Unreal.Core
                 return new FVector(0, 0, 0);
             }
 
-            var bias = 1 << ((int)bits + 1);
-            var max = 1 << ((int)bits + 2);
+            var bias = 1 << ((int) bits + 1);
+            var max = 1 << ((int) bits + 2);
 
             var dx = ReadSerializedInt(max);
             var dy = ReadSerializedInt(max);
@@ -516,6 +607,11 @@ namespace Unreal.Core
             return BitConverter.ToUInt64(ReadBytes(8));
         }
 
+        public override double ReadDouble()
+        {
+            return BitConverter.ToDouble(ReadBytes(8));
+        }
+
         public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
         {
             if (offset < 0 || offset >> 3 > Buffer.Length || (offset >> 3 == Buffer.Length && (offset & 7) > 0) || (seekOrigin == SeekOrigin.Current && offset + Position > (Buffer.Length * 8)))
@@ -535,7 +631,7 @@ namespace Unreal.Core
 
         public override void SkipBytes(uint byteCount)
         {
-            SkipBytes((int)byteCount);
+            SkipBytes((int) byteCount);
         }
 
         public override void SkipBytes(int byteCount)
@@ -550,7 +646,7 @@ namespace Unreal.Core
 
         public override void SkipBits(uint numbits)
         {
-            SkipBits((int)numbits);
+            SkipBits((int) numbits);
         }
 
         public override void Mark()

@@ -242,6 +242,13 @@ namespace Unreal.Core
             _position += 4;
             return result;
         }
+        
+        public override double ReadDouble()
+        {
+            var result = BitConverter.ToDouble(Bytes.Slice(_position, 8).Span);
+            _position += 8;
+            return result;
+        }
 
         public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2)
         {

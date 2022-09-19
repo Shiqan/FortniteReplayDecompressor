@@ -174,6 +174,12 @@ namespace Unreal.Core
         public abstract float ReadSingle();
 
         /// <summary>
+        /// Reads a 8-byte double-precision floating point value from the current stream and advances the current position of the stream by four bytes.
+        /// </summary>
+        /// <returns>A 8-byte double-precision floating point value read from the current stream.</returns>
+        public abstract double ReadDouble();
+
+        /// <summary>
         /// Reads a string from the current stream. The string is prefixed with the length as an 4-byte signed integer.
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Private/Containers/String.cpp#L1390
         /// </summary>

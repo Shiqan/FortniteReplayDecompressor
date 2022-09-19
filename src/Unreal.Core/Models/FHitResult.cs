@@ -48,7 +48,7 @@ namespace Unreal.Core.Models
         /// <summary>
         /// The distance from the TraceStart to the Location in world space. This value is 0 if there was an initial overlap (trace started inside another colliding object).
         /// </summary>
-        public float Distance { get; private set; }
+        public double Distance { get; private set; }
 
         /// <summary>
         /// The location in world space where the moving shape would end up against the impacted object, if there is a hit. Equal to the point of impact for line tests.

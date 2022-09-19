@@ -30,27 +30,33 @@ namespace Unreal.Core
         /// <seealso cref="PeekBit"/>
         public abstract bool ReadBit();
 
-
         /// <summary>
-        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
         public abstract ReadOnlySpan<byte> ReadBits(int bitCount);
 
         /// <summary>
-        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// Retuns bool[] and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>bool[]</returns>
         public abstract ReadOnlySpan<byte> ReadBits(uint bitCount);
 
         /// <summary>
-        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bits"/> bits.
+        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.
         /// </summary>
         /// <param name="bits">The number of bits to read.</param>
         /// <returns>int</returns>
         public abstract int ReadBitsToInt(int bitCount);
+
+        /// <summary>
+        /// Retuns int and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.
+        /// </summary>
+        /// <param name="bits">The number of bits to read.</param>
+        /// <returns>int</returns>
+        public abstract ulong ReadBitsToLong(int bitCount);
 
         /// <summary>
         /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/Serialization/BitReader.h#L69

@@ -1,6 +1,6 @@
 site_name: FortniteReplayDecompressor
 
-pages:
+nav:
 - Home: index.md
 - Introduction: introduction.md
 - Overview: overview.md

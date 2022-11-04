@@ -7,6 +7,7 @@ namespace OozSharp.Test
     {
         [Theory]
         [InlineData(@"CompressedChunk/mermaid-fortnite.dump", 405273)]
+        [InlineData(@"CompressedChunk/mermaid-fortnite2.dump", 262151)]
         public void MermaidTest(string data, int expectedSize)
         {
             using var stream = File.Open(data, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);

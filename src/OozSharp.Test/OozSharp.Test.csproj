@@ -29,6 +29,9 @@
     <None Update="CompressedChunk\mermaid-fortnite.dump">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="CompressedChunk\mermaid-fortnite2.dump">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

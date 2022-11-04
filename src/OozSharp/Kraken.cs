@@ -92,7 +92,7 @@ namespace OozSharp
                 //throw new NotImplementedException($"memmove(dst_start + offset, src, dst_bytes_left);");
                 Buffer.MemoryCopy(source, destination + destinationOffset, sourceBytesleft, sourceBytesleft);
 
-                decoder.SourceUsed = (int)((source - sourceIn) + destinationBytesLeft);
+                decoder.SourceUsed = (int) ((source - sourceIn) + destinationBytesLeft);
                 decoder.DestinationUsed = destinationBytesLeft;
 
                 return true;
@@ -143,10 +143,11 @@ namespace OozSharp
                 }
                 else
                 {
-                    throw new NotImplementedException($"memset(dst_start + offset, qhdr.checksum, dst_bytes_left);");
+                    var val = quantumHeader.Checksum;
+                    Buffer.MemoryCopy(&val, destination + destinationOffset, destinationBytesLeft, destinationBytesLeft);
                 }
 
-                decoder.SourceUsed = (int)(source - sourceIn);
+                decoder.SourceUsed = (int) (source - sourceIn);
                 decoder.DestinationUsed = destinationBytesLeft;
 
                 return true;
@@ -164,7 +165,7 @@ namespace OozSharp
 
             if (quantumHeader.CompressedSize == destinationBytesLeft)
             {
-                decoder.SourceUsed = (int)((source - sourceIn) + destinationBytesLeft);
+                decoder.SourceUsed = (int) ((source - sourceIn) + destinationBytesLeft);
                 decoder.DestinationUsed = destinationBytesLeft;
 
                 throw new NotImplementedException($"memmove(dst_start + offset, src, dst_bytes_left);");
@@ -189,22 +190,18 @@ namespace OozSharp
             }
 
 
-            decoder.SourceUsed = (int)(source - sourceIn) + numBytes;
+            decoder.SourceUsed = (int) (source - sourceIn) + numBytes;
             decoder.DestinationUsed = destinationBytesLeft;
 
             return true;
         }
 
-        private uint GetCrc(byte* source, uint compressedSize)
-        {
-            throw new NotImplementedException();
-        }
+        private uint GetCrc(byte* source, uint compressedSize) => throw new NotImplementedException();
 
         private int DecodeBytes(byte** output, byte* source, byte* sourceEnd, int* decodedSize, uint outputSize, bool forceMemmove, byte* scratch, byte* scratchEnd)
         {
             var sourceOrg = source;
             int sourceSize;
-            int destinationSize;
 
             if (sourceEnd - source < 2)
             {
@@ -253,7 +250,7 @@ namespace OozSharp
                 {
                     *output = source;
 
-                    return (int)(source + sourceSize - sourceOrg);
+                    return (int) (source + sourceSize - sourceOrg);
                 }
             }
 
@@ -272,7 +269,7 @@ namespace OozSharp
 
             while (destinationEnd - destination != 0)
             {
-                destinationCount = (int)(destinationEnd - destination);
+                destinationCount = (int) (destinationEnd - destination);
 
                 destinationCount = destinationCount > 0x20000 ? 0x20000 : destinationCount;
 
@@ -316,7 +313,7 @@ namespace OozSharp
                         if (!MermaidReadLzTable(mode,
                             source, source + sourceUsed,
                             destination, destinationCount, destination - destinationStart,
-                            temp + sizeof(MermaidLzTable), temp + tempUsage, (MermaidLzTable*)temp))
+                            temp + sizeof(MermaidLzTable), temp + tempUsage, (MermaidLzTable*) temp))
                         {
                             throw new DecoderException($"Failed to run MermaidReadLzTable");
                         }
@@ -327,7 +324,7 @@ namespace OozSharp
                             source + sourceUsed,
                             destination, destinationCount,
                             destination - destinationStart, destinationEnd,
-                            (MermaidLzTable*)temp))
+                            (MermaidLzTable*) temp))
                         {
                             throw new DecoderException($"Failed to run MermaidProcessLzRuns");
                         }
@@ -347,7 +344,7 @@ namespace OozSharp
 
             }
 
-            return (int)(source - sourceIn);
+            return (int) (source - sourceIn);
         }
 
         private bool MermaidReadLzTable(int mode, byte* source, byte* sourceEnd, byte* destination, int destinationSize, long offset, byte* scratch, byte* scratchEnd, MermaidLzTable* lz)
@@ -380,7 +377,7 @@ namespace OozSharp
             //Decode lit stream
             scratchOut = scratch;
 
-            numBytes = DecodeBytes(&scratchOut, source, sourceEnd, &decodeCount, (uint)Math.Min(scratchEnd - scratch, destinationSize), false, scratch, scratchEnd);
+            numBytes = DecodeBytes(&scratchOut, source, sourceEnd, &decodeCount, (uint) Math.Min(scratchEnd - scratch, destinationSize), false, scratch, scratchEnd);
 
             source += numBytes;
             lz->LitStream = scratchOut;
@@ -389,18 +386,18 @@ namespace OozSharp
 
             //Decode flag stream
             scratchOut = scratch;
-            numBytes = DecodeBytes(&scratchOut, source, sourceEnd, &decodeCount, (uint)Math.Min(scratchEnd - scratch, destinationSize), false, scratch, scratchEnd);
+            numBytes = DecodeBytes(&scratchOut, source, sourceEnd, &decodeCount, (uint) Math.Min(scratchEnd - scratch, destinationSize), false, scratch, scratchEnd);
 
             source += numBytes;
             lz->CmdStream = scratchOut;
             lz->CmdStreamEnd = scratchOut + decodeCount;
             scratch += decodeCount;
 
-            lz->CmdStream2OffsetsEnd = (uint)decodeCount;
+            lz->CmdStream2OffsetsEnd = (uint) decodeCount;
 
             if (destinationSize <= 0x10000)
             {
-                lz->CmdStream2Offsets = (uint)decodeCount;
+                lz->CmdStream2Offsets = (uint) decodeCount;
             }
             else
             {
@@ -409,7 +406,7 @@ namespace OozSharp
                     throw new DecoderException($"MermaidReadLzTable: Too few bytes ({sourceEnd - source}) remaining");
                 }
 
-                lz->CmdStream2Offsets = *(ushort*)source;
+                lz->CmdStream2Offsets = *(ushort*) source;
 
                 source += 2;
 
@@ -424,7 +421,7 @@ namespace OozSharp
                 throw new DecoderException($"MermaidReadLzTable: Too few bytes ({sourceEnd - source}) remaining");
             }
 
-            int off16Count = *(ushort*)source;
+            int off16Count = *(ushort*) source;
 
             if (off16Count == 0xFFFF)
             {
@@ -435,13 +432,13 @@ namespace OozSharp
 
                 source += 2;
                 offset16High = scratch;
-                numBytes = DecodeBytes(&offset16High, source, sourceEnd, &offset16HighCount, (uint)Math.Min(scratchEnd - scratch, destinationSize >> 1), false, scratch, scratchEnd);
+                numBytes = DecodeBytes(&offset16High, source, sourceEnd, &offset16HighCount, (uint) Math.Min(scratchEnd - scratch, destinationSize >> 1), false, scratch, scratchEnd);
 
                 source += numBytes;
                 scratch += offset16HighCount;
 
                 offset16Low = scratch;
-                numBytes = DecodeBytes(&offset16Low, source, sourceEnd, &offset16LowCount, (uint)Math.Min(scratchEnd - scratch, destinationSize >> 1), false, scratch, scratchEnd);
+                numBytes = DecodeBytes(&offset16Low, source, sourceEnd, &offset16LowCount, (uint) Math.Min(scratchEnd - scratch, destinationSize >> 1), false, scratch, scratchEnd);
 
                 source += numBytes;
                 scratch += offset16LowCount;
@@ -452,7 +449,7 @@ namespace OozSharp
                 }
 
                 scratch = Util.AlignPointer(scratch, 2);
-                lz->Offset16Stream = (ushort*)scratch;
+                lz->Offset16Stream = (ushort*) scratch;
 
                 if (scratch + offset16LowCount * 2 > scratchEnd)
                 {
@@ -460,15 +457,15 @@ namespace OozSharp
                 }
 
                 scratch += offset16LowCount * 2;
-                lz->Offset16StreamEnd = (ushort*)scratch;
+                lz->Offset16StreamEnd = (ushort*) scratch;
 
                 MermaidCombineOffset16(lz->Offset16Stream, offset16LowCount, offset16Low, offset16High);
             }
             else
             {
-                lz->Offset16Stream = (ushort*)(source + 2);
+                lz->Offset16Stream = (ushort*) (source + 2);
                 source += 2 + off16Count * 2;
-                lz->Offset16StreamEnd = (ushort*)source;
+                lz->Offset16StreamEnd = (ushort*) source;
             }
 
             if (sourceEnd - source < 3)
@@ -476,7 +473,7 @@ namespace OozSharp
                 throw new DecoderException($"MermaidReadLzTable: Too few bytes ({sourceEnd - source}) remaining");
             }
 
-            temp = (uint)(source[0] | source[1] << 8 | source[2] << 16);
+            temp = (uint) (source[0] | source[1] << 8 | source[2] << 16);
 
             source += 3;
 
@@ -492,7 +489,7 @@ namespace OozSharp
                         throw new DecoderException($"MermaidReadLzTable: Too few bytes ({sourceEnd - source}) remaining");
                     }
 
-                    offset32Size1 = *(ushort*)source;
+                    offset32Size1 = *(ushort*) source;
                     source += 2;
                 }
 
@@ -503,7 +500,7 @@ namespace OozSharp
                         throw new DecoderException($"MermaidReadLzTable: Too few bytes ({sourceEnd - source}) remaining");
                     }
 
-                    offset32Size2 = *(ushort*)source;
+                    offset32Size2 = *(ushort*) source;
                     source += 2;
                 }
 
@@ -517,24 +514,24 @@ namespace OozSharp
 
                 scratch = Util.AlignPointer(scratch, 4);
 
-                lz->Offset32Stream1 = (uint*)scratch;
+                lz->Offset32Stream1 = (uint*) scratch;
                 scratch += offset32Size1 * 4;
 
                 // store dummy bytes after for prefetcher.
-                ((ulong*)scratch)[0] = 0;
-                ((ulong*)scratch)[1] = 0;
-                ((ulong*)scratch)[2] = 0;
-                ((ulong*)scratch)[3] = 0;
+                ((ulong*) scratch)[0] = 0;
+                ((ulong*) scratch)[1] = 0;
+                ((ulong*) scratch)[2] = 0;
+                ((ulong*) scratch)[3] = 0;
                 scratch += 32;
 
-                lz->Offset32Stream2 = (uint*)scratch;
+                lz->Offset32Stream2 = (uint*) scratch;
                 scratch += offset32Size2 * 4;
 
                 // store dummy bytes after for prefetcher.
-                ((ulong*)scratch)[0] = 0;
-                ((ulong*)scratch)[1] = 0;
-                ((ulong*)scratch)[2] = 0;
-                ((ulong*)scratch)[3] = 0;
+                ((ulong*) scratch)[0] = 0;
+                ((ulong*) scratch)[1] = 0;
+                ((ulong*) scratch)[2] = 0;
+                ((ulong*) scratch)[3] = 0;
                 scratch += 32;
 
                 numBytes = MermaidDecodeFarOffsets(source, sourceEnd, lz->Offset32Stream1, lz->Offset32Stream1Size, offset);
@@ -555,14 +552,14 @@ namespace OozSharp
 
                 lz->Offset32Stream1Size = 0;
                 lz->Offset32Stream2Size = 0;
-                lz->Offset32Stream1 = (uint*)scratch;
-                lz->Offset32Stream2 = (uint*)scratch;
+                lz->Offset32Stream1 = (uint*) scratch;
+                lz->Offset32Stream2 = (uint*) scratch;
 
                 // store dummy bytes after for prefetcher.
-                ((ulong*)scratch)[0] = 0;
-                ((ulong*)scratch)[1] = 0;
-                ((ulong*)scratch)[2] = 0;
-                ((ulong*)scratch)[3] = 0;
+                ((ulong*) scratch)[0] = 0;
+                ((ulong*) scratch)[1] = 0;
+                ((ulong*) scratch)[2] = 0;
+                ((ulong*) scratch)[3] = 0;
             }
 
             lz->LengthStream = source;
@@ -660,9 +657,9 @@ namespace OozSharp
                     destination += litLen;
                     litStream += litLen;
 
-                    recentOffs ^= (int)(useDistance & (uint)(recentOffs ^ -newDist));
+                    recentOffs ^= (int) (useDistance & (uint) (recentOffs ^ -newDist));
 
-                    off16Stream = (ushort*)((byte*)off16Stream + (useDistance & 2));
+                    off16Stream = (ushort*) ((byte*) off16Stream + (useDistance & 2));
                     match = destination + recentOffs;
 
                     Util.Copy64(destination, match);
@@ -673,7 +670,7 @@ namespace OozSharp
                 }
                 else if (flag > 2)
                 {
-                    length = (int)(flag + 5);
+                    length = (int) (flag + 5);
 
                     if (off32Stream == off32StreamEnd)
                     {
@@ -681,7 +678,7 @@ namespace OozSharp
                     }
 
                     match = destinationBegin - *off32Stream++;
-                    recentOffs = (int)(match - destination);
+                    recentOffs = (int) (match - destination);
 
                     if (destinationEnd - destination < length)
                     {
@@ -711,7 +708,7 @@ namespace OozSharp
                             throw new DecoderException($"MermaidMode1: Not enough source bytes remaining. Have {sourceEnd - lengthStream}. Need 3");
                         }
 
-                        length += *(ushort*)(lengthStream + 1) * 4;
+                        length += *(ushort*) (lengthStream + 1) * 4;
                         lengthStream += 2;
                     }
 
@@ -753,7 +750,7 @@ namespace OozSharp
                             throw new DecoderException($"MermaidMode1: Not enough source bytes remaining. Have {sourceEnd - lengthStream}. Need 3");
                         }
 
-                        length += *(ushort*)(lengthStream + 1) * 4;
+                        length += *(ushort*) (lengthStream + 1) * 4;
                         lengthStream += 2;
                     }
 
@@ -766,7 +763,7 @@ namespace OozSharp
                     }
 
                     match = destination - *off16Stream++;
-                    recentOffs = (int)(match - destination);
+                    recentOffs = (int) (match - destination);
 
                     do
                     {
@@ -796,7 +793,7 @@ namespace OozSharp
                             throw new DecoderException($"MermaidMode1: Not enough source bytes remaining. Have {sourceEnd - lengthStream}. Need 3");
                         }
 
-                        length += *(ushort*)(lengthStream + 1) * 4;
+                        length += *(ushort*) (lengthStream + 1) * 4;
                         lengthStream += 2;
                     }
 
@@ -809,7 +806,7 @@ namespace OozSharp
                     }
 
                     match = destinationBegin - *off32Stream++;
-                    recentOffs = (int)(match - destination);
+                    recentOffs = (int) (match - destination);
 
                     do
                     {
@@ -825,7 +822,7 @@ namespace OozSharp
                 }
             }
 
-            length = (int)(destinationEnd - destination);
+            length = (int) (destinationEnd - destination);
 
             if (length >= 8)
             {
@@ -859,7 +856,7 @@ namespace OozSharp
         {
             for (var i = 0; i != size; i++)
             {
-                destination[i] = (ushort)(lo[i] + hi[i] * 256);
+                destination[i] = (ushort) (lo[i] + hi[i] * 256);
             }
         }
 
@@ -878,7 +875,7 @@ namespace OozSharp
                         throw new DecoderException($"MermaidDecodeFarOffsets: Too few bytes ({sourceEnd - source}) remaining");
                     }
 
-                    off = (uint)(sourceCurrent[0] | sourceCurrent[1] << 8 | sourceCurrent[2] << 16);
+                    off = (uint) (sourceCurrent[0] | sourceCurrent[1] << 8 | sourceCurrent[2] << 16);
                     sourceCurrent += 3;
 
                     output[i] = off;
@@ -889,7 +886,7 @@ namespace OozSharp
                     }
                 }
 
-                return (int)(sourceCurrent - source);
+                return (int) (sourceCurrent - source);
             }
 
             for (i = 0; i != outputSize; i++)
@@ -899,7 +896,7 @@ namespace OozSharp
                     throw new DecoderException($"MermaidDecodeFarOffsets: Too few bytes ({sourceEnd - source}) remaining");
                 }
 
-                off = (uint)(sourceCurrent[0] | sourceCurrent[1] << 8 | sourceCurrent[2] << 16);
+                off = (uint) (sourceCurrent[0] | sourceCurrent[1] << 8 | sourceCurrent[2] << 16);
                 sourceCurrent += 3;
 
                 if (off >= 0xc00000)
@@ -909,7 +906,7 @@ namespace OozSharp
                         throw new DecoderException($"MermaidDecodeFarOffsets: No remaining bytes");
                     }
 
-                    off += (uint)(*sourceCurrent++ << 22);
+                    off += (uint) (*sourceCurrent++ << 22);
                 }
 
                 output[i] = off;
@@ -920,7 +917,7 @@ namespace OozSharp
                 }
             }
 
-            return (int)(sourceCurrent - source);
+            return (int) (sourceCurrent - source);
         }
     }
 }

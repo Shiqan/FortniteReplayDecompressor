@@ -32,7 +32,9 @@
         HISTORY_REPMOVE_SERVERFRAME_AND_HANDLE = 25,        // Bump version to support serialization changes to RepMove so we can get the serverframe and physics handle associated with the object
         HISTORY_21_AND_VIEWPITCH_ONLY_DO_NOT_USE = 26,      // Bump version to support up to history 21 + HISTORY_PAWN_REMOTEVIEWPITCH.  DO NOT USE!!!
         HISTORY_PLACEHOLDER = 27,                           // Bump version to a placeholder.  This version is the same as HISTORY_REPMOVE_SERVERFRAME_AND_HANDLE
-        HISTORY_RUNTIME_FEATURES_COMPATIBILITY = 28,	    // Bump version to add network runtime feature compatibility test to handshake (hello/upgrade) control messages
+        HISTORY_RUNTIME_FEATURES_COMPATIBILITY = 28,        // Bump version to add network runtime feature compatibility test to handshake (hello/upgrade) control messages
+        HISTORY_SOFTOBJECTPTR_NETGUIDS = 29,                // Bump version to support replicating SoftObjectPtrs by NetGuid instead of raw strings.
+        HISTORY_SUBOBJECT_DESTROY_FLAG = 30,                // Bump version to support subobject destruction message flags
 
         HISTORY_ENGINENETVERSION_PLUS_ONE,
         LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,

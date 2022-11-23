@@ -1860,15 +1860,11 @@ namespace Unreal.Core
                 classNetGUID = InternalLoadObject(bunch.Archive, false);
 
                 bDeleteSubObject = !classNetGUID.IsValid();
-                //if (!classNetGUID.IsValid())
-                //{
-                //    bObjectDeleted = true;
-                //    return null;
-                //}
             }
 
             if (bDeleteSubObject)
             {
+                bObjectDeleted = true;
                 return null;
             }
 

@@ -531,7 +531,7 @@ namespace Unreal.Core
             {
                 _logger?.LogWarning("Found unexpected ReplayVersionHistory: {}", fileVersion);
             }
-            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_2500)
+            if (archive.ReplayVersion >= ReplayVersionHistory.HISTORY_CUSTOM_VERSIONS)
             {
                 var customVersionCount = archive.ReadInt32();
 

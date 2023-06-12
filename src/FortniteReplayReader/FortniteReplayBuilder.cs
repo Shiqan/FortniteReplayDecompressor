@@ -37,7 +37,7 @@ namespace FortniteReplayReader
         private readonly Dictionary<uint, WeaponData> _unknownWeapons = new();
 
         private float? ReplicatedWorldTimeSeconds = 0;
-        private float? ReplicatedWorldTimeSecondsDouble = 0;
+        private double? ReplicatedWorldTimeSecondsDouble = 0;
 
         public void AddActorChannel(uint channelIndex, uint guid)
         {

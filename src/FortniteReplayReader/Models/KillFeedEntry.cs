@@ -14,7 +14,7 @@ namespace FortniteReplayReader.Models
         public bool FinisherOrDownerIsBot { get; set; }
 
         public float? ReplicatedWorldTimeSeconds { get; set; }
-        public float? ReplicatedWorldTimeSecondsDouble { get; set; }
+        public double? ReplicatedWorldTimeSecondsDouble { get; set; }
         public float? Distance { get; set; }
         public int? DeathCause { get; set; }
         public FVector DeathLocation { get; set; }

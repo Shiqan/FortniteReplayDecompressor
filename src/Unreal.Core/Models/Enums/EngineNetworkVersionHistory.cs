@@ -35,6 +35,7 @@
         HISTORY_RUNTIME_FEATURES_COMPATIBILITY = 28,        // Bump version to add network runtime feature compatibility test to handshake (hello/upgrade) control messages
         HISTORY_SOFTOBJECTPTR_NETGUIDS = 29,                // Bump version to support replicating SoftObjectPtrs by NetGuid instead of raw strings.
         HISTORY_SUBOBJECT_DESTROY_FLAG = 30,                // Bump version to support subobject destruction message flags
+        HISTORY_GAMESTATE_REPLCIATED_TIME_AS_DOUBLE = 31,	// Bump version to support AGameStateBase::ReplicatedWorldTimeSeconds as double instead of float.
 
         HISTORY_ENGINENETVERSION_PLUS_ONE,
         LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,

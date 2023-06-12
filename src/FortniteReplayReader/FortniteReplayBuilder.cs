@@ -37,6 +37,7 @@ namespace FortniteReplayReader
         private readonly Dictionary<uint, WeaponData> _unknownWeapons = new();
 
         private float? ReplicatedWorldTimeSeconds = 0;
+        private float? ReplicatedWorldTimeSecondsDouble = 0;
 
         public void AddActorChannel(uint channelIndex, uint guid)
         {
@@ -130,6 +131,11 @@ namespace FortniteReplayReader
             if (state.ReplicatedWorldTimeSeconds != null)
             {
                 ReplicatedWorldTimeSeconds = state.ReplicatedWorldTimeSeconds;
+            }
+
+            if (state.ReplicatedWorldTimeSecondsDouble != null)
+            {
+                ReplicatedWorldTimeSecondsDouble = state.ReplicatedWorldTimeSecondsDouble;
             }
 
             GameData.WinningPlayerIds ??= state.WinningPlayerList;
@@ -246,6 +252,8 @@ namespace FortniteReplayReader
             if (state.DeathTags != null)
             {
                 playerData.DeathTime = ReplicatedWorldTimeSeconds;
+                playerData.DeathTimeDouble = ReplicatedWorldTimeSecondsDouble;
+
             }
 
             playerData.Cosmetics.Parts ??= state.Parts?.Name;
@@ -262,7 +270,8 @@ namespace FortniteReplayReader
         {
             KillFeedEntry? entry = new KillFeedEntry()
             {
-                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds
+                ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                ReplicatedWorldTimeSecondsDouble = ReplicatedWorldTimeSecondsDouble,
             };
 
             if (state.RebootCounter != null)
@@ -363,6 +372,7 @@ namespace FortniteReplayReader
                 {
                     ReplicatedMovement = pawn.ReplicatedMovement,
                     ReplicatedWorldTimeSeconds = ReplicatedWorldTimeSeconds,
+                    ReplicatedWorldTimeSecondsDouble = ReplicatedWorldTimeSecondsDouble,
                     LastUpdateTime = pawn.ReplayLastTransformUpdateTimeStamp,
                     bIsCrouched = pawn.bIsCrouched,
                     bIsInAnyStorm = pawn.bIsInAnyStorm,
@@ -495,6 +505,7 @@ namespace FortniteReplayReader
             {
                 llama.Looted = true;
                 llama.LootedTime = ReplicatedWorldTimeSeconds;
+                llama.LootedTimeDouble = ReplicatedWorldTimeSecondsDouble;
             }
 
             if (supplyDropLlama.bHasSpawnedPickups)
@@ -517,12 +528,15 @@ namespace FortniteReplayReader
             {
                 drop.Looted = true;
                 drop.LootedTime = ReplicatedWorldTimeSeconds;
+                drop.LootedTimeDouble = ReplicatedWorldTimeSecondsDouble;
             }
 
             if (supplyDrop.BalloonPopped)
             {
                 drop.BalloonPopped = true;
                 drop.BalloonPoppedTime = ReplicatedWorldTimeSeconds;
+                drop.BalloonPoppedTimeDouble = ReplicatedWorldTimeSecondsDouble;
+
             }
 
             if (supplyDrop.bHasSpawnedPickups)

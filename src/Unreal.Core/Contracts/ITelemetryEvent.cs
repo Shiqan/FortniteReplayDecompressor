@@ -6,5 +6,7 @@
     public interface ITelemetryEvent
     {
         public float? ReplicatedWorldTimeSeconds { get; set; }
+
+        public float? ReplicatedWorldTimeSecondsDouble { get; set; }
     }
 }

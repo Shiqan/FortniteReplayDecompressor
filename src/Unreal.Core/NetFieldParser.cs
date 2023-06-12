@@ -379,6 +379,9 @@ namespace Unreal.Core
                 case RepLayoutCmdType.PropertyFloat:
                     data = netBitReader.SerializePropertyFloat();
                     break;
+                case RepLayoutCmdType.PropertyDouble:
+                    data = netBitReader.SerializePropertyDouble();
+                    break;
                 case RepLayoutCmdType.PropertyNativeBool:
                     data = netBitReader.SerializePropertyNativeBool();
                     break;

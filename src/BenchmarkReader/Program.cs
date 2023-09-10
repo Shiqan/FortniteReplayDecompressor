@@ -1,15 +1,8 @@
 ﻿using BenchmarkDotNet.Running;
 
-namespace BenchmarkReader
+namespace BenchmarkReader;
+
+internal class Program
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            BenchmarkRunner.Run<BenchmarkBitReader>();
-            //BenchmarkRunner.Run<BenchmarkBinaryReader>();
-            //BenchmarkRunner.Run<BenchmarkNetGuidCache>();
-            //BenchmarkRunner.Run<BenchmarkReader>();
-        }
-    }
+    private static void Main(string[] args) => BenchmarkRunner.Run<BenchmarkBitReader>();//BenchmarkRunner.Run<BenchmarkBinaryReader>();//BenchmarkRunner.Run<BenchmarkNetGuidCache>();//BenchmarkRunner.Run<BenchmarkReader>();
 }

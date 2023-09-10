@@ -25,6 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OozSharp.Test", "OozSharp.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{223EF4B5-E42A-494D-BA0B-4E22E97ED281}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		..\.github\workflows\build.yml = ..\.github\workflows\build.yml
 		..\CHANGELOG.md = ..\CHANGELOG.md
 		..\.github\workflows\publish.yml = ..\.github\workflows\publish.yml

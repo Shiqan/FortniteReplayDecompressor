@@ -25,6 +25,7 @@ namespace FortniteReplayReader.Test
                 GameSessionId = "123",
                 WinningTeam = 99,
                 ReplicatedWorldTimeSeconds = 1,
+                ReplicatedWorldTimeSecondsDouble = 1,
             };
             builder.UpdateGameState(state);
 

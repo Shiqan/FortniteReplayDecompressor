@@ -71,7 +71,7 @@ namespace FortniteReplayReader.Models
         public IEnumerable<string> DeathTags { get; set; }
         public FVector DeathLocation { get; set; }
         public float? DeathTime { get; set; }
-
+        public double? DeathTimeDouble { get; set; }
         public Cosmetics Cosmetics { get; set; }
         public uint? CurrentWeapon { get; internal set; }
 
@@ -104,6 +104,9 @@ namespace FortniteReplayReader.Models
     {
         public FRepMovement? ReplicatedMovement { get; set; }
         public float? ReplicatedWorldTimeSeconds { get; set; }
+
+        public double? ReplicatedWorldTimeSecondsDouble { get; set; }
+        
         public float? LastUpdateTime { get; set; }
 
         public bool? bIsCrouched { get; set; }

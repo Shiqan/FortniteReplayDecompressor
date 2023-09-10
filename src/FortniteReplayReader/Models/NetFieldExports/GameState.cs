@@ -108,6 +108,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedWorldTimeSeconds", RepLayoutCmdType.PropertyFloat)]
         public float? ReplicatedWorldTimeSeconds { get; set; }
 
+        [NetFieldExport("ReplicatedWorldTimeSecondsDouble", RepLayoutCmdType.PropertyDouble)]
+        public double? ReplicatedWorldTimeSecondsDouble { get; set; }
+
         [NetFieldExport("MatchState", RepLayoutCmdType.Property)]
         public FName MatchState { get; set; }
 

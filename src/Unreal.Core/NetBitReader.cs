@@ -41,6 +41,11 @@ namespace Unreal.Core
             return ReadSingle();
         }
 
+        public double SerializePropertyDouble()
+        {
+            return ReadDouble();
+        }
+
         public string SerializePropertyName()
         {
             return ReadFName();

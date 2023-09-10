@@ -32,6 +32,7 @@
         PropertySoftObject = 22,
         PropertyWeakObject = 23,
 
+        PropertyDouble = 94,
         PropertyVector2D = 95,
         PropertyInt16 = 96,
         PropertyUInt16 = 97,

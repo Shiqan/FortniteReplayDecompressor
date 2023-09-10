@@ -206,6 +206,10 @@ namespace FortniteReplayReader
             }
 
             _logger?.LogDebug("Unknown event {group} ({metadata}) of size {sizeInBytes}", info.Group, info.Metadata, info.SizeInBytes);
+            if (IsDebugMode)
+            {
+                throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");
+            }
         }
 
         public virtual EncryptionKey ParseEncryptionKeyEvent(FArchive archive, EventInfo info)

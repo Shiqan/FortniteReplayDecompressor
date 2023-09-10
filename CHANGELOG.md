@@ -9,27 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
-## [2.1.0] - 2022-09-19
+## [2.1.0] - 2023-09-10
 ### Changed
 - support .net6
 
-## [2.0.8] - 2022-09-19
+## [2.0.8] - 2023-09-10
 ### Changed
 - adding support for v26.00
 
-## [2.0.7] - 2022-09-19
+## [2.0.7] - 2023-09-10
 ### Changed
 - add HISTORY_GAMESTATE_REPLCIATED_TIME_AS_DOUBLE (by [chrisai-dev](https://github.com/chrisai-dev))
 
-## [2.0.6] - 2022-09-19
+## [2.0.6] - 2024-06-10
 ### Changed
 - adding support for v25.00
 
-## [2.0.5] - 2022-09-19
+## [2.0.5] - 2022-12-04
 ### Changed
 - support new network version
 
-## [2.0.4] - 2022-09-19
+## [2.0.4] - 2022-10-04
 ### Changed
 - fix issue in Oodle decompress (by [SL-x-TnT](https://github.com/SL-x-TnT))
 

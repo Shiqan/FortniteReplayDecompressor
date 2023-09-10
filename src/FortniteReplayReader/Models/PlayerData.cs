@@ -8,15 +8,15 @@ namespace FortniteReplayReader.Models
     {
         public PlayerData(FortPlayerState playerState)
         {
-            Id = playerState.PlayerID;
-            EpicId = playerState.UniqueId;
+            Id = playerState.PlayerId is null ? playerState.PlayerID : (int?) playerState.PlayerId;
+            EpicId = playerState.UniqueId ?? playerState.UniqueID;
             BotId = playerState.BotUniqueId;
             IsBot = playerState.bIsABot == true;
             PlayerNameCustomOverride = playerState.PlayerNameCustomOverride?.Text;
             IsGameSessionOwner = playerState.bIsGameSessionOwner;
-            PlayerNumber = playerState.WorldPlayerId;
+            PlayerNumber = playerState.WorldPlayerId is not null ? (int?) playerState.WorldPlayerId : null;
             StreamerModeName = playerState.StreamerModeName?.Text;
-            IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId;
+            IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId || playerState.PartyOwnerUniqueId == playerState.UniqueID;
             TeamIndex = playerState.TeamIndex;
             Level = playerState.Level;
             SeasonLevelUIDisplay = playerState.SeasonLevelUIDisplay;
@@ -36,12 +36,12 @@ namespace FortniteReplayReader.Models
         }
 
         public int? Id { get; set; }
-        public string PlayerId => (IsBot == true) ? BotId : EpicId ?? PlatformUniqueNetId;
-        public string EpicId { get; set; }
-        public string PlatformUniqueNetId { get; set; }
-        public string BotId { get; set; }
+        public string? PlayerId => (IsBot == true) ? BotId : EpicId ?? PlatformUniqueNetId;
+        public string? EpicId { get; set; }
+        public string? PlatformUniqueNetId { get; set; }
+        public string? BotId { get; set; }
         public bool IsBot { get; set; }
-        public string PlayerName { get; set; }
+        public string? PlayerName { get; set; }
         public string? PlayerNameCustomOverride { get; set; }
         public string? StreamerModeName { get; set; }
         public string Platform { get; set; }
@@ -68,8 +68,8 @@ namespace FortniteReplayReader.Models
         public uint? TeamKills { get; set; }
         public int? DeathCause { get; set; }
         public int? DeathCircumstance { get; set; }
-        public IEnumerable<string> DeathTags { get; set; }
-        public FVector DeathLocation { get; set; }
+        public IEnumerable<string>? DeathTags { get; set; }
+        public FVector? DeathLocation { get; set; }
         public float? DeathTime { get; set; }
         public double? DeathTimeDouble { get; set; }
         public Cosmetics Cosmetics { get; set; }
@@ -82,11 +82,11 @@ namespace FortniteReplayReader.Models
     {
         public int? CharacterGender { get; set; }
         public int? CharacterBodyType { get; set; }
-        public string Parts { get; set; }
+        public string? Parts { get; set; }
         public IEnumerable<string> VariantRequiredCharacterParts { get; set; }
-        public string HeroType { get; set; }
-        public string BannerIconId { get; set; }
-        public string BannerColorId { get; set; }
+        public string? HeroType { get; set; }
+        public string? BannerIconId { get; set; }
+        public string? BannerColorId { get; set; }
         public IEnumerable<string> ItemWraps { get; set; }
         public string SkyDiveContrail { get; set; }
         public string Glider { get; set; }

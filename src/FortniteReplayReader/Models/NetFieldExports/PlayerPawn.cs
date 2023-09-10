@@ -501,5 +501,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bReplicatedIsInVortex", RepLayoutCmdType.PropertyBool)]
         public bool? bReplicatedIsInVortex { get; set; }
+
+        [NetFieldExport("bIsTacticalSprinting", RepLayoutCmdType.PropertyBool)]
+        public bool? bIsTacticalSprinting { get; set; }
     }
 }

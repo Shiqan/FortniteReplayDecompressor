@@ -31,9 +31,12 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("Score", RepLayoutCmdType.PropertyUInt32)]
         public uint? Score { get; set; }
-
+        
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyInt)]
         public int? PlayerID { get; set; }
+        
+        [NetFieldExport("PlayerId", RepLayoutCmdType.PropertyUInt32)]
+        public uint? PlayerId { get; set; }
 
         [NetFieldExport("Ping", RepLayoutCmdType.Ignore)]
         public byte? Ping { get; set; }
@@ -52,6 +55,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("UniqueId", RepLayoutCmdType.PropertyNetId)]
         public string UniqueId { get; set; }
+        
+        [NetFieldExport("UniqueID", RepLayoutCmdType.PropertyNetId)]
+        public string UniqueID { get; set; }
 
         [NetFieldExport("PlayerNamePrivate", RepLayoutCmdType.Ignore)]
         public string PlayerNamePrivate { get; set; }
@@ -71,8 +77,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("PartyOwnerUniqueId", RepLayoutCmdType.PropertyNetId)]
         public string PartyOwnerUniqueId { get; set; }
 
-        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt)]
-        public int? WorldPlayerId { get; set; }
+        [NetFieldExport("WorldPlayerId", RepLayoutCmdType.PropertyInt16)]
+        public short? WorldPlayerId { get; set; }
 
         [NetFieldExport("HeroType", RepLayoutCmdType.Property)]
         public ItemDefinition HeroType { get; set; }
@@ -200,6 +206,12 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("DeathTags", RepLayoutCmdType.Property)]
         public FGameplayTagContainer? DeathTags { get; set; }
 
+        [NetFieldExport("VictimTags", RepLayoutCmdType.Property)]
+        public FGameplayTagContainer? VictimTags { get; set; }
+        
+        [NetFieldExport("FinisherOrDownerTags", RepLayoutCmdType.Property)]
+        public FGameplayTagContainer? FinisherOrDownerTags { get; set; }
+
         [NetFieldExport("bResurrectionChipAvailable", RepLayoutCmdType.PropertyBool)]
         public bool? bResurrectionChipAvailable { get; set; }
 
@@ -238,5 +250,8 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("bIsAnAthenaGameParticipant", RepLayoutCmdType.PropertyBool)]
         public bool? bIsAnAthenaGameParticipant { get; set; }
+
+        [NetFieldExport("bHidden", RepLayoutCmdType.Ignore)]
+        public bool? bHidden { get; set; }
     }
 }

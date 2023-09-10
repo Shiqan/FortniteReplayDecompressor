@@ -7,14 +7,11 @@ namespace Unreal.Core
 {
     public class KeyList<K, V>
     {
-        private readonly List<V> _vals = new List<V>();
-        private readonly Dictionary<K, int> _keys = new Dictionary<K, int>();
+        private readonly List<V> _vals = new();
+        private readonly Dictionary<K, int> _keys = new();
         public int Length => _vals.Count;
 
-        public int Count(Func<V, bool> func)
-        {
-            return _vals.Count(func);
-        }
+        public int Count(Func<V, bool> func) => _vals.Count(func);
 
         public void Add(K key, V val)
         {
@@ -24,10 +21,7 @@ namespace Unreal.Core
             }
         }
 
-        public bool TryGetIndex(K key, [NotNullWhen(returnValue: true)] out int index)
-        {
-            return _keys.TryGetValue(key, out index);
-        }
+        public bool TryGetIndex(K key, [NotNullWhen(returnValue: true)] out int index) => _keys.TryGetValue(key, out index);
 
         public bool TryGetValue(int keyId, [NotNullWhen(returnValue: true)] out V? val)
         {

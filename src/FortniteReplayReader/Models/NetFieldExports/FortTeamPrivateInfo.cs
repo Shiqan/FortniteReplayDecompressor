@@ -30,6 +30,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("Value", RepLayoutCmdType.PropertyFloat)]
         public float? Value { get; set; }
 
+        [NetFieldExport("PlayerId", RepLayoutCmdType.PropertyNetId)]
+        public string PlayerId { get; set; }
+        
         [NetFieldExport("PlayerID", RepLayoutCmdType.PropertyNetId)]
         public string PlayerID { get; set; }
 

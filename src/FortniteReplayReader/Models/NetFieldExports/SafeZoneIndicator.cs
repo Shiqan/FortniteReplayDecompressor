@@ -46,5 +46,23 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("Radius", RepLayoutCmdType.PropertyFloat)]
         public float Radius { get; set; }
+
+        [NetFieldExport("PreviousRadius", RepLayoutCmdType.PropertyFloat)]
+        public float PreviousRadius { get; set; }
+
+        [NetFieldExport("CurrentPhase", RepLayoutCmdType.PropertyFloat)]
+        public float CurrentPhase { get; set; }
+
+        [NetFieldExport("PreviousCenter", RepLayoutCmdType.PropertyVector100)]
+        public FVector PreviousCenter { get; set; }
+
+        [NetFieldExport("Damage", RepLayoutCmdType.PropertyFloat)]
+        public float Damage { get; set; }
+
+        [NetFieldExport("PhaseCount", RepLayoutCmdType.PropertyFloat)]
+        public float PhaseCount { get; set; }
+
+        [NetFieldExport("TimeRemainingWhenPhasePaused", RepLayoutCmdType.PropertyFloat)]
+        public float TimeRemainingWhenPhasePaused { get; set; }
     }
 }

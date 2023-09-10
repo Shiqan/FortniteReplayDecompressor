@@ -111,6 +111,9 @@ namespace FortniteReplayReader.Models.NetFieldExports
         [NetFieldExport("ReplicatedWorldTimeSecondsDouble", RepLayoutCmdType.PropertyDouble)]
         public double? ReplicatedWorldTimeSecondsDouble { get; set; }
 
+        [NetFieldExport("ReplicatedWorldRealTimeSecondsDouble", RepLayoutCmdType.PropertyDouble)]
+        public double? ReplicatedWorldRealTimeSecondsDouble { get; set; }
+
         [NetFieldExport("MatchState", RepLayoutCmdType.Property)]
         public FName MatchState { get; set; }
 
@@ -371,5 +374,21 @@ namespace FortniteReplayReader.Models.NetFieldExports
 
         [NetFieldExport("Mappings", RepLayoutCmdType.DynamicArray)]
         public ItemDefinition[] Mappings { get; set; }
+
+        [NetFieldExport("PlayersLoaded", RepLayoutCmdType.PropertyFloat)]
+        public float PlayersLoaded { get; set; }
+        
+        [NetFieldExport("bIsCustomMatch", RepLayoutCmdType.PropertyBool)]
+        public bool bIsCustomMatch { get; set; }
+        
+        [NetFieldExport("bCraftingEnabled", RepLayoutCmdType.PropertyBool)]
+        public bool bCraftingEnabled { get; set; }
+
+        [NetFieldExport("MatchStartTime", RepLayoutCmdType.PropertyFloat)]
+        public float MatchStartTime { get; set; }
+        
+        [NetFieldExport("RealMatchStartTime", RepLayoutCmdType.PropertyDouble)]
+        public double RealMatchStartTime { get; set; }
+        
     }
 }

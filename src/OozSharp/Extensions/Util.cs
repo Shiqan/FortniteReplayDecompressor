@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace OozSharp.Extensions
+namespace OozSharp.Extensions;
+
+public static unsafe class Util
 {
-    public unsafe static class Util
-    {
-        public static void Copy64(byte* destination, byte * source)
-        {
-            *(ulong*)destination = *(ulong*)source;
-        }
+    public static void Copy64(byte* destination, byte* source) => *(ulong*) destination = *(ulong*) source;
 
-        public static byte* AlignPointer(byte* p, int align)
-        {
-            return ((byte*)((*(IntPtr*)&p + (align - 1)).ToInt64() & ~(align - 1)));
-        }
-    }
+    public static byte* AlignPointer(byte* p, int align) => ((byte*) ((*(IntPtr*) &p + (align - 1)).ToInt64() & ~(align - 1)));
 }

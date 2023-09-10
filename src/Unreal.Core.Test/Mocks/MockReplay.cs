@@ -1,8 +1,7 @@
 ﻿using Unreal.Core.Models;
 
-namespace Unreal.Core.Test.Mocks
+namespace Unreal.Core.Test.Mocks;
+
+public class MockReplay : Replay
 {
-    public class MockReplay : Replay
-    {
-    }
 }

@@ -1,22 +1,21 @@
 ﻿using Unreal.Core.Contracts;
 
-namespace Unreal.Core.Models
-{
-    /// <summary>
-    /// Just a wrapper class for <see cref="NetworkGUID"/>
-    /// </summary>
-    public class ItemDefinition : NetworkGUID, IResolvable
-    {
-        public string Name { get; set; }
+namespace Unreal.Core.Models;
 
-        public void Resolve(NetGuidCache cache)
+/// <summary>
+/// Just a wrapper class for <see cref="NetworkGUID"/>
+/// </summary>
+public class ItemDefinition : NetworkGUID, IResolvable
+{
+    public string Name { get; set; }
+
+    public void Resolve(NetGuidCache cache)
+    {
+        if (IsValid())
         {
-            if (IsValid())
+            if (cache.TryGetPathName(Value, out var name))
             {
-                if (cache.TryGetPathName(Value, out var name))
-                {
-                    Name = name;
-                }
+                Name = name;
             }
         }
     }

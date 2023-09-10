@@ -5,10 +5,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- .net 6 and C# 10
 - More changes and improvements by [SL-x-TnT](https://github.com/SL-x-TnT)
 - Interfaces to support proper DI
 - Register types to be parsed with DI
+
+## [2.1.0] - 2022-09-19
+### Changed
+- support .net6
+
+## [2.0.8] - 2022-09-19
+### Changed
+- adding support for v26.00
+
+## [2.0.7] - 2022-09-19
+### Changed
+- add HISTORY_GAMESTATE_REPLCIATED_TIME_AS_DOUBLE (by [chrisai-dev](https://github.com/chrisai-dev))
+
+## [2.0.6] - 2022-09-19
+### Changed
+- adding support for v25.00
+
+## [2.0.5] - 2022-09-19
+### Changed
+- support new network version
+
+## [2.0.4] - 2022-09-19
+### Changed
+- fix issue in Oodle decompress (by [SL-x-TnT](https://github.com/SL-x-TnT))
 
 ## [2.0.3] - 2022-09-19
 ### Changed

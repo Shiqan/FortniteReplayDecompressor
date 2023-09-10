@@ -9,7 +9,7 @@ C# parser for your Fortnite replays.
 
 ## Getting Started
 
-.Net 5.0 is required.
+.Net 6.0 is required.
 
 ```powershell
 dotnet add package FortniteReplayReader

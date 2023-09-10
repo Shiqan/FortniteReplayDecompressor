@@ -1,7 +1,8 @@
 namespace Unreal.Core.Models
 {
     /// <summary>
-    /// see https://github.com/EpicGames/UnrealEngine/blob/996ef9a9f4ad5a899abf70fb292d2914a46d0876/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#L34
+    /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L45
+    /// see https://github.com/EpicGames/UnrealEngine/blob/407acc04a93f09ecb42c07c98b74fd00cc967100/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Public/LocalFileNetworkReplayStreaming.h#LL21C24-L21C24
     /// </summary>
     [System.Flags]
     public enum ReplayVersionHistory : uint

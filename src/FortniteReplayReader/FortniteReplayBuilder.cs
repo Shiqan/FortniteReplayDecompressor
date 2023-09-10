@@ -176,7 +176,7 @@ namespace FortniteReplayReader
                     {
                         TeamIndex = playerData.TeamIndex,
                         PlayerIds = new List<int?>() { playerData.Id },
-                        PlayerNames = new List<string>() { playerData.PlayerId },
+                        PlayerNames = new List<string?>() { playerData.PlayerName ?? playerData.PlayerId },
                         Placement = playerData.Placement,
                         PartyOwnerId = playerData.IsPartyLeader ? playerData.Id : null,
                         TeamKills = playerData.TeamKills
@@ -188,7 +188,7 @@ namespace FortniteReplayReader
                 teamData.TeamKills ??= playerData.TeamKills;
 
                 teamData.PlayerIds.Add(playerData.Id);
-                teamData.PlayerNames.Add(playerData.PlayerId);
+                teamData.PlayerNames.Add(playerData.PlayerName ?? playerData.PlayerId);
                 if (playerData.IsPartyLeader)
                 {
                     teamData.PartyOwnerId = playerData.Id;
@@ -253,7 +253,6 @@ namespace FortniteReplayReader
             {
                 playerData.DeathTime = ReplicatedWorldTimeSeconds;
                 playerData.DeathTimeDouble = ReplicatedWorldTimeSecondsDouble;
-
             }
 
             playerData.Cosmetics.Parts ??= state.Parts?.Name;

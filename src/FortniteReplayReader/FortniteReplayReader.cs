@@ -205,7 +205,7 @@ namespace FortniteReplayReader
                 return;
             }
 
-            _logger?.LogInformation("Unknown event {group} ({metadata}) of size {sizeInBytes}", info.Group, info.Metadata, info.SizeInBytes);
+            _logger?.LogDebug("Unknown event {group} ({metadata}) of size {sizeInBytes}", info.Group, info.Metadata, info.SizeInBytes);
             if (IsDebugMode)
             {
                 throw new UnknownEventException($"Unknown event {info.Group} ({info.Metadata}) of size {info.SizeInBytes}");

@@ -318,7 +318,7 @@ namespace Unreal.Core
                 var chunkSize = archive.ReadInt32();
                 var offset = archive.Position;
 
-                if (chunkType == ReplayChunkType.ReplayData && _parseMode.HasFlag(ParseMode.Minimal))
+                if (chunkType == ReplayChunkType.ReplayData && _parseMode > ParseMode.EventsOnly)
                 {
                     ReadReplayData(archive, chunkSize);
                 }

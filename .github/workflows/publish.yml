@@ -21,15 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v3
+      
     - name: Setup .NET 6
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.x
+        
     - name: Build
       run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
+      
     - name: Test
       run: dotnet test ./src/FortniteReplayDecompressor.sln --no-build --configuration Release
+      
     - name: Get next version
       id: versioning
       uses: anothrNick/github-tag-action@1.52.0
@@ -41,14 +45,15 @@ jobs:
         PRERELEASE: false
         RELEASE_BRANCHES: master
         VERBOSE: true
+        
     - name: Create PackageVersion
       id: packageversion
       run: echo ::set-output name=tag::${{ steps.versioning.outputs.new_tag }}
       
     - name: Pack OozSharp
-      run: dotnet pack ./src/OozSharp/OozSharp.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+      run: dotnet pack ./src/OozSharp/OozSharp.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }} --output ./OozSharp
     - name: Publish OozSharp
-      run: dotnet nuget push ./src/OozSharp/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      run: dotnet nuget push ./OozSharp/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
     
     - name: Update Unreal.Encryption
       run: sed -i "s/ProjectReference Include=\"..\\\OozSharp\\\OozSharp.csproj\"/PackageReference Include=\"OozSharp\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/Unreal.Encryption/Unreal.Encryption.csproj
@@ -58,14 +63,14 @@ jobs:
         timeout_minutes: 15
         max_attempts: 3
         retry_wait_seconds: 300
-        command: dotnet nuget locals http-cache -c && dotnet pack ./src/Unreal.Encryption/Unreal.Encryption.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+        command: dotnet nuget locals http-cache -c && dotnet pack ./src/Unreal.Encryption/Unreal.Encryption.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }} --output ./Unreal.Encryption
     - name: Publish Unreal.Encryption
-      run: dotnet nuget push ./src/Unreal.Encryption/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1     
+      run: dotnet nuget push ./Unreal.Encryption/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1     
          
     - name: Pack Unreal.Core
-      run: dotnet pack ./src/Unreal.Core/Unreal.Core.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+      run: dotnet pack ./src/Unreal.Core/Unreal.Core.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }} --output ./Unreal.Core
     - name: Publish Unreal.Core
-      run: dotnet nuget push ./src/Unreal.Core/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      run: dotnet nuget push ./Unreal.Core/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Update FortniteReplayReader
       run: sed -i "s/ProjectReference Include=\"..\\\Unreal.Core\\\Unreal.Core.csproj\"/PackageReference Include=\"Unreal.Core\" Version=\"${{ steps.packageversion.outputs.tag }}\"/" ./src/FortniteReplayReader/FortniteReplayReader.csproj
@@ -77,9 +82,9 @@ jobs:
         timeout_minutes: 15
         max_attempts: 3
         retry_wait_seconds: 300
-        command: dotnet nuget locals http-cache -c && dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }}
+        command: dotnet nuget locals http-cache -c && dotnet pack ./src/FortniteReplayReader/FortniteReplayReader.csproj -c Release -p:PackageVersion=${{ steps.packageversion.outputs.tag }} --output ./FortniteReplayReader
     - name: Publish FortniteReplayReader
-      run: dotnet nuget push ./src/FortniteReplayReader/**/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
+      run: dotnet nuget push ./FortniteReplayReader/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_TOKEN }} --no-symbols 1
       
     - name: Bump version and push tag
       uses: anothrNick/github-tag-action@1.52.0

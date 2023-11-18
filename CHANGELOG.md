@@ -9,19 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+<<<<<<< HEAD
+## [2.1.0] - 2023-11-18
+### Changed
+- support .net8
+
+=======
+>>>>>>> origin
 ## [2.1.0] - 2023-09-10
 ### Changed
 - support .net6
 
 ## [2.0.8] - 2023-09-10
 ### Changed
-- adding support for v26.00
+- add support for v26.00
 
 ## [2.0.7] - 2023-09-10
 ### Changed
 - add HISTORY_GAMESTATE_REPLCIATED_TIME_AS_DOUBLE (by [chrisai-dev](https://github.com/chrisai-dev))
 
+<<<<<<< HEAD
+## [2.0.6] - 2023-06-10
+=======
 ## [2.0.6] - 2024-06-10
+>>>>>>> origin
 ### Changed
 - adding support for v25.00
 

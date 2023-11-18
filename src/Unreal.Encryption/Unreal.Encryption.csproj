@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <Authors>Shiqan</Authors>
     <Company />
     <Description>Unreal Engine replay encryption layer</Description>
@@ -11,14 +10,13 @@
     <PackageTags>Unreal Engine Replay Reader</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
-  
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>
+      </PackagePath>
     </None>
   </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\OozSharp\OozSharp.csproj" />
   </ItemGroup>

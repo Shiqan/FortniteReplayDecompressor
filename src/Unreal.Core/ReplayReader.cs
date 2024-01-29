@@ -317,6 +317,13 @@ public abstract class ReplayReader<T> where T : Replay, new()
             var chunkSize = archive.ReadInt32();
             var offset = archive.Position;
 
+            if (chunkSize <= 0 || (long) chunkSize + offset > int.MaxValue)
+            {
+                _logger?.LogError("Invalid chunk size ({chunkSize} for chunk {chunkType}) at offset {offset}. Stopping the parsing...", chunkSize, chunkType, archive.Position);
+                archive.SetError();
+                return;
+            }
+
             if (chunkType == ReplayChunkType.ReplayData && _parseMode > ParseMode.EventsOnly)
             {
                 ReadReplayData(archive, chunkSize);

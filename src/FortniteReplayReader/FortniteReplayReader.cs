@@ -283,6 +283,12 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
                     archive.SkipBytes(36);
                 }
             }
+
+            if ((int) archive.EngineNetworkVersion >= 34)
+            {
+                archive.SkipBytes(80);
+            }
+
             ParsePlayer(archive, elim.EliminatedInfo, version);
             ParsePlayer(archive, elim.EliminatorInfo, version);
 

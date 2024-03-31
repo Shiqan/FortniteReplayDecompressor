@@ -31,11 +31,15 @@ public enum RepLayoutCmdType
     PropertyNativeBool = 21,
     PropertySoftObject = 22,
     PropertyWeakObject = 23,
+    PropertyInterface = 24,
+    NetSerializeStructWithObjectReferences = 25,
 
     PropertyDouble = 94,
     PropertyVector2D = 95,
     PropertyInt16 = 96,
     PropertyUInt16 = 97,
+    PropertyQuat = 98,
+
     Enum = 99,
     Ignore = 100
 }

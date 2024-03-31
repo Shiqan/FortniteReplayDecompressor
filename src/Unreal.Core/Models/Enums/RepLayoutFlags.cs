@@ -8,5 +8,6 @@ public enum RepLayoutFlags
 {
     None = 0,                           //! No flags.
     IsSharedSerialization = (1 << 0),   //! Indicates the property is eligible for shared serialization.
-    IsStruct = (1 << 1)	                //! This is a struct property.
+    IsStruct = (1 << 1),                //! This is a struct property.
+    IsEmptyArrayStruct = (1 << 2),      //! This is an ArrayProperty whose InnerProperty has no replicated properties.
 }

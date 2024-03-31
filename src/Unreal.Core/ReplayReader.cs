@@ -416,14 +416,16 @@ public abstract class ReplayReader<T> where T : Replay, new()
             _logger?.LogError("Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {}, MIN_NETWORK_DEMO_VERSION: {}", header.NetworkVersion, NetworkVersionHistory.HISTORY_EXTRA_VERSION);
             throw new InvalidReplayException($"Header.Version < MIN_NETWORK_DEMO_VERSION. Header.Version: {header.NetworkVersion}, MIN_NETWORK_DEMO_VERSION: {NetworkVersionHistory.HISTORY_EXTRA_VERSION}");
         }
+
         if (header.NetworkVersion >= NetworkVersionHistory.HISTORY_USE_CUSTOM_VERSION)
         {
             var customVersionCount = archive.ReadInt32();
 
-            // version guid -> 16 bytes
-            // version -> 4 bytes
+            //var fguid = archive.ReadGUID();
+            //var latestVersion = archive.ReadInt32();
             archive.SkipBytes(customVersionCount * 20);
         }
+
         header.NetworkChecksum = archive.ReadUInt32();
         header.EngineNetworkVersion = archive.ReadUInt32AsEnum<EngineNetworkVersionHistory>();
 

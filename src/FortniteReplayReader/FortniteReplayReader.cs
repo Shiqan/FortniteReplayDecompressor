@@ -104,6 +104,9 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
             case GameState state:
                 Builder.UpdateGameState(state);
                 break;
+            case PlayspaceGameState state:
+                Builder.UpdatePlayspaceGameState(state);
+                break;
             case PlaylistInfo playlist:
                 Builder.UpdatePlaylistInfo(playlist);
                 break;

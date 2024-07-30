@@ -143,6 +143,24 @@ public class FortniteReplayBuilder
         GameData.RecorderId ??= state.RecorderPlayerState?.Value;
     }
 
+    public void UpdatePlayspaceGameState(PlayspaceGameState state)
+    {
+        GameData.GameSessionId ??= state?.GameSessionId;
+        GameData.UtcTimeStartedMatch ??= state.UtcTimeStartedMatch?.Time;
+        GameData.MapInfo ??= state.MapInfo?.Name;
+
+        GameData.MaxPlayers ??= state.TeamCount;
+
+        MapData.BattleBusFlightPaths ??= state.TeamFlightPaths?.Select(i => new BattleBus(i) { Skin = state.DefaultBattleBus?.Name });
+
+        if (state.ReplicatedWorldTimeSecondsDouble != null)
+        {
+            ReplicatedWorldTimeSecondsDouble = state.ReplicatedWorldTimeSecondsDouble;
+        }
+
+        GameData.RecorderId ??= state.RecorderPlayerState?.Value;
+    }
+
     public void UpdatePrivateName(uint channelIndex, PlayerNameData playerNameData)
     {
         if (_players.TryGetValue(channelIndex, out var playerData))

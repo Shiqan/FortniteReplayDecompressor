@@ -69,6 +69,8 @@ public class DataBunch
     /// </summary>
     public bool bPartialInitial { get; set; }
 
+    public bool bHasPartialCustomExportsFinalBit { get; set; }
+
     /// <summary>
     /// The final bunch of a partial bunch
     /// </summary>

@@ -1950,6 +1950,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
         InPacketId++;
 
+        bool bHasPartialCustomExportsFinalBit = !(bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.CustomExports);
+
         //var rejectedChannels = new Dictionary<uint, uint>();
         while (!bitReader.AtEnd())
         {
@@ -2013,6 +2015,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
 
             bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
+            bunch.bHasPartialCustomExportsFinalBit = bunch.bPartial && bHasPartialCustomExportsFinalBit ? bitReader.ReadBit() : false;
             bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
             var chType = ChannelType.None;

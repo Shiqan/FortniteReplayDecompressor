@@ -8,6 +8,9 @@
     <ProjectReference Include="..\FortniteReplayReader\FortniteReplayReader.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Replays\chapter5season5.replay">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Replays\collectPickup.replay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -24,7 +24,7 @@ internal class Program
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
         //var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\";
         var replayFilesFolder = @"C:\Users\ferro\Downloads\";
-        var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
+        var replayFiles = Directory.EnumerateFiles("Replays", "*.replay");
 
         var sw = new Stopwatch();
 #if DEBUG
@@ -35,6 +35,11 @@ internal class Program
         long total = 0;
         foreach (var replayFile in replayFiles)
         {
+            if(!replayFile.Contains("chapter5"))
+            {
+                continue;
+            }
+
             sw.Restart();
             try
             {

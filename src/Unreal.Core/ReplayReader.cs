@@ -760,6 +760,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 }
                 else if (numExports > group.NetFieldExportsLength)
                 {
+                    // Allow our exports to dynamically grow as more are encountered
                     var oldExports = group.NetFieldExports;
 
                     group.NetFieldExports = new NetFieldExport[numExports];

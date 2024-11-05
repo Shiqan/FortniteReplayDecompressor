@@ -37,6 +37,10 @@ public enum EngineNetworkVersionHistory
     HISTORY_SUBOBJECT_DESTROY_FLAG = 30,                // Bump version to support subobject destruction message flags
     HISTORY_GAMESTATE_REPLCIATED_TIME_AS_DOUBLE = 31,   // Bump version to support AGameStateBase::ReplicatedWorldTimeSeconds as double instead of float.
     HISTORY_CUSTOMVERION = 32,                          // Bump version to switch to using custom versions
+    DynamicMontageSerialization = 33,                   // Bump version to support dynamic montage serialization in the Gameplay Ability System
+    PredictionKeyBaseNotReplicated = 34,                // Bump version to stop FPredictionKey::Base from being replicated (it was unused).
+    RepMoveOptionalAcceleration = 35,                   // Bump version to support serialization changes to RepMove for optional Acceleration
+    CustomExports = 36,                                 // Bump version to support CustomExports (such as NetTokens used for supporting "Dynamic Replication" of GameplayTags -- see FGameplayTag::NetSerialize_Packed)		// -----<new versions can be added above this line>-------------------------------------------------
 
     HISTORY_ENGINENETVERSION_PLUS_ONE,
     LATEST = HISTORY_ENGINENETVERSION_PLUS_ONE - 1,

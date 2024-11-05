@@ -758,6 +758,17 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     };
                     _netGuidCache.AddToExportGroupMap(pathName, group);
                 }
+                else if (numExports > group.NetFieldExportsLength)
+                {
+                    // Allow our exports to dynamically grow as more are encountered
+                    var oldExports = group.NetFieldExports;
+
+                    group.NetFieldExports = new NetFieldExport[numExports];
+                    group.NetFieldExportsLength = numExports;
+
+                    Array.Copy(oldExports, group.NetFieldExports, oldExports.Length);
+                }
+
                 //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
                 //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
             }
@@ -1940,6 +1951,9 @@ public abstract class ReplayReader<T> where T : Replay, new()
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#1549
         InPacketId++;
 
+        // We want to be able to read replays that do not support export extentions.
+        bool bHasPartialCustomExportsFinalBit = !(bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.CustomExports);
+
         //var rejectedChannels = new Dictionary<uint, uint>();
         while (!bitReader.AtEnd())
         {
@@ -2003,6 +2017,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
 
             bunch.bPartialInitial = bunch.bPartial && bitReader.ReadBit();
+            bunch.bHasPartialCustomExportsFinalBit = bunch.bPartial && bHasPartialCustomExportsFinalBit ? bitReader.ReadBit() : false;
             bunch.bPartialFinal = bunch.bPartial && bitReader.ReadBit();
 
             var chType = ChannelType.None;

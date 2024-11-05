@@ -69,6 +69,9 @@ public class DataBunch
     /// </summary>
     public bool bPartialInitial { get; set; }
 
+    /// <summary>
+    ///  This bunch marks the end of the CustomExports data that needs to be processed immediately (not queued)
+    /// </summary>
     public bool bHasPartialCustomExportsFinalBit { get; set; }
 
     /// <summary>

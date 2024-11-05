@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [2.2.3] - 2024-11-05
+### Changed
+- add support for Fortnite v32 (see [issue 58](https://github.com/Shiqan/FortniteReplayDecompressor/issues/58)) (by [SL-x-TnT](https://github.com/SL-x-TnT))
+
 ## [2.2.2] - 2024-03-31
 ### Changed
 - fix `ParseElimination` (see [issue 55](https://github.com/Shiqan/FortniteReplayDecompressor/issues/55))
@@ -27,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.8] - 2023-09-10
 ### Changed
-- add support for v26.00
+- add support for Fortnite v26
 
 ## [2.0.7] - 2023-09-10
 ### Changed
@@ -35,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.6] - 2023-06-10
 ### Changed
-- adding support for v25.00
+- adding support for Fortnite v25
 
 ## [2.0.5] - 2022-12-04
 ### Changed

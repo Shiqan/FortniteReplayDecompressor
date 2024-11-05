@@ -758,6 +758,16 @@ public abstract class ReplayReader<T> where T : Replay, new()
                     };
                     _netGuidCache.AddToExportGroupMap(pathName, group);
                 }
+                else if (numExports > group.NetFieldExportsLength)
+                {
+                    var oldExports = group.NetFieldExports;
+
+                    group.NetFieldExports = new NetFieldExport[numExports];
+                    group.NetFieldExportsLength = numExports;
+
+                    Array.Copy(oldExports, group.NetFieldExports, oldExports.Length);
+                }
+
                 //GuidCache->NetFieldExportGroupPathToIndex.Add(PathName, PathNameIndex);
                 //GuidCache->NetFieldExportGroupIndexToGroup.Add(PathNameIndex, NetFieldExportGroup);
             }

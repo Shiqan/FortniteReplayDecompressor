@@ -46,6 +46,10 @@ public class NetGuidCache
                 {
                     _networkGameplayTagNodeIndex = nodeIndex;
                 }
+                else if (NetFieldExportGroupMap.TryGetValue("NetworkGameplayTagDynamicIndex", out nodeIndex))
+                {
+                    _networkGameplayTagNodeIndex = nodeIndex;
+                }
             }
             return _networkGameplayTagNodeIndex;
         }

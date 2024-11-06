@@ -24,7 +24,7 @@ internal class Program
         //var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
         //var replayFilesFolder = @"F:\Projects\FortniteReplayCollection\_upload\";
         var replayFilesFolder = @"C:\Users\ferro\Downloads\";
-        var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
+        var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*919.replay");
 
         var sw = new Stopwatch();
 #if DEBUG

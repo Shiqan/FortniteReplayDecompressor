@@ -42,10 +42,12 @@ public class NetGuidCache
         {
             if (_networkGameplayTagNodeIndex == null)
             {
+                // bUseFastReplication
                 if (NetFieldExportGroupMap.TryGetValue("NetworkGameplayTagNodeIndex", out var nodeIndex))
                 {
                     _networkGameplayTagNodeIndex = nodeIndex;
                 }
+                // bUseDynamicReplication
                 else if (NetFieldExportGroupMap.TryGetValue("NetworkGameplayTagDynamicIndex", out nodeIndex))
                 {
                     _networkGameplayTagNodeIndex = nodeIndex;

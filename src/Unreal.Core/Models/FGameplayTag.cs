@@ -47,15 +47,26 @@ public class FGameplayTag : IProperty, IResolvable
         else if (bUseDynamicReplication)
         {
             // https://github.com/EpicGames/UnrealEngine/blob/55e6c59d10463ba45392a915f89cdf31660a41c7/Engine/Source/Runtime/GameplayTags/Private/GameplayTagContainer.cpp#L1393
+            // https://github.com/EpicGames/UnrealEngine/blob/85fe5dd282a00eb15e7ba41cbe46a46c440dea79/Engine/Source/Runtime/Experimental/Iris/Core/Private/Iris/ReplicationSystem/NetTokenStore.cpp#L117
+            TagIndex = reader.ReadIntPacked();
 
-            var byteCountToRead = reader.ReadBitsToInt(2) + 1;
-            var bitCountToRead = byteCountToRead * 8;
-            TagIndex = (uint) reader.ReadBitsToInt(bitCountToRead);
+            //if (const bool bIsValid = (TokenIndex != FNetToken::InvalidTokenIndex))
+            if (TagIndex > 0)
+            {
+                var bIsAssignedByAuthority = reader.ReadBit();
+
+                // pray we dont need this :)
+                //if (TokenTypeId == FNetToken::InvalidTokenTypeId)
+                //{
+                //    uint32 TempTokenTypeId = 0;
+                //    Ar.SerializeBits(&TempTokenTypeId, FNetToken::TokenTypeIdBits);
+                //    TokenTypeId = TempTokenTypeId;
+                //}
+            }
         }
         //else
         //{
         //    // not implemented
-        //    // Ar << TagName;
         //    // reader.ReadFName();
         //}
 

@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
-## [2.2.3] - 2024-11-05
+## [2.3.1] - 2024-11-08
+### Changed
+- fix parsing of `FGameplayTag` with new `bUseDynamicReplication`
+
+## [2.3.0] - 2024-11-05
 ### Changed
 - add support for Fortnite v32 (see [issue 58](https://github.com/Shiqan/FortniteReplayDecompressor/issues/58)) (by [SL-x-TnT](https://github.com/SL-x-TnT))
 

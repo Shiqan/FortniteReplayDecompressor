@@ -60,7 +60,6 @@ public class NetBitReader : BitReader
             bRepPhysics = bRepPhysics,
             Location = SerializePropertyQuantizedVector(locationQuantizationLevel),
             Rotation = rotationQuantizationLevel == RotatorQuantization.ByteComponents ? ReadRotation() : ReadRotationShort(),
-
             LinearVelocity = SerializePropertyQuantizedVector(velocityQuantizationLevel)
         };
 
@@ -77,6 +76,15 @@ public class NetBitReader : BitReader
         if (bRepServerHandle)
         {
             repMovement.ServerPhysicsHandle = ReadIntPacked();
+        }
+
+        if (EngineNetworkVersion >= EngineNetworkVersionHistory.RepMoveOptionalAcceleration)
+        {
+            repMovement.bRepAcceleration = ReadBit();
+            if (repMovement.bRepAcceleration)
+            {
+                repMovement.Acceleration = SerializePropertyQuantizedVector(velocityQuantizationLevel);
+            }
         }
 
         return repMovement;

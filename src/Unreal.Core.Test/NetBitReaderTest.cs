@@ -26,12 +26,12 @@ public class NetBitReaderTest
     // sniper rifle bullet season 11
     [InlineData(new byte[] {
         0x34, 0x88, 0xDF, 0x03, 0xE0, 0xE9, 0xCB, 0x3F, 0x92, 0x3B, 0x53, 0x3C,
-        0x47, 0x61, 0xD6, 0x01}, 122,
+        0x47, 0x61, 0xD6, 0x01 }, 122,
         VectorQuantization.RoundWholeNumber, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber)]
     // supply drop season 11
     [InlineData(new byte[] {
         0x74, 0x20, 0x88, 0x53, 0x86, 0xDA, 0x16, 0xD8, 0x02, 0x40, 0x00, 0x38,
-        0x2B, 0x00}, 105,
+        0x2B, 0x00 }, 105,
         VectorQuantization.RoundWholeNumber, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber)]
     // meat vehicle 11.40
     [InlineData(new byte[] {
@@ -39,12 +39,21 @@ public class NetBitReaderTest
         0x83, 0x55, 0x1A, 0xF9, 0x47, 0xF2, 0xBD, 0xBE, 0x54, 0x3B, 0xFB, 0x88,
         0xAB, 0xBF, 0x70, 0xB3, 0xCB, 0x02}, 236,
         VectorQuantization.RoundWholeNumber, RotatorQuantization.ShortComponents, VectorQuantization.RoundTwoDecimals)]
+    [InlineData(new byte[] {
+        0xA0, 0x65, 0x06, 0xE5, 0x68, 0x79, 0x0F, 0x60, 0xD8, 0x85, 0xFD, 0x05,
+        0x15, 0x04 }, 111, VectorQuantization.RoundTwoDecimals, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber, 
+        EngineNetworkVersionHistory.CustomExports)]
     public void RepMovementTest(byte[] rawData, int bitCount,
         VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,
         RotatorQuantization rotationQuantizationLevel = RotatorQuantization.ByteComponents,
-        VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber)
+        VectorQuantization velocityQuantizationLevel = VectorQuantization.RoundWholeNumber,
+        EngineNetworkVersionHistory engineNetworkVersion = EngineNetworkVersionHistory.HISTORY_INITIAL)
     {
-        var reader = new NetBitReader(rawData, bitCount);
+        var reader = new NetBitReader(rawData, bitCount)
+        {
+            EngineNetworkVersion = engineNetworkVersion
+        };
+
         reader.SerializeRepMovement(locationQuantizationLevel, rotationQuantizationLevel, velocityQuantizationLevel);
         Assert.False(reader.IsError);
         Assert.True(reader.AtEnd());

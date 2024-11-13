@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Unreal.Core.Models.Enums;
-using static System.Environment;
 
 // Set up dependency injection and logging services
 var serviceCollection = new ServiceCollection()
@@ -16,8 +15,7 @@ var provider = serviceCollection.BuildServiceProvider();
 var logger = provider.GetService<ILogger<Program>>();
 
 // Define the folder containing replay files
-var localAppDataFolder = GetFolderPath(SpecialFolder.LocalApplicationData);
-// var replayFilesFolder = Path.Combine(localAppDataFolder, @"FortniteGame\Saved\Demos");
+//var replayFilesFolder = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), @"FortniteGame\Saved\Demos");
 var replayFilesFolder = @"C:\Users\ferro\Downloads\";
 var replayFiles = Directory.EnumerateFiles(replayFilesFolder, "*.replay");
 
@@ -25,12 +23,11 @@ var sw = new Stopwatch();
 long total = 0;
 
 #if DEBUG
-var reader = new ReplayReader(logger, ParseMode.Minimal);
+var reader = new ReplayReader(logger, ParseMode.Normal);
 #else
 var reader = new ReplayReader(null, ParseMode.Minimal);
 #endif
 
-// Process each replay file
 foreach (var replayFile in replayFiles)
 {
     sw.Restart();

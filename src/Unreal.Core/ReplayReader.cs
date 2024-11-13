@@ -1729,7 +1729,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) caused error when reading (bits: {numBits}, group: {group.PathName})");
                     _cmdReader.Reset();
-                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int) Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
+                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBits(_cmdReader.GetBitsLeft()));
 #endif
                     continue;
                 }
@@ -1742,7 +1742,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 #if DEBUG
                     Debug("failed-properties", $"Property {export.Name} (handle: {handle}, path: {group.PathName}) didnt read proper number of bits: {(_cmdReader.LastBit - _cmdReader.GetBitsLeft())} out of {numBits}");
                     _cmdReader.Reset();
-                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBytes(Math.Max((int) Math.Ceiling(_cmdReader.GetBitsLeft() / 8.0), 1)));
+                    Debug($"cmd-{export.Name}-{numBits}", "cmds", _cmdReader.ReadBits(_cmdReader.GetBitsLeft()));
 #endif
                     continue;
                 }

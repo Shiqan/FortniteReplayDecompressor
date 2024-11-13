@@ -23,7 +23,7 @@ public class BitReader : FBitArchive
 
     public override int MarkPosition { get; protected set; }
 
-    private readonly Dictionary<FBitArchiveEndIndex, int> _tempLastBit = new();
+    private readonly Dictionary<FBitArchiveEndIndex, int> _tempLastBit = [];
 
 
     public BitReader()
@@ -132,7 +132,7 @@ public class BitReader : FBitArchive
         if (!CanRead(bitCount) || bitCount < 0)
         {
             IsError = true;
-            return ReadOnlySpan<byte>.Empty;
+            return [];
         }
 
         var bitCountUsedInByte = Position & 7;
@@ -205,7 +205,7 @@ public class BitReader : FBitArchive
         if (!CanRead(byteCount * 8) || byteCount < 0)
         {
             IsError = true;
-            return Span<byte>.Empty;
+            return [];
         }
 
         var bitCountUsedInByte = Position & 7;

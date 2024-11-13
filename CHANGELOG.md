@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.4.0] - 2024-11-13
 ### Changed
 - support .net9
+- fix parsing of `FRepMovement` with `RepMoveOptionalAcceleration` (thanks @Zaid)
 
 ### Removed 
 - support .net6

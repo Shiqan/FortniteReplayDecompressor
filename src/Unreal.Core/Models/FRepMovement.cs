@@ -29,6 +29,11 @@ public struct FRepMovement
     public FRotator Rotation { get; set; }
 
     /// <summary>
+    /// Acceleration of component in world space. Only valid if bRepAcceleration is set.
+    /// </summary>
+    public FVector? Acceleration { get; set; }
+    
+    /// <summary>
     /// If set, RootComponent should be sleeping.
     /// </summary>
     public bool bSimulatedPhysicSleep { get; set; }
@@ -37,6 +42,11 @@ public struct FRepMovement
     /// If set, additional physic data (angular velocity) will be replicated.
     /// </summary>
     public bool bRepPhysics { get; set; }
+
+    /// <summary>
+    /// If set, additional acceleration data will be replicated.
+    /// </summary>
+    public bool bRepAcceleration { get; set; }
 
     /// <summary>
     /// Server physics step

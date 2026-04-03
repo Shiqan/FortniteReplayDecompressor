@@ -21,11 +21,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            8.x
-            9.x
+            10.x
 
       - name: Build
-        run: dotnet build ./src/FortniteReplayDecompressor.sln --configuration Release
+        run: dotnet build ./FortniteReplayDecompressor.slnx --configuration Release
 
       - name: Test
-        run: dotnet test ./src/FortniteReplayDecompressor.sln /p:CollectCoverage=true /p:CoverletOutputFormat="lcov" /p:CoverletOutput="../../coverage/lcov.info" /p:Exclude=\"[Fortnite*]*.Models.*\" --no-build --configuration Release
+        run: dotnet test ./FortniteReplayDecompressor.slnx --no-build --configuration Release --coverage --coverage-output-format lcov --coverage-output src/coverage/lcov.info

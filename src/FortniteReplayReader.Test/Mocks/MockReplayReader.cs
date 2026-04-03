@@ -1,4 +1,4 @@
-﻿using FortniteReplayReader.Models;
+using FortniteReplayReader.Models;
 using Unreal.Core;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -18,5 +18,5 @@ public class MockReplayReader : ReplayReader
 
     public FortniteReplay GetReplay() => Replay;
 
-    internal FArchive DecryptBuffer(BinaryReader archive, int v) => base.DecryptBuffer(archive, v);
+    internal FArchive DecryptBuffer(FArchive archive, int v) => base.DecryptBuffer(archive, v);
 }

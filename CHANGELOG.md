@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [3.0.0] - 2026-04-04
+### Changed
+- support .net10
+
 ## [2.4.0] - 2024-11-13
 ### Changed
 - support .net9
@@ -150,3 +154,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [2.3.1]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/2.3.0
 [2.3.1]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/2.3.1
 [2.4.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/2.4.0
+[3.0.0]: https://github.com/Shiqan/FortniteReplayDecompressor/releases/tag/3.0.0
+

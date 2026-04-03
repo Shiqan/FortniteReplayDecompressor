@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="src\.editorconfig" />
+    <File Path="CHANGELOG.md" />
+    <File Path="README.md" />
+    <File Path=".github\workflows\build.yml" />
+    <File Path=".github\workflows\publish.yml" />
+  </Folder>
+  <Project Path="src\OozSharp\OozSharp.csproj" />
+  <Project Path="src\OozSharp.Test\OozSharp.Test.csproj" />
+  <Project Path="src\Unreal.Core\Unreal.Core.csproj" />
+  <Project Path="src\Unreal.Core.Test\Unreal.Core.Test.csproj" />
+  <Project Path="src\Unreal.Encryption\Unreal.Encryption.csproj" />
+  <Project Path="src\Unreal.Encryption.Test\Unreal.Encryption.Test.csproj" />
+  <Project Path="src\FortniteReplayReader\FortniteReplayReader.csproj" />
+  <Project Path="src\FortniteReplayReader.Test\FortniteReplayReader.Test.csproj" />
+  <Project Path="src\ConsoleReader\ConsoleReader.csproj" />
+  <Project Path="src\BenchmarkReader\BenchmarkReader.csproj" />
+</Solution>

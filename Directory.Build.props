@@ -5,16 +5,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Authors>Shiqan</Authors>
     <Company />
-    <Copyright>Copyright © 2020 Shiqan</Copyright>
+    <Copyright>Copyright © 2020-2026 Shiqan</Copyright>
     <PackageProjectUrl>https://github.com/Shiqan/FortniteReplayDecompressor</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
-  <!-- Microsoft Testing Platform defaults for all test projects (opt-in via UseMicrosoftTestingPlatformRunner) -->
-  <PropertyGroup Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">
+  <!-- Microsoft Testing Platform defaults for all test projects -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Test'))">
     <OutputType>Exe</OutputType>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 </Project>

@@ -1,13 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="AthenaTeamStats\**" />
-    <EmbeddedResource Remove="AthenaTeamStats\**" />
-    <None Remove="AthenaTeamStats\**" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>

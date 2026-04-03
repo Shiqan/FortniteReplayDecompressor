@@ -1,5 +1,5 @@
-﻿using FortniteReplayReader.Models.Events;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using FortniteReplayReader.Models.Events;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models;

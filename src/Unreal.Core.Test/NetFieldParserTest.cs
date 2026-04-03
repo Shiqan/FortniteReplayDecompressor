@@ -182,7 +182,7 @@ public class NetFieldParserTest
         parser.ReadField(data, export, export.Handle, group, reader);
         Assert.True(reader.AtEnd());
         Assert.False(reader.IsError);
-        Assert.True(((NetFieldGroup1) data).bField);
+        Assert.True(((NetFieldGroup1)data).bField);
     }
 
     [Fact]
@@ -210,8 +210,8 @@ public class NetFieldParserTest
         parser.ReadField(data, export, export.Handle, group, reader);
         Assert.True(reader.AtEnd());
         Assert.False(reader.IsError);
-        Assert.True(((NetFieldGroup1) data).ItemDefinitionField.IsValid());
-        Assert.Equal(323u, ((NetFieldGroup1) data).ItemDefinitionField.Value);
+        Assert.True(((NetFieldGroup1)data).ItemDefinitionField.IsValid());
+        Assert.Equal(323u, ((NetFieldGroup1)data).ItemDefinitionField.Value);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class NetFieldParserTest
         parser.ReadField(data, export, export.Handle, group, reader);
         Assert.True(reader.AtEnd());
         Assert.False(reader.IsError);
-        Assert.Equal(-3864, ((NetFieldGroup1) data).VectorField.Z);
+        Assert.Equal(-3864, ((NetFieldGroup1)data).VectorField.Z);
     }
 
 
@@ -282,6 +282,6 @@ public class NetFieldParserTest
         parser.ReadField(data, export, export.Handle, group, reader);
         Assert.True(reader.AtEnd());
         Assert.False(reader.IsError);
-        Assert.Equal(6, ((NetFieldGroup1) data).ArrayField.Length);
+        Assert.Equal(6, ((NetFieldGroup1)data).ArrayField.Length);
     }
 }

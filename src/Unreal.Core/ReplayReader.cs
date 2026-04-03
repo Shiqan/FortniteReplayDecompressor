@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.Extensions.Logging;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
 using Unreal.Core.Extensions;
@@ -317,7 +317,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             var chunkSize = archive.ReadInt32();
             var offset = archive.Position;
 
-            if (chunkSize <= 0 || (long) chunkSize + offset > int.MaxValue)
+            if (chunkSize <= 0 || (long)chunkSize + offset > int.MaxValue)
             {
                 _logger?.LogError("Invalid chunk size ({chunkSize} for chunk {chunkType}) at offset {offset}. Stopping the parsing...", chunkSize, chunkType, archive.Position);
                 archive.SetError();
@@ -365,7 +365,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         {
             info.Start = archive.ReadUInt32();
             info.End = archive.ReadUInt32();
-            info.Length = (int) archive.ReadUInt32();
+            info.Length = (int)archive.ReadUInt32();
         }
         else
         {
@@ -848,7 +848,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             if (skipExternalOffset > 0)
             {
                 // ignore it for now
-                archive.SkipBytes((int) skipExternalOffset);
+                archive.SkipBytes((int)skipExternalOffset);
             }
             // else skip externalOffset
         }
@@ -1273,7 +1273,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 continue;
             }
 
-            bunch.Archive.SetTempEnd((int) payload, FBitArchiveEndIndex.CONTENT_BLOCK_PAYLOAD);
+            bunch.Archive.SetTempEnd((int)payload, FBitArchiveEndIndex.CONTENT_BLOCK_PAYLOAD);
 
             try
             {
@@ -1351,7 +1351,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                 continue;
             }
 
-            archive.SetTempEnd((int) payload, FBitArchiveEndIndex.FIELD_HEADER_PAYLOAD);
+            archive.SetTempEnd((int)payload, FBitArchiveEndIndex.FIELD_HEADER_PAYLOAD);
             try
             {
                 if (fieldCache == null)
@@ -1714,7 +1714,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             hasdata = true;
             try
             {
-                _cmdReader.FillBuffer(archive.ReadBits(numBits), (int) numBits);
+                _cmdReader.FillBuffer(archive.ReadBits(numBits), (int)numBits);
                 if (!_netFieldParser.ReadField(exportGroup, export, handle, group, _cmdReader))
                 {
                     // Set field incompatible since we couldnt (or didnt want to) parse it.
@@ -1782,7 +1782,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         // const int32 NetFieldExportHandle = Bunch.ReadInt(FMath::Max(NetFieldExportGroup->NetFieldExports.Num(), 2));
-        var netFieldExportHandle = archive.ReadSerializedInt(Math.Max((int) group.NetFieldExportsLength, 2));
+        var netFieldExportHandle = archive.ReadSerializedInt(Math.Max((int)group.NetFieldExportsLength, 2));
         if (archive.IsError)
         {
             payload = null;
@@ -1792,7 +1792,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         // const FNetFieldExport& NetFieldExport = NetFieldExportGroup->NetFieldExports[NetFieldExportHandle];
-        outField = group.NetFieldExports[(int) netFieldExportHandle];
+        outField = group.NetFieldExports[(int)netFieldExportHandle];
 
         payload = archive.ReadIntPacked();
         if (archive.IsError)
@@ -1803,7 +1803,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             return false;
         }
 
-        if (!archive.CanRead((int) payload))
+        if (!archive.CanRead((int)payload))
         {
             payload = null;
             return false;
@@ -1981,7 +1981,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             }
             else
             {
-                bunch.CloseReason = bunch.bClose ? (ChannelCloseReason) bitReader.ReadSerializedInt((int) ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
+                bunch.CloseReason = bunch.bClose ? (ChannelCloseReason)bitReader.ReadSerializedInt((int)ChannelCloseReason.MAX) : ChannelCloseReason.Destroyed;
                 bunch.bDormant = bunch.CloseReason == ChannelCloseReason.Dormancy;
             }
 
@@ -2025,7 +2025,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
             if (bitReader.EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES)
             {
-                var type = bitReader.ReadSerializedInt((int) ChannelType.MAX);
+                var type = bitReader.ReadSerializedInt((int)ChannelType.MAX);
                 //    chType = (bunch.bReliable || bunch.bOpen) ? (ChannelType)type : ChannelType.None;
 
                 //    chName = chType switch
@@ -2060,7 +2060,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             // If there's an existing channel and the bunch specified it's channel type, make sure they match.
             // Channel && (Bunch.ChName != NAME_None) && (Bunch.ChName != Channel->ChName)
 
-            var bunchDataBits = (int) bitReader.ReadSerializedInt(MaxPacketSizeInBits);
+            var bunchDataBits = (int)bitReader.ReadSerializedInt(MaxPacketSizeInBits);
 
             if (bunch.bPartial)
             {

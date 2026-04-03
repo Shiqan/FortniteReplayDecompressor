@@ -1,5 +1,5 @@
-using FortniteReplayReader.Exceptions;
 using System.IO;
+using FortniteReplayReader.Exceptions;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Xunit;
@@ -152,7 +152,7 @@ public class PlayerElimTest
         0x90, 0x6D, 0x59, 0x11, 0x10, 0xBF, 0x48, 0x07, 0x77, 0xC3, 0x03, 0x48,
         0xA5, 0xAB, 0x30, 0xE9, 0x97, 0x74, 0x92, 0xA9, 0x03, 0x03, 0x01, 0x00,
         0x00, 0x00
-    }, (EngineNetworkVersionHistory) 34, "++Fortnite+Release-29.01")]
+    }, (EngineNetworkVersionHistory)34, "++Fortnite+Release-29.01")]
     public void ParsePlayerElimTest(byte[] rawData, EngineNetworkVersionHistory version, string branch)
     {
         using var stream = new MemoryStream(rawData);
@@ -164,7 +164,7 @@ public class PlayerElimTest
         {
             Branch = branch
         };
-        
+
         reader.ParseElimination(archive, new EventInfo { StartTime = 0 });
 
         Assert.True(archive.AtEnd());

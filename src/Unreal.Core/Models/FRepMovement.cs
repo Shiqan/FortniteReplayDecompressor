@@ -32,7 +32,7 @@ public struct FRepMovement
     /// Acceleration of component in world space. Only valid if bRepAcceleration is set.
     /// </summary>
     public FVector? Acceleration { get; set; }
-    
+
     /// <summary>
     /// If set, RootComponent should be sleeping.
     /// </summary>

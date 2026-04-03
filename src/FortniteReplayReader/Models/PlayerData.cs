@@ -1,5 +1,5 @@
-﻿using FortniteReplayReader.Models.NetFieldExports;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models;
@@ -8,13 +8,13 @@ public class PlayerData
 {
     public PlayerData(FortPlayerState playerState)
     {
-        Id = playerState.PlayerId is null ? playerState.PlayerID : (int?) playerState.PlayerId;
+        Id = playerState.PlayerId is null ? playerState.PlayerID : (int?)playerState.PlayerId;
         EpicId = playerState.UniqueId ?? playerState.UniqueID;
         BotId = playerState.BotUniqueId;
         IsBot = playerState.bIsABot == true;
         PlayerNameCustomOverride = playerState.PlayerNameCustomOverride?.Text;
         IsGameSessionOwner = playerState.bIsGameSessionOwner;
-        PlayerNumber = playerState.WorldPlayerId is not null ? (int?) playerState.WorldPlayerId : null;
+        PlayerNumber = playerState.WorldPlayerId is not null ? (int?)playerState.WorldPlayerId : null;
         StreamerModeName = playerState.StreamerModeName?.Text;
         IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId || playerState.PartyOwnerUniqueId == playerState.UniqueID;
         TeamIndex = playerState.TeamIndex;

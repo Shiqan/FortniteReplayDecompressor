@@ -14,18 +14,18 @@ public unsafe class KrakenQuantumHeader
 
     public KrakenQuantumHeader(byte* source, bool useChecksums, out int bytesRead)
     {
-        var v = (uint) ((source[0] << 16) | (source[1] << 8) | source[2]);
+        var v = (uint)((source[0] << 16) | (source[1] << 8) | source[2]);
         var size = v & 0x3FFFF;
 
         if (size != 0x3FFFF)
         {
             CompressedSize = size + 1;
-            Flag1 = (byte) ((v >> 18) & 1);
-            Flag2 = (byte) ((v >> 19) & 1);
+            Flag1 = (byte)((v >> 18) & 1);
+            Flag2 = (byte)((v >> 19) & 1);
 
             if (useChecksums)
             {
-                Checksum = (uint) ((source[3] << 16) | (source[4] << 8) | source[5]);
+                Checksum = (uint)((source[3] << 16) | (source[4] << 8) | source[5]);
 
                 bytesRead = 6;
             }

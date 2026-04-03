@@ -127,17 +127,17 @@ public class NetBitReader : BitReader
         var serIntMax = (1 << (numBits - 0));
 
         var delta = ReadSerializedInt(serIntMax);
-        float unscaledValue = (int) delta - bias;
+        float unscaledValue = (int)delta - bias;
 
         if (maxValue > maxBitValue)
         {
-            var invScale = maxValue / (float) maxBitValue;
+            var invScale = maxValue / (float)maxBitValue;
 
             return unscaledValue * invScale;
         }
         else
         {
-            var scale = maxBitValue / (float) maxValue;
+            var scale = maxBitValue / (float)maxValue;
             var invScale = 1f / scale;
 
             return unscaledValue * invScale;
@@ -154,7 +154,7 @@ public class NetBitReader : BitReader
     /// </summary>
     public int SerializePropertyByte(int enumMaxValue) =>
         //Ar.SerializeBits( Data, Enum ? FMath::CeilLogTwo(Enum->GetMaxEnumValue()) : 8 );
-        ReadBitsToInt(enumMaxValue > 0 ? (int) Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
+        ReadBitsToInt(enumMaxValue > 0 ? (int)Math.Ceiling(Math.Log2(enumMaxValue)) : 8);
 
     public int SerializePropertyByte() => ReadByte();
 
@@ -213,7 +213,7 @@ public class NetBitReader : BitReader
         }
 
         // Non empty and hex encoded
-        var typeHash = ((int) (encodingFlags & UniqueIdEncodingFlags.TypeMask)) >> 3;
+        var typeHash = ((int)(encodingFlags & UniqueIdEncodingFlags.TypeMask)) >> 3;
         if (typeHash == 0)
         {
             // If no type was encoded, assume default

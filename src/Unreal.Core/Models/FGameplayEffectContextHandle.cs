@@ -79,7 +79,7 @@ public class FGameplayEffectContextHandle : IProperty
             if ((RepBits & (1 << 4)) > 0)
             {
                 // SafeNetSerializeTArray_HeaderOnly
-                var bitCount = (int) Math.Ceiling(Math.Log2(31));
+                var bitCount = (int)Math.Ceiling(Math.Log2(31));
                 var arrayNum = reader.ReadBitsToInt(bitCount);
 
                 // SafeNetSerializeTArray_Default

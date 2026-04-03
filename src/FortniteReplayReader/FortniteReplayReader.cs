@@ -1,4 +1,8 @@
-﻿using FortniteReplayReader.Exceptions;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using FortniteReplayReader.Exceptions;
 using FortniteReplayReader.Extensions;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.Enums;
@@ -6,10 +10,6 @@ using FortniteReplayReader.Models.Events;
 using FortniteReplayReader.Models.NetFieldExports;
 using FortniteReplayReader.Models.NetFieldExports.Weapons;
 using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using Unreal.Core;
 using Unreal.Core.Contracts;
 using Unreal.Core.Exceptions;
@@ -284,7 +284,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
                 }
             }
 
-            if ((int) archive.EngineNetworkVersion >= 34)
+            if ((int)archive.EngineNetworkVersion >= 34)
             {
                 archive.SkipBytes(80);
             }

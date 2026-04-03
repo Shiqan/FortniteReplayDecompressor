@@ -120,7 +120,7 @@ public class NetFieldParser
 
             _objects[group.TypeId] = new SingleInstanceExport
             {
-                Instance = (INetFieldExportGroup) Activator.CreateInstance(group.Type),
+                Instance = (INetFieldExportGroup)Activator.CreateInstance(group.Type),
                 ChangedProperties = new List<NetFieldInfo>(group.Properties.Length),
             };
         }
@@ -150,7 +150,7 @@ public class NetFieldParser
         }
         gen.Emit(OpCodes.Ret);
 
-        return (Action<INetFieldExportGroup, object>) setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
+        return (Action<INetFieldExportGroup, object>)setterMethod.CreateDelegate(typeof(Action<INetFieldExportGroup, object>));
 
         FieldInfo GetBackingField(PropertyInfo property)
         {
@@ -540,17 +540,17 @@ public class NetFieldParser
 
                 if (export == null)
                 {
-                    netBitReader.SkipBits((int) numBits);
+                    netBitReader.SkipBits((int)numBits);
                     continue;
                 }
 
                 try
                 {
-                    netBitReader.SetTempEnd((int) numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
+                    netBitReader.SetTempEnd((int)numBits, FBitArchiveEndIndex.READ_ARRAY_FIELD);
 
                     if (groupInfo != null)
                     {
-                        ReadField((INetFieldExportGroup) data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
+                        ReadField((INetFieldExportGroup)data, export, handle, netfieldExportGroup, netBitReader, singleInstance: false);
                     }
                     else
                     {

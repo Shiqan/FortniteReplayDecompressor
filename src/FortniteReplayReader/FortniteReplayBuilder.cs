@@ -1,9 +1,9 @@
-﻿using FortniteReplayReader.Models;
-using FortniteReplayReader.Models.NetFieldExports;
-using FortniteReplayReader.Models.NetFieldExports.Weapons;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using FortniteReplayReader.Models;
+using FortniteReplayReader.Models.NetFieldExports;
+using FortniteReplayReader.Models.NetFieldExports.Weapons;
 
 namespace FortniteReplayReader;
 

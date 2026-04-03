@@ -41,7 +41,7 @@ public class NetBitReaderTest
         VectorQuantization.RoundWholeNumber, RotatorQuantization.ShortComponents, VectorQuantization.RoundTwoDecimals)]
     [InlineData(new byte[] {
         0xA0, 0x65, 0x06, 0xE5, 0x68, 0x79, 0x0F, 0x60, 0xD8, 0x85, 0xFD, 0x05,
-        0x15, 0x04 }, 111, VectorQuantization.RoundTwoDecimals, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber, 
+        0x15, 0x04 }, 111, VectorQuantization.RoundTwoDecimals, RotatorQuantization.ByteComponents, VectorQuantization.RoundWholeNumber,
         EngineNetworkVersionHistory.CustomExports)]
     public void RepMovementTest(byte[] rawData, int bitCount,
         VectorQuantization locationQuantizationLevel = VectorQuantization.RoundTwoDecimals,

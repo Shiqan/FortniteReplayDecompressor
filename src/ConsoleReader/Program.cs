@@ -1,9 +1,9 @@
-﻿using FortniteReplayReader;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
+using FortniteReplayReader;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Unreal.Core.Models.Enums;
 
 // Set up dependency injection and logging services

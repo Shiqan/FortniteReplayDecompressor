@@ -24,7 +24,7 @@ public class PlayerNameData
             for (var i = 0; i < EncodedName.Length; i++)
             {
                 var shift = (EncodedName.Length % 4 * 3 % 8 + 1 + i) * 3 % 8;
-                decodedName += (char) (EncodedName[i] + shift);
+                decodedName += (char)(EncodedName[i] + shift);
             }
 
             DecodedName = decodedName;

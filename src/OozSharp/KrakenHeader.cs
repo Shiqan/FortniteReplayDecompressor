@@ -24,7 +24,7 @@ public unsafe class KrakenHeader
             RestartDecoder = ((firstByte >> 7) & 0x1) == 0x01;
             Uncompressed = ((firstByte >> 6) & 0x1) == 0x01;
 
-            DecoderType = (DecoderTypes) (secondByte & 0x7F);
+            DecoderType = (DecoderTypes)(secondByte & 0x7F);
             UseChecksums = ((secondByte >> 7) & 0x1) == 0x01;
         }
         else

@@ -107,7 +107,7 @@ public class BitReader : FBitArchive
 
             if (ReadBit())
             {
-                result |= (byte) (1 << i);
+                result |= (byte)(1 << i);
             }
         }
         return result;
@@ -153,7 +153,7 @@ public class BitReader : FBitArchive
         var shiftDelta = (1 << bitCountUsedInByte) - 1;
         for (var i = 0; i < byteCount; i++)
         {
-            result[i] = (byte) (
+            result[i] = (byte)(
                 (span[currentByte + i] >> bitCountUsedInByte) |
                 ((span[currentByte + i + 1] & shiftDelta) << bitCountLeftInByte)
                 );
@@ -167,7 +167,7 @@ public class BitReader : FBitArchive
             Position++;
             if (bit)
             {
-                result[^1] |= (byte) (1 << i);
+                result[^1] |= (byte)(1 << i);
             }
         }
 
@@ -175,7 +175,7 @@ public class BitReader : FBitArchive
     }
 
 
-    public override ReadOnlySpan<byte> ReadBits(uint bitCount) => ReadBits((int) bitCount);
+    public override ReadOnlySpan<byte> ReadBits(uint bitCount) => ReadBits((int)bitCount);
 
     public override bool ReadBoolean() => ReadBit();
 
@@ -192,13 +192,13 @@ public class BitReader : FBitArchive
         var bitCountUsedInByte = Position & 7;
         var bitCountLeftInByte = 8 - (Position & 7);
 
-        var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte) ((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+        var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
 
         Position += 8;
         return result;
     }
 
-    public override T ReadByteAsEnum<T>() => (T) Enum.ToObject(typeof(T), ReadByte());
+    public override T ReadByteAsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadByte());
 
     public override ReadOnlySpan<byte> ReadBytes(int byteCount)
     {
@@ -220,7 +220,7 @@ public class BitReader : FBitArchive
             Span<byte> output = new byte[byteCount];
             for (var i = 0; i < byteCount; i++)
             {
-                output[i] = (byte) ((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
+                output[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
             }
             result = output;
         }
@@ -229,7 +229,7 @@ public class BitReader : FBitArchive
         return result;
     }
 
-    public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int) byteCount);
+    public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int)byteCount);
 
     public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count)).Replace("-", "");
 
@@ -267,7 +267,7 @@ public class BitReader : FBitArchive
                 nameIndex = ReadIntPacked();
             }
 
-            return ((UnrealNames) nameIndex).ToString();
+            return ((UnrealNames)nameIndex).ToString();
         }
 
         var inString = ReadFString();
@@ -299,7 +299,7 @@ public class BitReader : FBitArchive
     public override short ReadInt16()
     {
         var value = ReadBytes(2);
-        return IsError ? (short) 0 : BitConverter.ToInt16(value);
+        return IsError ? (short)0 : BitConverter.ToInt16(value);
     }
 
     public override int ReadInt32()
@@ -320,8 +320,8 @@ public class BitReader : FBitArchive
     {
         var bitCountUsedInByte = Position & 7;
         var bitCountLeftInByte = 8 - (Position & 7);
-        var srcMaskByte0 = (byte) ((1U << bitCountLeftInByte) - 1U);
-        var srcMaskByte1 = (byte) ((1U << bitCountUsedInByte) - 1U);
+        var srcMaskByte0 = (byte)((1U << bitCountLeftInByte) - 1U);
+        var srcMaskByte1 = (byte)((1U << bitCountUsedInByte) - 1U);
         var srcIndex = CurrentByte;
         var nextSrcIndex = bitCountUsedInByte != 0 ? srcIndex + 1 : srcIndex;
 
@@ -341,8 +341,8 @@ public class BitReader : FBitArchive
 
             Position += 8;
 
-            var readByte = (byte) (((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
-            value = (uint) ((readByte >> 1) << shiftCount) | value;
+            var readByte = (byte)(((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
+            value = (uint)((readByte >> 1) << shiftCount) | value;
             srcIndex++;
             nextSrcIndex++;
 
@@ -384,7 +384,7 @@ public class BitReader : FBitArchive
     private FVector ReadQuantizedVector(int scaleFactor)
     {
         var componentBitCountAndExtraInfo = ReadSerializedInt(1 << 7);
-        var componentBitCount = (int) (componentBitCountAndExtraInfo & 63U);
+        var componentBitCount = (int)(componentBitCountAndExtraInfo & 63U);
         var extraInfo = componentBitCountAndExtraInfo >> 6;
 
         if (componentBitCount > 0U)
@@ -395,9 +395,9 @@ public class BitReader : FBitArchive
 
             var signBit = 1UL << componentBitCount - 1;
 
-            double fX = (long) (X ^ signBit) - (long) signBit;
-            double fY = (long) (Y ^ signBit) - (long) signBit;
-            double fZ = (long) (Z ^ signBit) - (long) signBit;
+            double fX = (long)(X ^ signBit) - (long)signBit;
+            double fY = (long)(Y ^ signBit) - (long)signBit;
+            double fZ = (long)(Z ^ signBit) - (long)signBit;
 
             if (extraInfo > 0)
             {
@@ -447,8 +447,8 @@ public class BitReader : FBitArchive
             return new FVector(0, 0, 0);
         }
 
-        var bias = 1 << ((int) bits + 1);
-        var max = 1 << ((int) bits + 2);
+        var bias = 1 << ((int)bits + 1);
+        var max = 1 << ((int)bits + 2);
 
         var dx = ReadSerializedInt(max);
         var dy = ReadSerializedInt(max);
@@ -559,13 +559,13 @@ public class BitReader : FBitArchive
         });
     }
 
-    public override void SkipBytes(uint byteCount) => SkipBytes((int) byteCount);
+    public override void SkipBytes(uint byteCount) => SkipBytes((int)byteCount);
 
     public override void SkipBytes(int byteCount) => Seek(byteCount * 8, SeekOrigin.Current);
 
     public override void SkipBits(int numbits) => Seek(numbits, SeekOrigin.Current);
 
-    public override void SkipBits(uint numbits) => SkipBits((int) numbits);
+    public override void SkipBits(uint numbits) => SkipBits((int)numbits);
 
     public override void Mark() => MarkPosition = Position;
 

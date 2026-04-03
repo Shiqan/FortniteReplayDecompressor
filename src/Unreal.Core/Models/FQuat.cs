@@ -42,14 +42,14 @@ public class FQuat : IProperty
         // If mag of (X,Y,Z) <= 1.0, then we calculate W to make magnitude of Q 1.0
         if (WSquared >= 0f)
         {
-            W = (float) Math.Sqrt(WSquared);
+            W = (float)Math.Sqrt(WSquared);
         }
         // If mag of (X,Y,Z) > 1.0, we set W to zero, and then renormalize 
         else
         {
             W = 0f;
 
-            var XYZInvMag = (float) (1 / Math.Sqrt(XYZMagSquared));
+            var XYZInvMag = (float)(1 / Math.Sqrt(XYZMagSquared));
             X *= XYZInvMag;
             Y *= XYZInvMag;
             Z *= XYZInvMag;

@@ -1,7 +1,7 @@
-using FortniteReplayReader.Extensions;
-using FortniteReplayReader.Models.Events;
 using System;
 using System.IO;
+using FortniteReplayReader.Extensions;
+using FortniteReplayReader.Models.Events;
 using Xunit;
 
 namespace FortniteReplayReader.Test;
@@ -13,7 +13,7 @@ public class TestAthenaMatchStats
         Assert.Equal(expected.Eliminations, actual.Eliminations);
         Assert.Equal(expected.Assists, actual.Assists);
         Assert.Equal(expected.Revives, actual.Revives);
-        Assert.Equal(expected.Accuracy, (float) Math.Round(actual.Accuracy * 100));
+        Assert.Equal(expected.Accuracy, (float)Math.Round(actual.Accuracy * 100));
         Assert.Equal(expected.MaterialsUsed, actual.MaterialsUsed);
         Assert.Equal(expected.MaterialsGathered, actual.MaterialsGathered);
         Assert.Equal(expected.DamageTaken, actual.DamageTaken);
@@ -21,7 +21,7 @@ public class TestAthenaMatchStats
         Assert.Equal(expected.OtherDamage, actual.OtherDamage);
         Assert.Equal(expected.DamageToPlayers, actual.DamageToPlayers);
         Assert.Equal(expected.DamageToStructures, actual.DamageToStructures);
-        Assert.Equal(expected.TotalTraveled, (uint) actual.TotalTraveled.CentimetersToDistance());
+        Assert.Equal(expected.TotalTraveled, (uint)actual.TotalTraveled.CentimetersToDistance());
     }
 
     [Fact]

@@ -23,7 +23,7 @@ public class FStaticName : IProperty
                 nameIndex = reader.ReadIntPacked();
             }
 
-            Value = ((UnrealNames) nameIndex).ToString();
+            Value = ((UnrealNames)nameIndex).ToString();
 
             return;
         }

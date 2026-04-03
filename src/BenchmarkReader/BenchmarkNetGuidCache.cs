@@ -1,5 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
-using System;
+﻿using System;
+using BenchmarkDotNet.Attributes;
 using Unreal.Core.Models;
 
 namespace BenchmarkReader;
@@ -19,12 +19,12 @@ public class BenchmarkNetGuidCache
 
         for (var i = 0; i < iterations; i++)
         {
-            netGuidCache.AddToExportGroupMap(i.ToString(), new NetFieldExportGroup() { PathNameIndex = (uint) i, PathName = i.ToString() });
+            netGuidCache.AddToExportGroupMap(i.ToString(), new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = i.ToString() });
         }
     }
 
     [Benchmark]
-    public void GetNetFieldExportGroupFromIndex() => netGuidCache.GetNetFieldExportGroupFromIndex((uint) random.Next(iterations));
+    public void GetNetFieldExportGroupFromIndex() => netGuidCache.GetNetFieldExportGroupFromIndex((uint)random.Next(iterations));
 
     [Benchmark]
     public void GetNetFieldExportGroup() => netGuidCache.GetNetFieldExportGroup(random.Next(iterations).ToString());

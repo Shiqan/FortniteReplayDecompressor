@@ -115,21 +115,21 @@ public class FGameplayCueParameters : IProperty
         const byte NUM_LEVEL_BITS = 5; // need to bump this up to support 20 levels for AbilityLevel
         // const byte MAX_LEVEL = (1 << NUM_LEVEL_BITS) - 1;
 
-        var RepBits = reader.ReadBitsToInt((int) RepFlag.REP_MAX);
+        var RepBits = reader.ReadBitsToInt((int)RepFlag.REP_MAX);
 
         // Tag containers serialize empty containers with 1 bit, so no need to serialize this in the RepBits field.
         AggregatedSourceTags.Serialize(reader);
         AggregatedTargetTags.Serialize(reader);
 
-        if ((RepBits & (1 << (int) RepFlag.REP_NormalizedMagnitude)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_NormalizedMagnitude)) > 0)
         {
             NormalizedMagnitude = reader.ReadSingle();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_RawMagnitude)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_RawMagnitude)) > 0)
         {
             RawMagnitude = reader.ReadSingle();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_EffectContext)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_EffectContext)) > 0)
         {
             // FGameplayEffectContextHandle
             if (reader.ReadBit())
@@ -138,39 +138,39 @@ public class FGameplayCueParameters : IProperty
                 handle.Serialize(reader);
             }
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_Location)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_Location)) > 0)
         {
             Location = reader.SerializePropertyVector10();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_Normal)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_Normal)) > 0)
         {
             Normal = reader.SerializePropertyVectorNormal();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_Instigator)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_Instigator)) > 0)
         {
             Instigator = reader.ReadIntPacked();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_EffectCauser)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_EffectCauser)) > 0)
         {
             EffectCauser = reader.ReadIntPacked();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_SourceObject)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_SourceObject)) > 0)
         {
             SourceObject = reader.ReadIntPacked();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_TargetAttachComponent)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_TargetAttachComponent)) > 0)
         {
             TargetAttachComponent = reader.ReadIntPacked();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_PhysMaterial)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_PhysMaterial)) > 0)
         {
             PhysicalMaterial = reader.ReadIntPacked();
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_GELevel)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_GELevel)) > 0)
         {
             GameplayEffectLevel = reader.ReadBitsToInt(NUM_LEVEL_BITS);
         }
-        if ((RepBits & (1 << (int) RepFlag.REP_AbilityLevel)) > 0)
+        if ((RepBits & (1 << (int)RepFlag.REP_AbilityLevel)) > 0)
         {
             AbilityLevel = reader.ReadBitsToInt(NUM_LEVEL_BITS);
         }

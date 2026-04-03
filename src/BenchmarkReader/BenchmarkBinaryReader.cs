@@ -1,6 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
-using System;
+﻿using System;
 using System.IO;
+using BenchmarkDotNet.Attributes;
 
 namespace BenchmarkReader;
 

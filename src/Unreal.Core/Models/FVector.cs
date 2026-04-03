@@ -22,7 +22,7 @@ public class FVector
 
     public override string ToString() => $"X: {X}, Y: {Y}, Z: {Z}";
 
-    public float Size() => (float) Math.Sqrt(X * X + Y * Y + Z * Z);
+    public float Size() => (float)Math.Sqrt(X * X + Y * Y + Z * Z);
     public double DistanceTo(FVector vector) => Math.Sqrt(DistanceSquared(vector));
 
     private double DistanceSquared(FVector vector) => Math.Pow(vector.X - X, 2) + Math.Pow(vector.Y - Y, 2) + Math.Pow(vector.Z - Z, 2);

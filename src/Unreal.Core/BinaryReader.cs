@@ -23,7 +23,7 @@ public class BinaryReader : FArchive
     /// <seealso cref="System.IO.BinaryReader"/> 
     public BinaryReader(Stream input)
     {
-        using var ms = new MemoryStream((int) input.Length);
+        using var ms = new MemoryStream((int)input.Length);
         input.CopyTo(ms);
         Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
         _length = Bytes.Length;
@@ -73,7 +73,7 @@ public class BinaryReader : FArchive
         return result[0];
     }
 
-    public override T ReadByteAsEnum<T>() => (T) Enum.ToObject(typeof(T), ReadByte());
+    public override T ReadByteAsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadByte());
 
     public override ReadOnlySpan<byte> ReadBytes(int byteCount)
     {
@@ -82,7 +82,7 @@ public class BinaryReader : FArchive
         return result;
     }
 
-    public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int) byteCount);
+    public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int)byteCount);
 
     public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count)).Replace("-", "");
 
@@ -117,7 +117,7 @@ public class BinaryReader : FArchive
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
             // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
             // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
-            return ((UnrealNames) nameIndex).ToString();
+            return ((UnrealNames)nameIndex).ToString();
         }
 
         // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
@@ -191,7 +191,7 @@ public class BinaryReader : FArchive
             var nextByte = ReadByte();
             remaining = (nextByte & 1) == 1;            // Check 1 bit to see if theres more after this
             nextByte >>= 1;                             // Shift to get actual 7 bit value
-            value += (uint) nextByte << (7 * count++);   // Add to total value
+            value += (uint)nextByte << (7 * count++);   // Add to total value
         }
         return value;
     }
@@ -200,7 +200,7 @@ public class BinaryReader : FArchive
     {
         var result = Bytes.Slice(_position, 1).Span;
         _position++;
-        return (sbyte) result[0];
+        return (sbyte)result[0];
     }
 
     public override float ReadSingle()
@@ -244,7 +244,7 @@ public class BinaryReader : FArchive
 
     public override bool ReadUInt32AsBoolean() => ReadUInt32() >= 1u;
 
-    public override T ReadUInt32AsEnum<T>() => (T) Enum.ToObject(typeof(T), ReadUInt32());
+    public override T ReadUInt32AsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadUInt32());
 
     public override ulong ReadUInt64()
     {
@@ -270,7 +270,7 @@ public class BinaryReader : FArchive
         });
     }
 
-    public override void SkipBytes(uint byteCount) => SkipBytes((int) byteCount);
+    public override void SkipBytes(uint byteCount) => SkipBytes((int)byteCount);
 
     public override void SkipBytes(int byteCount) => _position += byteCount;
 }

@@ -21,9 +21,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.x
-          cache: true
-          cache-dependency-path: '**/Packages.props' # Or just default if no central props file for packages, but let's use default
-
       - run: dotnet restore
       - run: dotnet build --configuration Release --no-restore
       - run: dotnet test --coverage --report-github

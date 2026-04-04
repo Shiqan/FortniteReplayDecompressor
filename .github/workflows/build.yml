@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -18,5 +21,9 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.x
-      - run: dotnet build --configuration Release
-      - run: dotnet test --coverlet
+          cache: true
+          cache-dependency-path: '**/Packages.props' # Or just default if no central props file for packages, but let's use default
+
+      - run: dotnet restore
+      - run: dotnet build --configuration Release --no-restore
+      - run: dotnet test --coverage --report-github

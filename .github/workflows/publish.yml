@@ -19,20 +19,12 @@ jobs:
     needs: check_skip
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: |
-            10.x
-
-      - name: Build
-        run: dotnet build ./FortniteReplayDecompressor.slnx --configuration Release
-
-      - name: Test
-        run: dotnet test ./FortniteReplayDecompressor.slnx --no-build --configuration Release
+          dotnet-version: 10.x
+      - run: dotnet build --configuration Release
+      - run: dotnet test
 
       - name: Get next version
         id: versioning

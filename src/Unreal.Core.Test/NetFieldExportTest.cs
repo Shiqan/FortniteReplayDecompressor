@@ -50,6 +50,30 @@ public class NetFieldExportTest
         Assert.False(archive.IsError);
     }
 
+    [Fact]
+    public void ReadNetFieldExportGroupMap_IgnoresOutOfRangeHandle()
+    {
+        var rawData = new byte[] {
+            0x54, 0x65, 0x73, 0x74, 0x47, 0x72, 0x6F, 0x75, 0x70, 0x00, 0x00, 0x02, 0x01,
+            0x04, 0x00, 0x00, 0x00, 0x00, 0x46, 0x69, 0x65, 0x6C, 0x64, 0x4E, 0x61, 0x6D,
+            0x65, 0x00,0x46, 0x69, 0x65, 0x6C, 0x64, 0x54, 0x79, 0x70, 0x65, 0x00
+        };
+
+        using var ms = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(ms)
+        {
+            EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION - 1,
+            NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
+            ReplayHeaderFlags = ReplayHeaderFlags.HasStreamingFixes
+        };
+
+        var reader = new MockReplayReader();
+        var group = reader.ReadNetFieldExportGroupMap(archive);
+
+        Assert.Equal(1u, group.NetFieldExportsLength);
+        Assert.Null(group.NetFieldExports[0]);
+        Assert.False(archive.IsError);
+    }
 
 
     [Theory]
@@ -113,6 +137,31 @@ public class NetFieldExportTest
 
         var reader = new MockReplayReader();
         reader.ReadNetFieldExports(archive);
+        Assert.True(archive.AtEnd());
+        Assert.False(archive.IsError);
+    }
+
+    [Fact]
+    public void ReadNetFieldExports_IgnoresOutOfRangeHandle()
+    {
+        var rawData = new byte[] {
+            0x02, 0x00, 0x02, 0x0A, 0x00, 0x00, 0x00, 0x54, 0x65, 0x73, 0x74, 0x47, 0x72,
+            0x6F, 0x75, 0x70, 0x00, 0x02, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00,
+            0x00, 0x00, 0x46, 0x69, 0x65, 0x6C, 0x64, 0x4E, 0x61, 0x6D, 0x65, 0x00, 0x0A,
+            0x00, 0x00, 0x00, 0x46, 0x69, 0x65, 0x6C, 0x64, 0x54, 0x79, 0x70, 0x65, 0x00
+        };
+
+        using var stream = new MemoryStream(rawData);
+        using var archive = new Unreal.Core.BinaryReader(stream)
+        {
+            EngineNetworkVersion = EngineNetworkVersionHistory.HISTORY_NETEXPORT_SERIALIZATION - 1,
+            NetworkVersion = NetworkVersionHistory.HISTORY_CHARACTER_MOVEMENT_NOINTERP,
+            ReplayHeaderFlags = ReplayHeaderFlags.HasStreamingFixes
+        };
+
+        var reader = new MockReplayReader();
+        reader.ReadNetFieldExports(archive);
+
         Assert.True(archive.AtEnd());
         Assert.False(archive.IsError);
     }

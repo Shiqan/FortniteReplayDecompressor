@@ -17,7 +17,7 @@ namespace Unreal.Core;
 public abstract class ReplayReader<T> where T : Replay, new()
 {
     /// <summary>
-    /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767; 
+    /// const int32 UNetConnection::DEFAULT_MAX_CHANNEL_SIZE = 32767;
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/NetConnection.cpp#L84
     /// </summary>
     protected const int DefaultMaxChannelSize = 32767;
@@ -100,7 +100,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
     }
 
     /// <summary>
-    /// Parses the entire replay. 
+    /// Parses the entire replay.
     /// It first parses the info section, and then all chunks.
     /// </summary>
     public virtual T ReadReplay(FArchive archive)
@@ -258,7 +258,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             _netGuidCache.NetFieldExportGroupMap.Clear();
             _netGuidCache.NetFieldExportGroupIndexToGroup.Clear();
 
-            // SerializeNetFieldExportGroupMap 
+            // SerializeNetFieldExportGroupMap
             // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Engine/Private/PackageMapClient.cpp#L1289
             var numNetFieldExportGroups = binaryArchive.ReadUInt32();
             for (var i = 0; i < numNetFieldExportGroups; i++)
@@ -357,7 +357,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// see https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/NetworkReplayStreaming/LocalFileNetworkReplayStreaming/Private/LocalFileNetworkReplayStreaming.cpp#L318
-    /// </summary> 
+    /// </summary>
     public virtual void ReadReplayData(FArchive archive, int fallbackChunkSize)
     {
         var info = new ReplayDataInfo();
@@ -699,7 +699,14 @@ public abstract class ReplayReader<T> where T : Replay, new()
             var netFieldExport = ReadNetFieldExport(archive);
             if (netFieldExport != null)
             {
-                group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
+                if (group.IsValidIndex(netFieldExport.Handle))
+                {
+                    group.NetFieldExports[netFieldExport.Handle] = netFieldExport;
+                }
+                else
+                {
+                    _logger?.LogWarning("ReadNetFieldExportGroupMap: Invalid NetFieldExport Handle {handle} for group {pathname} with length {length}", netFieldExport.Handle, group.PathName, group.NetFieldExportsLength);
+                }
             }
         }
         return group;
@@ -780,7 +787,14 @@ public abstract class ReplayReader<T> where T : Replay, new()
             var netField = ReadNetFieldExport(archive);
             if (group != null && netField != null)
             {
-                group.NetFieldExports[netField.Handle] = netField;
+                if (group.IsValidIndex(netField.Handle))
+                {
+                    group.NetFieldExports[netField.Handle] = netField;
+                }
+                else
+                {
+                    _logger?.LogWarning("ReceiveNetFieldExports: Invalid NetFieldExport Handle {} for group {} with length {}", netField.Handle, group.PathName, group.NetFieldExportsLength);
+                }
             }
             else
             {
@@ -813,7 +827,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
             var numStreamingLevels = archive.ReadIntPacked();
             for (var i = 0; i < numStreamingLevels; i++)
             {
-                // levelName 
+                // levelName
                 archive.ReadFString();
             }
         }
@@ -1040,7 +1054,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
                             return;
 
                         }
-                        // Incomplete partial bunch. 
+                        // Incomplete partial bunch.
                     }
                     PartialBunch = null;
                 }
@@ -2206,8 +2220,8 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     /// <summary>
     /// After receiving propteries for this <paramref name="exportGroup"/> indicate wheter it can be ignored for the rest of the replay (on the given channel)
-    /// or if it can be ignored for the rest of the replay. 
-    /// Useful to minimize the parsing, e.g. if you're only interested in the initial values and not subsequent updates. 
+    /// or if it can be ignored for the rest of the replay.
+    /// Useful to minimize the parsing, e.g. if you're only interested in the initial values and not subsequent updates.
     /// </summary>
     protected virtual bool IgnoreGroupOnChannel(uint channelIndex, INetFieldExportGroup exportGroup) => true;
 

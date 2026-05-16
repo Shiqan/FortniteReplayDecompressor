@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [3.0.1] - 2026-05-16
+### Changed
+- fix `ReadNetFieldExports` (see [issue 72](https://github.com/Shiqan/FortniteReplayDecompressor/issues/72))
+
 ## [3.0.0] - 2026-04-04
 ### Changed
 - support .net10
@@ -18,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support .net9
 - fix parsing of `FRepMovement` with `RepMoveOptionalAcceleration` (thanks @Zaid)
 
-### Removed 
+### Removed
 - support .net6
 
 ## [2.3.1] - 2024-11-08

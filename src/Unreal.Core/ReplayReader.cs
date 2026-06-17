@@ -1282,6 +1282,19 @@ public abstract class ReplayReader<T> where T : Replay, new()
         {
             var repObject = ReadContentBlockPayload(bunch, out var bObjectDeleted, out var bHasRepLayout, out var payload);
 
+            // Infinite-loop guard (matches UE UActorChannel::ProcessBunch, which checks Bunch.IsError()
+            // immediately after ReadContentBlockPayload). A desynced/overrun content block leaves the
+            // archive errored with its read position frozen below the end (BitReader no-ops further reads
+            // once IsError is set), so AtEnd() never trips and the `payload is null` continue below spins
+            // forever — observed hanging the full 180s parse timeout on certain build-41 replays. The
+            // IsError check farther down was unreachable in that path because the null-payload continue
+            // fired first.
+            if (bunch.Archive.IsError)
+            {
+                _logger?.LogWarning("UActorChannel::ProcessBunch: ReadContentBlockPayload errored; aborting bunch {}", bunchIndex);
+                break;
+            }
+
             if (payload is null)
             {
                 continue;

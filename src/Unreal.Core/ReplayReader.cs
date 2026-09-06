@@ -515,9 +515,6 @@ public abstract class ReplayReader<T> where T : Replay, new()
         _cmdReader.EngineNetworkVersion = header.EngineNetworkVersion;
         _cmdReader.NetworkVersion = header.NetworkVersion;
         _cmdReader.ReplayHeaderFlags = header.Flags;
-        // Thread the replay Changelist/Branch onto the command reader so the RepMovement call site can
-        // detect build 41.00, which widened pawn rotation quantization Byte->Short. EngineNetworkVersion
-        // is 44 on both 40.x and 41.x and cannot discriminate; NetworkReplayVersion (set above) can.
         _cmdReader.NetworkReplayVersion = archive.NetworkReplayVersion;
     }
 

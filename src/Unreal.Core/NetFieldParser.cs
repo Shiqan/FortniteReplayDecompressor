@@ -334,14 +334,7 @@ public class NetFieldParser
                 locationQuantizationLevel: netFieldInfo.MovementAttribute.LocationQuantizationLevel,
                 rotationQuantizationLevel: netFieldInfo.MovementAttribute.RotationQuantizationLevel,
                 velocityQuantizationLevel: netFieldInfo.MovementAttribute.VelocityQuantizationLevel)
-                // Actors that declare ReplicatedMovement without a [RepMovement] attribute (PlayerPawn,
-                // PlayerPawnAI, pickups, supply drops, ...) take this default branch. Fortnite build 41.00
-                // (++Fortnite+Release-41.00) widened their rotation quantization from ByteComponents
-                // (8 bits/axis) to ShortComponents (16 bits/axis). It carries no EngineNetworkVersion bump
-                // (still 44, as in 40.x), so detect the build from the replay Changelist/Branch. Reading the
-                // old byte rotation on a 41.00 pawn under-consumes the rotation field, misaligns the trailing
-                // velocity vector, and trips the RepMovement group into Incompatible -- dropping all pawn
-                // movement for the rest of the replay. Attributed actors (the branch above) are unaffected.
+                // TODO: support custom FEngineNetworkCustomVersion::Guid
                 : netBitReader.SerializeRepMovement(
                     rotationQuantizationLevel: (netBitReader.NetworkReplayVersion != null
                         && (netBitReader.NetworkReplayVersion.Changelist >= 54618515u

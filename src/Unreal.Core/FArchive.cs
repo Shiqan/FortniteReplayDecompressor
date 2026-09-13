@@ -1,5 +1,3 @@
-﻿using System;
-using System.IO;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -268,6 +266,20 @@ public abstract class FArchive : IDisposable
     /// <param name="byteCount">The number of bytes to read.</param>
     /// <returns>A byte array containing data read from the underlying stream.</returns>
     public abstract ReadOnlySpan<byte> ReadBytes(uint byteCount);
+
+    /// <summary>
+    /// Reads the specified number of bytes from the current stream as a ReadOnlyMemory and advances the current position by that number of bytes.
+    /// </summary>
+    /// <param name="byteCount">The number of bytes to read.</param>
+    /// <returns>A ReadOnlyMemory containing data read from the underlying stream.</returns>
+    public virtual ReadOnlyMemory<byte> ReadMemory(int byteCount) => ReadBytes(byteCount).ToArray();
+
+    /// <summary>
+    /// Reads the specified number of bytes from the current stream as a ReadOnlyMemory and advances the current position by that number of bytes.
+    /// </summary>
+    /// <param name="byteCount">The number of bytes to read.</param>
+    /// <returns>A ReadOnlyMemory containing data read from the underlying stream.</returns>
+    public virtual ReadOnlyMemory<byte> ReadMemory(uint byteCount) => ReadMemory((int)byteCount);
 
     /// <summary>
     /// Advences the current stream by <paramref name="byteCount"/> bytes.

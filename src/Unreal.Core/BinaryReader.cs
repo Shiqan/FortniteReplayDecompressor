@@ -1,5 +1,5 @@
-﻿using System;
-using System.IO;
+using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -16,17 +16,47 @@ public class BinaryReader : FArchive
     private int _position;
     public override int Position { get => _position; protected set => Seek(value); }
 
+    internal static readonly string[] UnrealNamesCache = InitUnrealNamesCache();
+
+    private static string[] InitUnrealNamesCache()
+    {
+        var names = Enum.GetNames<UnrealNames>();
+        var values = (int[])Enum.GetValuesAsUnderlyingType<UnrealNames>();
+        var max = 0;
+        for (var i = 0; i < values.Length; i++)
+        {
+            if (values[i] > max) max = values[i];
+        }
+        var cache = new string[max + 1];
+        for (var i = 0; i < values.Length; i++)
+        {
+            cache[values[i]] = names[i];
+        }
+        return cache;
+    }
+
     /// <summary>
     /// Initializes a new instance of the CustomBinaryReader class based on the specified stream.
     /// </summary>
     /// <param name="input">An stream.</param>
-    /// <seealso cref="System.IO.BinaryReader"/> 
+    /// <seealso cref="System.IO.BinaryReader"/>
     public BinaryReader(Stream input)
     {
-        using var ms = new MemoryStream((int)input.Length);
-        input.CopyTo(ms);
-        Bytes = new ReadOnlyMemory<byte>(ms.ToArray());
-        _length = Bytes.Length;
+        if (input.CanSeek)
+        {
+            var length = (int)input.Length;
+            var bytes = GC.AllocateUninitializedArray<byte>(length);
+            input.ReadExactly(bytes);
+            Bytes = bytes;
+            _length = length;
+        }
+        else
+        {
+            using var ms = new MemoryStream();
+            input.CopyTo(ms);
+            Bytes = ms.ToArray();
+            _length = Bytes.Length;
+        }
         _position = 0;
     }
 
@@ -59,32 +89,33 @@ public class BinaryReader : FArchive
         return arr;
     }
 
-    public override bool ReadBoolean()
-    {
-        var result = BitConverter.ToBoolean(Bytes.Slice(_position, 1).Span);
-        _position++;
-        return result;
-    }
+    public override bool ReadBoolean() => Bytes.Span[_position++] != 0;
 
-    public override byte ReadByte()
-    {
-        var result = Bytes.Slice(_position, 1).Span;
-        _position++;
-        return result[0];
-    }
+    public override byte ReadByte() => Bytes.Span[_position++];
 
-    public override T ReadByteAsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadByte());
+    public override T ReadByteAsEnum<T>()
+    {
+        var b = ReadByte();
+        return Unsafe.As<byte, T>(ref b);
+    }
 
     public override ReadOnlySpan<byte> ReadBytes(int byteCount)
     {
-        var result = Bytes.Slice(_position, byteCount).Span;
+        var result = Bytes.Span.Slice(_position, byteCount);
         _position += byteCount;
         return result;
     }
 
     public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int)byteCount);
 
-    public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count)).Replace("-", "");
+    public override ReadOnlyMemory<byte> ReadMemory(int byteCount)
+    {
+        var result = Bytes.Slice(_position, byteCount);
+        _position += byteCount;
+        return result;
+    }
+
+    public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count));
 
     public override string ReadFString()
     {
@@ -101,9 +132,23 @@ public class BinaryReader : FArchive
             length = -2 * length;
         }
 
-        var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
-        return encoding.GetString(ReadBytes(length))
-            .Trim(new[] { ' ', '\0' });
+        var bytes = ReadBytes(length);
+        if (!isUnicode)
+        {
+            if (bytes.Length > 0 && bytes[^1] == 0)
+            {
+                bytes = bytes[..^1];
+            }
+            return Encoding.Default.GetString(bytes).Trim(' ');
+        }
+        else
+        {
+            if (bytes.Length >= 2 && bytes[^1] == 0 && bytes[^2] == 0)
+            {
+                bytes = bytes[..^2];
+            }
+            return Encoding.Unicode.GetString(bytes).Trim(' ');
+        }
     }
 
     public override string ReadFName()
@@ -112,23 +157,12 @@ public class BinaryReader : FArchive
         if (isHardcoded)
         {
             var nameIndex = EngineNetworkVersion < EngineNetworkVersionHistory.HISTORY_CHANNEL_NAMES ? ReadUInt32() : ReadIntPacked();
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L31
-            // hard coded names in "UnrealNames.inl"
-            // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.inl
-            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L599
-            // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Private/UObject/UnrealNames.cpp#L283
+            if (nameIndex < (uint)UnrealNamesCache.Length && UnrealNamesCache[nameIndex] != null)
+            {
+                return UnrealNamesCache[nameIndex];
+            }
             return ((UnrealNames)nameIndex).ToString();
         }
-
-        // https://github.com/EpicGames/UnrealEngine/blob/70bc980c6361d9a7d23f6d23ffe322a2d6ef16fb/Engine/Source/Runtime/Core/Public/UObject/UnrealNames.h#L17
-        // MAX_NETWORKED_HARDCODED_NAME = 410
-
-        // https://github.com/EpicGames/UnrealEngine/blob/375ba9730e72bf85b383c07a5e4a7ba98774bcb9/Engine/Source/Runtime/Core/Public/UObject/NameTypes.h#L34
-        // NAME_SIZE = 1024
-
-        // InName.GetComparisonIndex() <= MAX_NETWORKED_HARDCODED_NAME;
-        // InName.GetPlainNameString();
-        // InName.GetNumber();
 
         var inString = ReadFString();
         ReadInt32(); // inNumber
@@ -159,14 +193,14 @@ public class BinaryReader : FArchive
 
     public override short ReadInt16()
     {
-        var result = BitConverter.ToInt16(Bytes.Slice(_position, 2).Span);
+        var result = BinaryPrimitives.ReadInt16LittleEndian(Bytes.Span.Slice(_position, 2));
         _position += 2;
         return result;
     }
 
     public override int ReadInt32()
     {
-        var result = BitConverter.ToInt32(Bytes.Slice(_position, 4).Span);
+        var result = BinaryPrimitives.ReadInt32LittleEndian(Bytes.Span.Slice(_position, 4));
         _position += 4;
         return result;
     }
@@ -175,7 +209,7 @@ public class BinaryReader : FArchive
 
     public override long ReadInt64()
     {
-        var result = BitConverter.ToInt64(Bytes.Slice(_position, 8).Span);
+        var result = BinaryPrimitives.ReadInt64LittleEndian(Bytes.Span.Slice(_position, 8));
         _position += 8;
         return result;
     }
@@ -185,10 +219,11 @@ public class BinaryReader : FArchive
         uint value = 0;
         byte count = 0;
         var remaining = true;
+        var span = Bytes.Span;
 
         while (remaining)
         {
-            var nextByte = ReadByte();
+            var nextByte = span[_position++];
             remaining = (nextByte & 1) == 1;            // Check 1 bit to see if theres more after this
             nextByte >>= 1;                             // Shift to get actual 7 bit value
             value += (uint)nextByte << (7 * count++);   // Add to total value
@@ -196,23 +231,18 @@ public class BinaryReader : FArchive
         return value;
     }
 
-    public override sbyte ReadSByte()
-    {
-        var result = Bytes.Slice(_position, 1).Span;
-        _position++;
-        return (sbyte)result[0];
-    }
+    public override sbyte ReadSByte() => (sbyte)Bytes.Span[_position++];
 
     public override float ReadSingle()
     {
-        var result = BitConverter.ToSingle(Bytes.Slice(_position, 4).Span);
+        var result = BinaryPrimitives.ReadSingleLittleEndian(Bytes.Span.Slice(_position, 4));
         _position += 4;
         return result;
     }
 
     public override double ReadDouble()
     {
-        var result = BitConverter.ToDouble(Bytes.Slice(_position, 8).Span);
+        var result = BinaryPrimitives.ReadDoubleLittleEndian(Bytes.Span.Slice(_position, 8));
         _position += 8;
         return result;
     }
@@ -230,25 +260,29 @@ public class BinaryReader : FArchive
 
     public override ushort ReadUInt16()
     {
-        var result = BitConverter.ToUInt16(Bytes.Slice(_position, 2).Span);
+        var result = BinaryPrimitives.ReadUInt16LittleEndian(Bytes.Span.Slice(_position, 2));
         _position += 2;
         return result;
     }
 
     public override uint ReadUInt32()
     {
-        var result = BitConverter.ToUInt32(Bytes.Slice(_position, 4).Span);
+        var result = BinaryPrimitives.ReadUInt32LittleEndian(Bytes.Span.Slice(_position, 4));
         _position += 4;
         return result;
     }
 
     public override bool ReadUInt32AsBoolean() => ReadUInt32() >= 1u;
 
-    public override T ReadUInt32AsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadUInt32());
+    public override T ReadUInt32AsEnum<T>()
+    {
+        var val = ReadUInt32();
+        return Unsafe.As<uint, T>(ref val);
+    }
 
     public override ulong ReadUInt64()
     {
-        var result = BitConverter.ToUInt64(Bytes.Slice(_position, 8).Span);
+        var result = BinaryPrimitives.ReadUInt64LittleEndian(Bytes.Span.Slice(_position, 8));
         _position += 8;
         return result;
     }

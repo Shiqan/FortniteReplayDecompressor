@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Exceptions;
+﻿namespace Unreal.Core.Exceptions;
 
 public class UnknownEventException : Exception
 {

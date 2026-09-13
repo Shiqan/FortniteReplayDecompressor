@@ -1,4 +1,3 @@
-using System.Linq;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Models;

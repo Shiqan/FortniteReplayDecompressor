@@ -1,5 +1,4 @@
-﻿using System;
-using Unreal.Core.Contracts;
+﻿using Unreal.Core.Contracts;
 
 namespace Unreal.Core.Models;
 
@@ -44,7 +43,7 @@ public class FQuat : IProperty
         {
             W = (float)Math.Sqrt(WSquared);
         }
-        // If mag of (X,Y,Z) > 1.0, we set W to zero, and then renormalize 
+        // If mag of (X,Y,Z) > 1.0, we set W to zero, and then renormalize
         else
         {
             W = 0f;

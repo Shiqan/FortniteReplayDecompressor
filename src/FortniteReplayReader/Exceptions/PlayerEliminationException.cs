@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FortniteReplayReader.Exceptions;
+﻿namespace FortniteReplayReader.Exceptions;
 
 public class PlayerEliminationException : Exception
 {

@@ -1,5 +1,4 @@
-﻿using System;
-using Unreal.Core.Models.Enums;
+﻿using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core.Models;
 
@@ -39,7 +38,7 @@ public class DataBunch
     public uint ChIndex { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     [Obsolete("UE_DEPRECATED(4.22, \"ChType deprecated in favor of ChName.\")")]
     public ChannelType ChType { get; set; }

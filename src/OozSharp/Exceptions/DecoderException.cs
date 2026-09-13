@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OozSharp.Exceptions;
+﻿namespace OozSharp.Exceptions;
 
 public class DecoderException : Exception
 {

@@ -1,4 +1,3 @@
-using System.IO;
 using FortniteReplayReader.Models;
 using FortniteReplayReader.Test.Mocks;
 using Unreal.Core.Exceptions;

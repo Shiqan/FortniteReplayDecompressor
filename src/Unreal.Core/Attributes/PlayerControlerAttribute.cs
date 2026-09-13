@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace Unreal.Core.Attributes;
+﻿namespace Unreal.Core.Attributes;
 
 /// <summary>
-/// Attribute to mark PlayerControllers, which require an additional byte to be parsed in 
+/// Attribute to mark PlayerControllers, which require an additional byte to be parsed in
 /// <see cref="ReplayReader{T}.ProcessBunch(Models.DataBunch)"/>
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]

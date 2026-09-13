@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FortniteReplayReader.Extensions;
+﻿namespace FortniteReplayReader.Extensions;
 
 public static class UIntExtensions
 {

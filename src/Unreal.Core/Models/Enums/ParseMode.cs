@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums;
+﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
 /// Setting to determines how much should be parsed.
@@ -14,7 +12,7 @@ public enum ParseMode
     EventsOnly,
 
     /// <summary>
-    /// Parses events and partial useful data. 
+    /// Parses events and partial useful data.
     /// </summary>
     Minimal,
 

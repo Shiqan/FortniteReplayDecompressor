@@ -1,11 +1,10 @@
-﻿using System;
-using Unreal.Core.Models;
+﻿using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
 namespace Unreal.Core;
 
 /// <summary>
-/// A <see cref="BitReader"/> used for reading everything related to RepLayout. 
+/// A <see cref="BitReader"/> used for reading everything related to RepLayout.
 /// see https://github.com/EpicGames/UnrealEngine/blob/bf95c2cbc703123e08ab54e3ceccdd47e48d224a/Engine/Source/Runtime/CoreUObject/Public/UObject/CoreNet.h#L303
 /// </summary>
 public class NetBitReader : BitReader
@@ -197,7 +196,7 @@ public class NetBitReader : BitReader
     /// </summary>
     public string SerializePropertyNetId()
     {
-        // Use highest value for type for other (out of engine) oss type 
+        // Use highest value for type for other (out of engine) oss type
         const byte typeHashOther = 31;
 
         var encodingFlags = ReadByteAsEnum<UniqueIdEncodingFlags>();

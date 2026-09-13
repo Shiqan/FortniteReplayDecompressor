@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Unreal.Core.Models.Enums;
+﻿namespace Unreal.Core.Models.Enums;
 
 /// <summary>
 /// see https://github.com/EpicGames/UnrealEngine/blob/0218ad46444accdba786b9a82bee3f445d9fa938/Engine/Source/Runtime/Engine/Classes/Engine/DemoNetDriver.h#L160

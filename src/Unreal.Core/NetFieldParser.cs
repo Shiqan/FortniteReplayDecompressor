@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using Unreal.Core.Attributes;
@@ -574,7 +571,7 @@ public class NetFieldParser
     }
 
     /// <summary>
-    /// Create the object associated with the NetFieldExportGroup. 
+    /// Create the object associated with the NetFieldExportGroup.
     /// </summary>
     /// <param name="group"></param>
     /// <returns></returns>

@@ -1,10 +1,9 @@
-﻿using System;
-using OozSharp;
+﻿using OozSharp;
 
 namespace Unreal.Encryption;
 
-/// <summary>  
-/// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleUtils.cpp 
+/// <summary>
+/// see https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Plugins/Runtime/PacketHandlers/CompressionComponents/Oodle/Source/OodleHandlerComponent/Private/OodleUtils.cpp
 /// </summary>
 public static class Oodle
 {

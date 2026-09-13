@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OozSharp.Extensions;
+﻿namespace OozSharp.Extensions;
 
 public static unsafe class Util
 {

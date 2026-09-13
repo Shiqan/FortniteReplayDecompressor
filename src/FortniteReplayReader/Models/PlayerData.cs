@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FortniteReplayReader.Models.NetFieldExports;
+﻿using FortniteReplayReader.Models.NetFieldExports;
 using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models;

@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Unreal.Core.Models;
+﻿using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 using Unreal.Core.Test.Mocks;
 using Xunit;

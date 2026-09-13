@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Unreal.Core.Models;
+﻿using Unreal.Core.Models;
 
 namespace FortniteReplayReader.Models;
 

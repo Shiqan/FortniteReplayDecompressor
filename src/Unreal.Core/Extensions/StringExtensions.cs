@@ -1,5 +1,3 @@
-﻿using System.Linq;
-
 namespace Unreal.Core.Extensions;
 
 public static class StringExtensions
@@ -32,14 +30,12 @@ public static class StringExtensions
     /// <returns>string without given prefix</returns>
     public static string RemovePathPrefix(this string path, string toRemove)
     {
-        if (toRemove.Length > path.Length)
+        if (path.StartsWith(toRemove, StringComparison.Ordinal))
         {
-            return path;
+            return path[toRemove.Length..];
         }
 
-        return toRemove.Where((t, i) => path[i] != t).Any()
-            ? path
-            : path[toRemove.Length..];
+        return path;
     }
 
     /// <summary>

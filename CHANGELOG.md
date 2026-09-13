@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [3.1.0] - 2026-09-13
+### Changed
+- improve performance
+- reduce allocations
+
+## [3.0.5] - 2026-09-06
+### Changed
+- use pinned commit SHAs for GitHub actions
+
+## [3.0.4] - 2026-09-06
+### Changed
+- fix `RepMovement` (see [issue 76](https://github.com/Shiqan/FortniteReplayDecompressor/issues/76)) (by [KerbalSpace](https://github.com/KerbalSpace))
+
+## [3.0.3] - 2026-09-06
+### Changed
+- prevent infinite loop when a bunch overflows (see [issue 74](https://github.com/Shiqan/FortniteReplayDecompressor/issues/74)) (by [tylerrichey](https://github.com/tylerrichey))
+
+## [3.0.2] - 2026-09-06
+### Changed
+- fix infinite loop in `ProcessBunch` (see [issue 74](https://github.com/Shiqan/FortniteReplayDecompressor/issues/74)) (by [KerbalSpace](https://github.com/KerbalSpace))
+
 ## [3.0.1] - 2026-05-16
 ### Changed
 - fix `ReadNetFieldExports` (see [issue 72](https://github.com/Shiqan/FortniteReplayDecompressor/issues/72))

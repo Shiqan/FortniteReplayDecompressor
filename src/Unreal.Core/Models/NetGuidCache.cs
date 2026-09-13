@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Unreal.Core.Contracts;
 using Unreal.Core.Extensions;
@@ -62,11 +60,22 @@ public class NetGuidCache
     /// </summary>
     public Dictionary<uint, IExternalData> ExternalData { get; private set; } = new();
 
+    private readonly Dictionary<uint, NetFieldExportGroup> _netFieldExportGroupFromIndex = new();
     private readonly Dictionary<uint, NetFieldExportGroup> _archTypeToExportGroup = new();
     private readonly Dictionary<uint, string> _cleanedPaths = new();
     private readonly Dictionary<string, string> _cleanedClassNetCache = new();
     private readonly HashSet<string> _failedPaths = new(); //Path names that didn't find an export group
     private NetFieldExportGroup? _networkGameplayTagNodeIndex { get; set; }
+
+    /// <summary>
+    /// Clears export group mappings.
+    /// </summary>
+    public void ClearExportGroups()
+    {
+        NetFieldExportGroupMap.Clear();
+        NetFieldExportGroupIndexToGroup.Clear();
+        _netFieldExportGroupFromIndex.Clear();
+    }
 
     /// <summary>
     /// Add a <see cref="NetFieldExportGroup"/> to the GuidCache.
@@ -80,6 +89,7 @@ public class NetGuidCache
 
         NetFieldExportGroupMap[group] = exportGroup;
         NetFieldExportGroupIndexToGroup[exportGroup.PathNameIndex] = group;
+        _netFieldExportGroupFromIndex[exportGroup.PathNameIndex] = exportGroup;
     }
 
     /// <summary>
@@ -89,11 +99,24 @@ public class NetGuidCache
     /// <returns><see cref="NetFieldExportGroup"/></returns>
     public NetFieldExportGroup? GetNetFieldExportGroupFromIndex(uint? index)
     {
-        if (index is null || !NetFieldExportGroupIndexToGroup.TryGetValue(index.Value, out var group))
+        if (index is null)
         {
             return null;
         }
-        return NetFieldExportGroupMap[group];
+
+        if (_netFieldExportGroupFromIndex.TryGetValue(index.Value, out var group))
+        {
+            return group;
+        }
+
+        if (NetFieldExportGroupIndexToGroup.TryGetValue(index.Value, out var groupName) &&
+            NetFieldExportGroupMap.TryGetValue(groupName, out group))
+        {
+            _netFieldExportGroupFromIndex[index.Value] = group;
+            return group;
+        }
+
+        return null;
     }
 
     /// <summary>

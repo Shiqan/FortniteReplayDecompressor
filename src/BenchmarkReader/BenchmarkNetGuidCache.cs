@@ -1,17 +1,15 @@
-﻿using System;
 using BenchmarkDotNet.Attributes;
 using Unreal.Core.Models;
 
 namespace BenchmarkReader;
 
 [MemoryDiagnoser]
+[ShortRunJob]
 public class BenchmarkNetGuidCache
 {
     private readonly NetGuidCache netGuidCache;
-
-    private const int iterations = 10000;
-
-    private readonly Random random = new();
+    private const int iterations = 1000;
+    private readonly uint[] _testIndices = new uint[iterations];
 
     public BenchmarkNetGuidCache()
     {
@@ -19,18 +17,41 @@ public class BenchmarkNetGuidCache
 
         for (var i = 0; i < iterations; i++)
         {
-            netGuidCache.AddToExportGroupMap(i.ToString(), new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = i.ToString() });
+            var name = $"Group_{i}";
+            netGuidCache.AddToExportGroupMap(name, new NetFieldExportGroup() { PathNameIndex = (uint)i, PathName = name });
+            _testIndices[i] = (uint)i;
         }
     }
 
-    [Benchmark]
-    public void GetNetFieldExportGroupFromIndex() => netGuidCache.GetNetFieldExportGroupFromIndex((uint)random.Next(iterations));
+    [Benchmark(Baseline = true)]
+    public int Baseline_TwoStepLookup()
+    {
+        var sum = 0;
+        for (var i = 0; i < iterations; i++)
+        {
+            var idx = _testIndices[i];
+            if (netGuidCache.NetFieldExportGroupIndexToGroup.TryGetValue(idx, out var groupName) &&
+                netGuidCache.NetFieldExportGroupMap.TryGetValue(groupName, out var group))
+            {
+                sum += (int)group.PathNameIndex;
+            }
+        }
+        return sum;
+    }
 
     [Benchmark]
-    public void GetNetFieldExportGroup() => netGuidCache.GetNetFieldExportGroup(random.Next(iterations).ToString());
-
-    [Benchmark]
-    public void TryGetClassNetCache() => netGuidCache.TryGetClassNetCache(random.Next(iterations).ToString(), out var group, true);
-
-
+    public int Optimized_DirectSingleLookup()
+    {
+        var sum = 0;
+        for (var i = 0; i < iterations; i++)
+        {
+            var idx = _testIndices[i];
+            var group = netGuidCache.GetNetFieldExportGroupFromIndex(idx);
+            if (group != null)
+            {
+                sum += (int)group.PathNameIndex;
+            }
+        }
+        return sum;
+    }
 }

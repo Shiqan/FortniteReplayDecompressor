@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.0] - 2026-09-13
 ### Changed
-- improve performance
-- reduce allocations
+- Improve parsing performance and reduce allocations:
+  - Reduced heap allocations by ~34%–38% (~70–135 MB saved per replay) via zero-copy packet reading, bunch buffer reuse, and lazy vector serialization.
+  - Reduced parse times by ~10%–25% using `BinaryPrimitives`, 64-bit bit-shifting in `BitReader`, and direct NetGuid export group indexing.
+  - Decreased GC Gen 0 pressure by ~50%, significantly reducing GC pauses during replay parsing.
 
 ## [3.0.5] - 2026-09-06
 ### Changed

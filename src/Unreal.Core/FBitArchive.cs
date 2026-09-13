@@ -1,4 +1,3 @@
-﻿using System;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
 
@@ -43,6 +42,15 @@ public abstract class FBitArchive : FArchive
     /// <param name="bits">The number of bits to read.</param>
     /// <returns>bool[]</returns>
     public abstract ReadOnlySpan<byte> ReadBits(uint bitCount);
+
+    /// <summary>
+    /// Reads bits directly into destination and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.
+    /// </summary>
+    public virtual void ReadBits(Span<byte> destination, int bitCount)
+    {
+        var bytes = ReadBits(bitCount);
+        bytes.CopyTo(destination);
+    }
 
     /// <summary>
     /// Retuns int and advances the <see cref="Position"/> by <paramref name="bitCount"/> bits.

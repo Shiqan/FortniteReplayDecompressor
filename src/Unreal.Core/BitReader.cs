@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Unreal.Core.Models;
 using Unreal.Core.Models.Enums;
@@ -13,7 +13,28 @@ namespace Unreal.Core;
 /// </summary>
 public class BitReader : FBitArchive
 {
-    private ReadOnlyMemory<byte> Buffer { get; set; }
+    private ReadOnlyMemory<byte> _buffer;
+    protected ReadOnlyMemory<byte> Buffer
+    {
+        get => _buffer;
+        set
+        {
+            _buffer = value;
+            if (MemoryMarshal.TryGetArray(value, out var seg))
+            {
+                _byteArray = seg.Array;
+                _byteOffset = seg.Offset;
+            }
+            else
+            {
+                _byteArray = null;
+                _byteOffset = 0;
+            }
+        }
+    }
+    private byte[]? _byteArray;
+    private int _byteOffset;
+    private byte[]? _reusableBuffer;
 
     public override int Position { get; protected set; }
 
@@ -23,12 +44,24 @@ public class BitReader : FBitArchive
 
     public override int MarkPosition { get; protected set; }
 
-    private readonly Dictionary<FBitArchiveEndIndex, int> _tempLastBit = [];
+    private readonly int[] _tempLastBit = new int[4];
 
 
     public BitReader()
     {
 
+    }
+
+    public BitReader(ReadOnlyMemory<byte> input)
+    {
+        Buffer = input;
+        LastBit = Buffer.Length * 8;
+    }
+
+    public BitReader(ReadOnlyMemory<byte> input, int bitCount)
+    {
+        Buffer = input;
+        LastBit = bitCount;
     }
 
     /// <summary>
@@ -52,13 +85,34 @@ public class BitReader : FBitArchive
         LastBit = bitCount;
     }
 
+    public void FillBuffer(ReadOnlyMemory<byte> input)
+    {
+        Buffer = input;
+        LastBit = Buffer.Length * 8;
+        Position = 0;
+        IsError = false;
+    }
+
+    public void FillBuffer(ReadOnlyMemory<byte> input, int bitCount)
+    {
+        Buffer = input;
+        LastBit = bitCount;
+        Position = 0;
+        IsError = false;
+    }
+
     /// <summary>
     /// Fill the buffer and reset this BitReader. Useful when created with the empty constructor.
     /// </summary>
     public void FillBuffer(ReadOnlySpan<byte> input)
     {
-        Buffer = input.ToArray();
-        LastBit = Buffer.Length * 8;
+        if (_reusableBuffer == null || _reusableBuffer.Length < input.Length)
+        {
+            _reusableBuffer = new byte[Math.Max(input.Length * 2, 2048)];
+        }
+        input.CopyTo(_reusableBuffer);
+        Buffer = _reusableBuffer.AsMemory(0, input.Length);
+        LastBit = input.Length * 8;
         Position = 0;
         IsError = false;
     }
@@ -68,36 +122,105 @@ public class BitReader : FBitArchive
     /// </summary>
     public void FillBuffer(ReadOnlySpan<byte> input, int bitCount)
     {
-        Buffer = input.ToArray();
+        if (_reusableBuffer == null || _reusableBuffer.Length < input.Length)
+        {
+            _reusableBuffer = new byte[Math.Max(input.Length * 2, 2048)];
+        }
+        input.CopyTo(_reusableBuffer);
+        Buffer = _reusableBuffer.AsMemory(0, input.Length);
         LastBit = bitCount;
         Position = 0;
         IsError = false;
     }
 
+    /// <summary>
+    /// Reads <paramref name="bitCount"/> bits directly from <paramref name="source"/> into this reader's reusable buffer without allocating.
+    /// </summary>
+    public void FillBitsFrom(FBitArchive source, int bitCount)
+    {
+        if (bitCount <= 0 || !source.CanRead(bitCount))
+        {
+            IsError = bitCount < 0 || source.IsError;
+            Buffer = ReadOnlyMemory<byte>.Empty;
+            LastBit = 0;
+            Position = 0;
+            return;
+        }
+
+        var requiredBytes = (bitCount + 7) / 8;
+        if (_reusableBuffer == null || _reusableBuffer.Length < requiredBytes)
+        {
+            _reusableBuffer = new byte[Math.Max(requiredBytes * 2, 2048)];
+        }
+
+        source.ReadBits(_reusableBuffer.AsSpan(0, requiredBytes), bitCount);
+        Buffer = _reusableBuffer.AsMemory(0, requiredBytes);
+        LastBit = bitCount;
+        Position = 0;
+        IsError = source.IsError;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool AtEnd() => Position >= LastBit;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool CanRead(int count) => Position + count <= LastBit;
 
-    public override bool PeekBit() => (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool PeekBit()
+    {
+        var bit = Position & 7;
+        var byteIdx = Position >> 3;
+        if (_byteArray != null)
+        {
+            return (_byteArray[_byteOffset + byteIdx] & (1 << bit)) != 0;
+        }
+        return (_buffer.Span[byteIdx] & (1 << bit)) != 0;
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override bool ReadBit()
     {
-        if (AtEnd() || IsError)
+        if (Position >= LastBit || IsError)
         {
             IsError = true;
             return false;
         }
 
-        var result = (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
+        var bit = Position & 7;
+        var byteIdx = Position >> 3;
         Position++;
-        return result;
+
+        if (_byteArray != null)
+        {
+            return (_byteArray[_byteOffset + byteIdx] & (1 << bit)) != 0;
+        }
+
+        return (_buffer.Span[byteIdx] & (1 << bit)) != 0;
     }
 
     public override T[] ReadArray<T>(Func<T> func1) => throw new NotImplementedException();
 
     public override int ReadBitsToInt(int bitCount)
     {
-        var result = new byte();
+        if (!CanRead(bitCount) || bitCount < 0)
+        {
+            IsError = true;
+            return 0;
+        }
+        if (bitCount == 0) return 0;
+
+        var currentByte = CurrentByte;
+        if (currentByte + 8 <= Buffer.Length)
+        {
+            var val = BinaryPrimitives.ReadUInt64LittleEndian(Buffer.Span.Slice(currentByte, 8));
+            var mask = bitCount == 64 ? ~0UL : (1UL << bitCount) - 1UL;
+            var res = (int)((val >> (Position & 7)) & mask);
+            Position += bitCount;
+            return res;
+        }
+
+        var result = 0;
         for (var i = 0; i < bitCount; i++)
         {
             if (IsError)
@@ -107,7 +230,7 @@ public class BitReader : FBitArchive
 
             if (ReadBit())
             {
-                result |= (byte)(1 << i);
+                result |= (1 << i);
             }
         }
         return result;
@@ -115,7 +238,24 @@ public class BitReader : FBitArchive
 
     public override ulong ReadBitsToLong(int bitCount)
     {
-        var result = new ulong();
+        if (!CanRead(bitCount) || bitCount < 0)
+        {
+            IsError = true;
+            return 0;
+        }
+        if (bitCount == 0) return 0;
+
+        var currentByte = CurrentByte;
+        if (currentByte + 8 <= Buffer.Length)
+        {
+            var val = BinaryPrimitives.ReadUInt64LittleEndian(Buffer.Span.Slice(currentByte, 8));
+            var mask = bitCount == 64 ? ~0UL : (1UL << bitCount) - 1UL;
+            var res = (val >> (Position & 7)) & mask;
+            Position += bitCount;
+            return res;
+        }
+
+        var result = 0UL;
         for (var i = 0; i < bitCount; i++)
         {
             if (ReadBit())
@@ -125,6 +265,61 @@ public class BitReader : FBitArchive
         }
 
         return result;
+    }
+
+    public override void ReadBits(Span<byte> destination, int bitCount)
+    {
+        if (!CanRead(bitCount) || bitCount < 0)
+        {
+            IsError = true;
+            return;
+        }
+
+        var bitCountUsedInByte = Position & 7;
+        var byteCount = bitCount / 8;
+        var extraBits = bitCount % 8;
+        var span = Buffer.Span;
+        var currentByte = CurrentByte;
+
+        if (bitCountUsedInByte == 0)
+        {
+            if (byteCount > 0)
+            {
+                span.Slice(currentByte, byteCount).CopyTo(destination);
+                Position += (byteCount * 8);
+            }
+            if (extraBits > 0)
+            {
+                destination[byteCount] = (byte)(span[CurrentByte] & ((1 << extraBits) - 1));
+                Position += extraBits;
+            }
+            return;
+        }
+
+        var neededBytes = (bitCount + 7) / 8;
+        destination[..neededBytes].Clear();
+
+        var bitCountLeftInByte = 8 - bitCountUsedInByte;
+        var shiftDelta = (1 << bitCountUsedInByte) - 1;
+        for (var i = 0; i < byteCount; i++)
+        {
+            destination[i] = (byte)(
+                (span[currentByte + i] >> bitCountUsedInByte) |
+                ((span[currentByte + i + 1] & shiftDelta) << bitCountLeftInByte)
+            );
+        }
+        Position += (byteCount * 8);
+
+        bitCount %= 8;
+        for (var i = 0; i < bitCount; i++)
+        {
+            var bit = (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
+            Position++;
+            if (bit)
+            {
+                destination[neededBytes - 1] |= (byte)(1 << i);
+            }
+        }
     }
 
     public override ReadOnlySpan<byte> ReadBits(int bitCount)
@@ -146,34 +341,9 @@ public class BitReader : FBitArchive
         }
 
         Span<byte> result = new byte[(bitCount + 7) / 8];
-
-        var bitCountLeftInByte = 8 - (Position & 7);
-        var currentByte = CurrentByte;
-        var span = Buffer.Span;
-        var shiftDelta = (1 << bitCountUsedInByte) - 1;
-        for (var i = 0; i < byteCount; i++)
-        {
-            result[i] = (byte)(
-                (span[currentByte + i] >> bitCountUsedInByte) |
-                ((span[currentByte + i + 1] & shiftDelta) << bitCountLeftInByte)
-                );
-        }
-        Position += (byteCount * 8);
-
-        bitCount %= 8;
-        for (var i = 0; i < bitCount; i++)
-        {
-            var bit = (Buffer.Span[CurrentByte] & (1 << (Position & 7))) > 0;
-            Position++;
-            if (bit)
-            {
-                result[^1] |= (byte)(1 << i);
-            }
-        }
-
+        ReadBits(result, bitCount);
         return result;
     }
-
 
     public override ReadOnlySpan<byte> ReadBits(uint bitCount) => ReadBits((int)bitCount);
 
@@ -183,22 +353,65 @@ public class BitReader : FBitArchive
     {
         var result = ReadByte();
         Position -= 8;
-
         return result;
     }
 
     public override byte ReadByte()
     {
         var bitCountUsedInByte = Position & 7;
-        var bitCountLeftInByte = 8 - (Position & 7);
-
-        var result = (bitCountUsedInByte == 0) ? Buffer.Span[CurrentByte] : (byte)((Buffer.Span[CurrentByte] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
-
+        var cur = CurrentByte;
         Position += 8;
-        return result;
+
+        if (_byteArray != null)
+        {
+            var offsetCur = _byteOffset + cur;
+            return (bitCountUsedInByte == 0)
+                ? _byteArray[offsetCur]
+                : (byte)((_byteArray[offsetCur] >> bitCountUsedInByte) | ((_byteArray[offsetCur + 1] & ((1 << bitCountUsedInByte) - 1)) << (8 - bitCountUsedInByte)));
+        }
+
+        var span = _buffer.Span;
+        return (bitCountUsedInByte == 0)
+            ? span[cur]
+            : (byte)((span[cur] >> bitCountUsedInByte) | ((span[cur + 1] & ((1 << bitCountUsedInByte) - 1)) << (8 - bitCountUsedInByte)));
     }
 
-    public override T ReadByteAsEnum<T>() => (T)Enum.ToObject(typeof(T), ReadByte());
+    public override T ReadByteAsEnum<T>()
+    {
+        var b = ReadByte();
+        return Unsafe.As<byte, T>(ref b);
+    }
+
+    public void ReadBytes(Span<byte> destination)
+    {
+        var byteCount = destination.Length;
+        if (!CanRead(byteCount * 8) || byteCount < 0)
+        {
+            IsError = true;
+            destination.Clear();
+            return;
+        }
+
+        var bitCountUsedInByte = Position & 7;
+        var currentByte = CurrentByte;
+        var span = Buffer.Span;
+
+        if (bitCountUsedInByte == 0)
+        {
+            span.Slice(currentByte, byteCount).CopyTo(destination);
+        }
+        else
+        {
+            var bitCountLeftInByte = 8 - bitCountUsedInByte;
+            var mask = (1 << bitCountUsedInByte) - 1;
+            for (var i = 0; i < byteCount; i++)
+            {
+                destination[i] = (byte)((span[currentByte + i] >> bitCountUsedInByte) | ((span[currentByte + 1 + i] & mask) << bitCountLeftInByte));
+            }
+        }
+
+        Position += (byteCount * 8);
+    }
 
     public override ReadOnlySpan<byte> ReadBytes(int byteCount)
     {
@@ -209,29 +422,41 @@ public class BitReader : FBitArchive
         }
 
         var bitCountUsedInByte = Position & 7;
-        var bitCountLeftInByte = 8 - (Position & 7);
-        ReadOnlySpan<byte> result;
         if (bitCountUsedInByte == 0)
         {
-            result = Buffer.Span[CurrentByte..(CurrentByte + byteCount)];
-        }
-        else
-        {
-            Span<byte> output = new byte[byteCount];
-            for (var i = 0; i < byteCount; i++)
-            {
-                output[i] = (byte)((Buffer.Span[CurrentByte + i] >> bitCountUsedInByte) | ((Buffer.Span[CurrentByte + 1 + i] & ((1 << bitCountUsedInByte) - 1)) << bitCountLeftInByte));
-            }
-            result = output;
+            var result = Buffer.Span.Slice(CurrentByte, byteCount);
+            Position += (byteCount * 8);
+            return result;
         }
 
-        Position += (byteCount * 8);
-        return result;
+        var output = new byte[byteCount];
+        ReadBytes(output);
+        return output;
     }
 
     public override ReadOnlySpan<byte> ReadBytes(uint byteCount) => ReadBytes((int)byteCount);
 
-    public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count)).Replace("-", "");
+    public override ReadOnlyMemory<byte> ReadMemory(int byteCount)
+    {
+        if (!CanRead(byteCount * 8) || byteCount < 0)
+        {
+            IsError = true;
+            return ReadOnlyMemory<byte>.Empty;
+        }
+
+        if ((Position & 7) == 0)
+        {
+            var result = Buffer.Slice(CurrentByte, byteCount);
+            Position += (byteCount * 8);
+            return result;
+        }
+
+        var output = new byte[byteCount];
+        ReadBytes(output);
+        return output;
+    }
+
+    public override string ReadBytesToString(int count) => Convert.ToHexString(ReadBytes(count));
 
     public override string ReadFString()
     {
@@ -248,8 +473,23 @@ public class BitReader : FBitArchive
             length = -2 * length;
         }
 
-        var encoding = isUnicode ? Encoding.Unicode : Encoding.Default;
-        return encoding.GetString(ReadBytes(length)).Trim(new[] { ' ', '\0' });
+        var bytes = ReadBytes(length);
+        if (!isUnicode)
+        {
+            if (bytes.Length > 0 && bytes[^1] == 0)
+            {
+                bytes = bytes[..^1];
+            }
+            return Encoding.Default.GetString(bytes).Trim(' ');
+        }
+        else
+        {
+            if (bytes.Length >= 2 && bytes[^1] == 0 && bytes[^2] == 0)
+            {
+                bytes = bytes[..^2];
+            }
+            return Encoding.Unicode.GetString(bytes).Trim(' ');
+        }
     }
 
     public override string ReadFName()
@@ -267,6 +507,10 @@ public class BitReader : FBitArchive
                 nameIndex = ReadIntPacked();
             }
 
+            if (nameIndex < (uint)BinaryReader.UnrealNamesCache.Length && BinaryReader.UnrealNamesCache[nameIndex] != null)
+            {
+                return BinaryReader.UnrealNamesCache[nameIndex];
+            }
             return ((UnrealNames)nameIndex).ToString();
         }
 
@@ -298,35 +542,95 @@ public class BitReader : FBitArchive
 
     public override short ReadInt16()
     {
-        var value = ReadBytes(2);
-        return IsError ? (short)0 : BitConverter.ToInt16(value);
+        if (!CanRead(16))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadInt16LittleEndian(Buffer.Span.Slice(CurrentByte, 2));
+            Position += 16;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[2];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadInt16LittleEndian(bytes);
     }
 
     public override int ReadInt32()
     {
-        var value = ReadBytes(4);
-        return IsError ? 0 : BitConverter.ToInt32(value);
+        if (!CanRead(32))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadInt32LittleEndian(Buffer.Span.Slice(CurrentByte, 4));
+            Position += 32;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[4];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
     public override bool ReadInt32AsBoolean() => ReadInt32() == 1;
 
     public override long ReadInt64()
     {
-        var value = ReadBytes(8);
-        return IsError ? 0 : BitConverter.ToInt64(value);
+        if (!CanRead(64))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadInt64LittleEndian(Buffer.Span.Slice(CurrentByte, 8));
+            Position += 64;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[8];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadInt64LittleEndian(bytes);
     }
 
     public override uint ReadIntPacked()
     {
+        if ((Position & 7) == 0)
+        {
+            var span = Buffer.Span;
+            var srcIndex = CurrentByte;
+            uint val = 0;
+            for (int it = 0, shift = 0; it < 5; ++it, shift += 7)
+            {
+                if (!CanRead(8))
+                {
+                    IsError = true;
+                    break;
+                }
+                Position += 8;
+                var b = span[srcIndex++];
+                val |= (uint)((b >> 1) << shift);
+                if ((b & 1) == 0)
+                {
+                    break;
+                }
+            }
+            return val;
+        }
+
         var bitCountUsedInByte = Position & 7;
-        var bitCountLeftInByte = 8 - (Position & 7);
+        var bitCountLeftInByte = 8 - bitCountUsedInByte;
         var srcMaskByte0 = (byte)((1U << bitCountLeftInByte) - 1U);
         var srcMaskByte1 = (byte)((1U << bitCountUsedInByte) - 1U);
-        var srcIndex = CurrentByte;
-        var nextSrcIndex = bitCountUsedInByte != 0 ? srcIndex + 1 : srcIndex;
+        var curByte = CurrentByte;
+        var nextByteIdx = curByte + 1;
+        var bufSpan = Buffer.Span;
 
         uint value = 0;
-        for (int It = 0, shiftCount = 0; It < 5; ++It, shiftCount += 7)
+        for (int it = 0, shiftCount = 0; it < 5; ++it, shiftCount += 7)
         {
             if (!CanRead(8))
             {
@@ -334,17 +638,17 @@ public class BitReader : FBitArchive
                 break;
             }
 
-            if (nextSrcIndex >= Buffer.Length)
+            if (nextByteIdx >= Buffer.Length)
             {
-                nextSrcIndex = srcIndex;
+                nextByteIdx = curByte;
             }
 
             Position += 8;
 
-            var readByte = (byte)(((Buffer.Span[srcIndex] >> bitCountUsedInByte) & srcMaskByte0) | ((Buffer.Span[nextSrcIndex] & srcMaskByte1) << (bitCountLeftInByte & 7)));
+            var readByte = (byte)(((bufSpan[curByte] >> bitCountUsedInByte) & srcMaskByte0) | ((bufSpan[nextByteIdx] & srcMaskByte1) << (bitCountLeftInByte & 7)));
             value = (uint)((readByte >> 1) << shiftCount) | value;
-            srcIndex++;
-            nextSrcIndex++;
+            curByte++;
+            nextByteIdx++;
 
             if ((readByte & 1) == 0)
             {
@@ -526,21 +830,105 @@ public class BitReader : FBitArchive
 
     public override sbyte ReadSByte() => throw new NotImplementedException();
 
-    public override float ReadSingle() => BitConverter.ToSingle(ReadBytes(4));
+    public override float ReadSingle()
+    {
+        if (!CanRead(32))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadSingleLittleEndian(Buffer.Span.Slice(CurrentByte, 4));
+            Position += 32;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[4];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadSingleLittleEndian(bytes);
+    }
 
     public override (T, U)[] ReadTupleArray<T, U>(Func<T> func1, Func<U> func2) => throw new NotImplementedException();
 
-    public override ushort ReadUInt16() => BitConverter.ToUInt16(ReadBytes(2));
+    public override ushort ReadUInt16()
+    {
+        if (!CanRead(16))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadUInt16LittleEndian(Buffer.Span.Slice(CurrentByte, 2));
+            Position += 16;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[2];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadUInt16LittleEndian(bytes);
+    }
 
-    public override uint ReadUInt32() => BitConverter.ToUInt32(ReadBytes(4));
+    public override uint ReadUInt32()
+    {
+        if (!CanRead(32))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadUInt32LittleEndian(Buffer.Span.Slice(CurrentByte, 4));
+            Position += 32;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[4];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadUInt32LittleEndian(bytes);
+    }
 
     public override bool ReadUInt32AsBoolean() => throw new NotImplementedException();
 
-    public override T ReadUInt32AsEnum<T>() => throw new NotImplementedException();
+    public override T ReadUInt32AsEnum<T>()
+    {
+        var val = ReadUInt32();
+        return Unsafe.As<uint, T>(ref val);
+    }
 
-    public override ulong ReadUInt64() => BitConverter.ToUInt64(ReadBytes(8));
+    public override ulong ReadUInt64()
+    {
+        if (!CanRead(64))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadUInt64LittleEndian(Buffer.Span.Slice(CurrentByte, 8));
+            Position += 64;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[8];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadUInt64LittleEndian(bytes);
+    }
 
-    public override double ReadDouble() => BitConverter.ToDouble(ReadBytes(8));
+    public override double ReadDouble()
+    {
+        if (!CanRead(64))
+        {
+            IsError = true;
+            return 0;
+        }
+        if ((Position & 7) == 0)
+        {
+            var res = BinaryPrimitives.ReadDoubleLittleEndian(Buffer.Span.Slice(CurrentByte, 8));
+            Position += 64;
+            return res;
+        }
+        Span<byte> bytes = stackalloc byte[8];
+        ReadBytes(bytes);
+        return BinaryPrimitives.ReadDoubleLittleEndian(bytes);
+    }
 
     public override void Seek(int offset, SeekOrigin seekOrigin = SeekOrigin.Begin)
     {
@@ -578,9 +966,9 @@ public class BitReader : FBitArchive
         LastBit += bitCount;
 
         // this works only because partial bunches are enforced to be byte aligned
-        var combined = new byte[Buffer.Span.Length + data.Length];
+        var combined = new byte[Buffer.Length + data.Length];
         Buffer.CopyTo(combined);
-        data.ToArray().CopyTo(combined, Buffer.Span.Length);
+        data.CopyTo(combined.AsSpan(Buffer.Length));
 
         Buffer = combined;
     }
@@ -594,14 +982,14 @@ public class BitReader : FBitArchive
             return;
         }
 
-        _tempLastBit[index] = LastBit;
+        _tempLastBit[(int)index] = LastBit;
         LastBit = setPosition;
     }
 
     public override void RestoreTempEnd(FBitArchiveEndIndex index)
     {
         Position = LastBit;
-        LastBit = _tempLastBit[index];
+        LastBit = _tempLastBit[(int)index];
         IsError = false;
     }
 }

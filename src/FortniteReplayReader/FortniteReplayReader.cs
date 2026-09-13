@@ -1,5 +1,3 @@
-﻿using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using FortniteReplayReader.Exceptions;
@@ -29,8 +27,13 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
 
     public FortniteReplay ReadReplay(string fileName)
     {
-        using var stream = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        return ReadReplay(stream);
+        var bytes = File.ReadAllBytes(fileName);
+        using var archive = new Unreal.Core.BinaryReader(bytes);
+
+        Builder = new FortniteReplayBuilder();
+        ReadReplay(archive);
+
+        return Builder.Build(Replay);
     }
 
     public FortniteReplay ReadReplay(Stream stream)
@@ -326,7 +329,7 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
         if (!Replay.Info.IsEncrypted)
         {
-            return new Unreal.Core.BinaryReader(archive.ReadBytes(size))
+            return new Unreal.Core.BinaryReader(archive.ReadMemory(size))
             {
                 EngineNetworkVersion = Replay.Header.EngineNetworkVersion,
                 NetworkVersion = Replay.Header.NetworkVersion,
@@ -336,18 +339,11 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
         }
 
         var key = Replay.Info.EncryptionKey;
-        var encryptedBytes = archive.ReadBytes(size);
+        var encryptedBytes = archive.ReadMemory(size);
 
-        using var aesCryptoServiceProvider = new AesCryptoServiceProvider
-        {
-            KeySize = key.Length * 8,
-            Key = key.ToArray(),
-            Mode = CipherMode.ECB,
-            Padding = PaddingMode.PKCS7
-        };
-
-        using var cryptoTransform = aesCryptoServiceProvider.CreateDecryptor();
-        var decryptedArray = cryptoTransform.TransformFinalBlock(encryptedBytes.ToArray(), 0, encryptedBytes.Length);
+        using var aes = Aes.Create();
+        aes.Key = key.ToArray();
+        var decryptedArray = aes.DecryptEcb(encryptedBytes.Span, PaddingMode.PKCS7);
 
         return new Unreal.Core.BinaryReader(decryptedArray.AsMemory())
         {

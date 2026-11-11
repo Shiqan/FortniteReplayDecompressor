@@ -52,6 +52,11 @@ public abstract class ReplayReader<T> where T : Replay, new()
 
     protected ILogger _logger;
     protected T Replay { get; set; }
+
+    /// <summary>
+    /// Replay time (in seconds) of the demo frame that is currently being read.
+    /// </summary>
+    protected float CurrentTimeSeconds { get; private set; }
     protected ParseMode _parseMode;
     protected bool IsDebugMode => _parseMode == ParseMode.Debug;
 
@@ -88,13 +93,18 @@ public abstract class ReplayReader<T> where T : Replay, new()
     /// </summary>
     private uint?[] IgnoringChannels = new uint?[DefaultMaxChannelSize]; // channel index, actorguid
 
-    public ReplayReader(ILogger logger, ParseMode mode)
+    public ReplayReader(ILogger logger, ParseMode mode) : this(logger, mode, null)
+    {
+    }
+
+    /// <param name="ignoredExportGroups">Export group types that are skipped while parsing, see <see cref="NetFieldParser"/>.</param>
+    public ReplayReader(ILogger logger, ParseMode mode, IReadOnlySet<Type>? ignoredExportGroups)
     {
         _logger = logger;
         _parseMode = mode;
 
         _netGuidCache = new NetGuidCache();
-        _netFieldParser = new NetFieldParser(_netGuidCache, mode);
+        _netFieldParser = new NetFieldParser(_netGuidCache, mode, ignoredTypes: ignoredExportGroups);
     }
 
     /// <summary>
@@ -812,6 +822,7 @@ public abstract class ReplayReader<T> where T : Replay, new()
         }
 
         var timeSeconds = archive.ReadSingle();
+        CurrentTimeSeconds = timeSeconds;
         _logger?.LogDebug("ReadDemoFrameIntoPlaybackPackets at {}", timeSeconds);
 
         if (archive.NetworkVersion >= NetworkVersionHistory.HISTORY_LEVEL_STREAMING_FIXES)

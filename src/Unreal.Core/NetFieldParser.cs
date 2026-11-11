@@ -62,9 +62,8 @@ public class NetFieldParser
         foreach (var type in netSubFields)
         {
             var attribute = type.GetCustomAttribute<NetFieldExportSubGroupAttribute>();
-            if (attribute.MinimalParseMode <= mode)
+            if (attribute.MinimalParseMode <= mode && NetFieldGroups.TryGetValue(attribute.Path, out var info))
             {
-                NetFieldGroups.TryGetValue(attribute.Path, out var info);
                 AddNetFieldInfo(type, info, mode);
             }
         }

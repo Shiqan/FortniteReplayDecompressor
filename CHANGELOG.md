@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+## [3.1.1] - 2026-11-14
+### Added
+- `ReplayReader` and `NetFieldParser`: skip selected export group types with `ignoredExportGroups` (by [Cristiano3120](https://github.com/Cristiano3120))
+- `NetFieldExportGroupPrefixAttribute`: match export groups by path prefix (exact paths still take priority) (by [Cristiano3120](https://github.com/Cristiano3120))
+- `PlayerBuild`: parse player-built structures (`PBWA_*`) (by [Cristiano3120](https://github.com/Cristiano3120))
+- `BatchedDamageCues`: add `SourceWeapon` actor GUID (by [Cristiano3120](https://github.com/Cristiano3120))
+- `ReplayReader`: add `CurrentTimeSeconds` for the active demo frame time (by [Cristiano3120](https://github.com/Cristiano3120))
+
+### Changed
+- switch NuGet package publishing to Trusted Publishing (OIDC)
+
+### Fixed
+- `HealthSet`: read health and shield values from the correct handles and make properties nullable (`null` means not sent) (by [Cristiano3120](https://github.com/Cristiano3120))
+- `NetGuidCache`: retry failed export group paths after new export groups load (by [Cristiano3120](https://github.com/Cristiano3120))
+- `FortniteReplayBuilder`: mark the replay owner when `RecorderId` arrives after player states (by [Cristiano3120](https://github.com/Cristiano3120))
+- `NetFieldParser`: add a subgroup only when its parent group exists (by [Cristiano3120](https://github.com/Cristiano3120))
+
 ## [3.1.0] - 2026-09-13
 ### Changed
 - Improve parsing performance and reduce allocations:

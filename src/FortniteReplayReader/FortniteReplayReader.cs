@@ -25,6 +25,11 @@ public class ReplayReader : Unreal.Core.ReplayReader<FortniteReplay>
     {
     }
 
+    /// <param name="ignoredExportGroups">Export group types (for example <c>typeof(HealthSet)</c>) that are skipped while parsing.</param>
+    public ReplayReader(ILogger logger, ParseMode parseMode, IReadOnlySet<Type>? ignoredExportGroups) : base(logger, parseMode, ignoredExportGroups)
+    {
+    }
+
     public FortniteReplay ReadReplay(string fileName)
     {
         var bytes = File.ReadAllBytes(fileName);

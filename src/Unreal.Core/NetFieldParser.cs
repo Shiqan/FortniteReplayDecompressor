@@ -24,13 +24,21 @@ public class NetFieldParser
     private readonly Dictionary<string, ClassNetCacheInfo> _classNetCacheToNetFieldGroup = new();
     private readonly CompiledLinqCache _linqCache = new();
 
+    // Groups registered by path prefix. A matching path is added to NetFieldGroups as an alias on first use.
+    private readonly List<(string Prefix, NetFieldGroupInfo Info)> _prefixGroups = new();
+    private readonly HashSet<string> _noPrefixMatch = new();
+
     /// <summary>
     /// Create a NetFieldParser, which will load all <see cref="NetFieldExportGroup"/> in the <see cref="AppDomain.CurrentDomain"/>.
     /// </summary>
     /// <param name="cache">Instance of NetGuidCache, used to resolve netguids to their string value.</param>
     /// <param name="mode"></param>
     /// <param name="assemblyNameFilter">Found assemblies should contain this string.</param>
-    public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader")
+    /// <param name="ignoredTypes">
+    /// Export group types that are not parsed even if their parse mode would allow it. The parser skips their data completely,
+    /// which saves time if the data is not needed (for example health or damage cues).
+    /// </param>
+    public NetFieldParser(NetGuidCache cache, ParseMode mode, string assemblyNameFilter = "ReplayReader", IReadOnlySet<Type>? ignoredTypes = null)
     {
         GuidCache = cache;
 
@@ -43,6 +51,11 @@ public class NetFieldParser
         var netFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupAttribute>() != null);
         foreach (var type in netFields)
         {
+            if (ignoredTypes?.Contains(type) == true)
+            {
+                continue;
+            }
+
             var attribute = type.GetCustomAttribute<NetFieldExportGroupAttribute>();
             if (attribute.MinimalParseMode <= mode)
             {
@@ -54,6 +67,29 @@ public class NetFieldParser
 
                 NetFieldGroups.Add(attribute.Path, info);
                 AddNetFieldInfo(type, info, mode);
+            }
+        }
+
+        // Add all groups matched by path prefix
+        var prefixFields = types.Where(c => c.GetCustomAttribute<NetFieldExportGroupPrefixAttribute>() != null);
+        foreach (var type in prefixFields)
+        {
+            if (ignoredTypes?.Contains(type) == true)
+            {
+                continue;
+            }
+
+            var attribute = type.GetCustomAttribute<NetFieldExportGroupPrefixAttribute>();
+            if (attribute.MinimalParseMode <= mode)
+            {
+                var info = new NetFieldGroupInfo
+                {
+                    Type = type,
+                    TypeId = _linqCache.AddExportType(type),
+                };
+
+                AddNetFieldInfo(type, info, mode);
+                _prefixGroups.Add((attribute.Prefix, info));
             }
         }
 
@@ -110,16 +146,49 @@ public class NetFieldParser
         //Load object instances
         _objects = new SingleInstanceExport[_linqCache.TotalTypes];
 
-        for (var i = 0; i < NetFieldGroups.Length; i++)
+        IEnumerable<NetFieldGroupInfo> allGroups = Enumerable.Range(0, NetFieldGroups.Length).Select(i => NetFieldGroups[i]).Concat(_prefixGroups.Select(p => p.Info));
+        foreach (var group in allGroups)
         {
-            var group = NetFieldGroups[i];
-
             _objects[group.TypeId] = new SingleInstanceExport
             {
                 Instance = (INetFieldExportGroup)Activator.CreateInstance(group.Type),
                 ChangedProperties = new List<NetFieldInfo>(group.Properties.Length),
             };
         }
+    }
+
+    /// <summary>
+    /// Adds <paramref name="group"/> as an alias of the first prefix group it starts with.
+    /// </summary>
+    /// <returns>true if a prefix group matched</returns>
+    private bool TryAddPrefixAlias(string group)
+    {
+        if (_prefixGroups.Count == 0 || string.IsNullOrEmpty(group) || _noPrefixMatch.Contains(group))
+        {
+            return false;
+        }
+
+        foreach ((string prefix, NetFieldGroupInfo info) in _prefixGroups)
+        {
+            if (group.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                NetFieldGroups.Add(group, info);
+                return true;
+            }
+        }
+
+        _noPrefixMatch.Add(group);
+        return false;
+    }
+
+    private bool TryGetGroup(string group, [NotNullWhen(returnValue: true)] out NetFieldGroupInfo? info)
+    {
+        if (NetFieldGroups.TryGetValue(group, out info))
+        {
+            return true;
+        }
+
+        return TryAddPrefixAlias(group) && NetFieldGroups.TryGetValue(group, out info);
     }
 
     /// <summary>
@@ -242,7 +311,7 @@ public class NetFieldParser
     /// </summary>
     /// <param name="group"></param>
     /// <returns>true if group should be parsed further, false otherwise</returns>
-    public bool WillReadType(string group) => NetFieldGroups.TryGetValue(group, out var _);
+    public bool WillReadType(string group) => TryGetGroup(group, out var _);
 
     /// <summary>
     /// Returns whether or not this <paramref name="group"/> is marked to be parsed.
@@ -283,7 +352,8 @@ public class NetFieldParser
 
         if (exportGroup.GroupId == -1)
         {
-            if (!NetFieldGroups.TryGetIndex(exportGroup.PathName, out var groupIndex))
+            if (!NetFieldGroups.TryGetIndex(exportGroup.PathName, out var groupIndex) &&
+                !(TryAddPrefixAlias(exportGroup.PathName) && NetFieldGroups.TryGetIndex(exportGroup.PathName, out groupIndex)))
             {
                 exportGroup.GroupId = -2;
                 return false;
@@ -576,7 +646,7 @@ public class NetFieldParser
     /// <returns></returns>
     public INetFieldExportGroup? CreateType(string group)
     {
-        if (!NetFieldGroups.TryGetValue(group, out var exportGroup))
+        if (!TryGetGroup(group, out var exportGroup))
         {
             return null;
         }

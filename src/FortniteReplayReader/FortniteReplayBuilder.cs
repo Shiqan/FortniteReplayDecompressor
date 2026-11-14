@@ -138,7 +138,19 @@ public class FortniteReplayBuilder
 
         GameData.WinningPlayerIds ??= state.WinningPlayerList;
         GameData.WinningTeam ??= state.WinningTeam;
-        GameData.RecorderId ??= state.RecorderPlayerState?.Value;
+        if (GameData.RecorderId is null && state.RecorderPlayerState?.Value is { } recorderId)
+        {
+            GameData.RecorderId = recorderId;
+
+            // The recorder's player state can be read before the game state names it.
+            foreach (KeyValuePair<uint, PlayerData> player in _players)
+            {
+                if (_channelToActor.TryGetValue(player.Key, out uint actorId) && actorId == recorderId)
+                {
+                    player.Value.IsReplayOwner = true;
+                }
+            }
+        }
     }
 
     public void UpdatePrivateName(uint channelIndex, PlayerNameData playerNameData)

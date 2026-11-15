@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interfaces to support proper DI
 - Register types to be parsed with DI
 
+
+## [3.2.0] - 2026-11-15
+### Changed
+- support .net11
+
 ## [3.1.1] - 2026-11-14
 ### Added
 - `ReplayReader` and `NetFieldParser`: skip selected export group types with `ignoredExportGroups` (by [Cristiano3120](https://github.com/Cristiano3120))
